@@ -1,0 +1,4 @@
+[submodule "libraries/TFT_eSPI"]
+	path = libraries/TFT_eSPI
+	url = https://github.com/Bodmer/TFT_eSPI
+	branch = master
