@@ -1,0 +1,19 @@
+board_manager:
+  additional_urls: [https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json]
+daemon:
+  port: "50051"
+directories:
+  data: /home/leeseungcheol/.arduino15
+  downloads: /home/leeseungcheol/.arduino15/staging
+  user: /home/leeseungcheol/work/smartpower3/sp3_arduino
+library:
+  enable_unsafe_install: false
+logging:
+  file: ""
+  format: text
+  level: info
+metrics:
+  addr: :9090
+  enabled: true
+sketch:
+  always_export_binaries: false
