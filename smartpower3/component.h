@@ -16,7 +16,7 @@
 class Component
 {
 private:
-	uint8_t mode = NULL;
+	uint8_t mode = 0;
 	bool activated;
 	uint16_t width;
 	uint16_t height;

@@ -1,15 +1,59 @@
 #include <ESP32Encoder.h>
 #include <Arduino.h>
+#include <FunctionalInterrupt.h>
 
-class Input
+#define DEBOUNCE_TIME 250
+
+void countEncoder(void *val);
+void initEncoder(void *param);
+void gpioIntrHandler0(void);
+void gpioIntrHandler1(void);
+
+/*
+struct Button {
+  uint8_t PIN;
+  uint32_t numberKeyPresses;
+  bool pressed;
+  volatile uint32_t debounceTimer;
+};
+
+  if (millis() - DEBOUNCE_TIME >= btn[1].debounceTimer) {
+    if (digitalRead(btn[1].PIN) == 1) {
+      btn[1].debounceTimer = millis();
+      btn[1].numberKeyPresses += 1;
+      btn[1].pressed = true;
+	  Serial.println("hello");
+    }
+  }
+*/
+
+class Button
 {
-private:
-	float val_volt = 3;
-	float val_ampere = 0;
-	float val_watt = 0;
 public:
-	Input(void);
-	ESP32Encoder encoder;
-	void initEncoder(void);
-	void countEncoder(void *);
+	Button(uint8_t reqPin) : PIN(reqPin){
+		pinMode(PIN, INPUT_PULLUP);
+		//attachInterrupt(PIN, std::bind(&Button::isr,this), FALLING);
+		attachInterrupt(PIN, std::bind(&Button::isr, this), FALLING);
+	};
+	~Button() {
+		detachInterrupt(PIN);
+	};
+
+	void isr(void) {
+		numberKeyPresses += 1;
+		pressed = true;
+	};
+
+	void checkPressed() {
+		if (pressed) {
+			Serial.printf("Button on pin %u has been pressed %u times\n", PIN, numberKeyPresses);
+			pressed = false;
+		}
+	};
+
+    volatile bool pressed;
+private:
+	const uint8_t PIN;
+    volatile uint32_t numberKeyPresses;
+    volatile uint32_t debounceTimer;
 };

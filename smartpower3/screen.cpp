@@ -28,17 +28,14 @@ void Channel::init(void)
 	volt->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
 	volt->setCoordinate(this->x, this->y);
 	volt->draw(0.0);
-	//tft_volt.pushSprite(W_CH0, H_VOLT);
 
 	ampere->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
 	ampere->setCoordinate(this->x, this->y + H_VOLT);
 	ampere->draw(0.0);
-	//tft_ampere.pushSprite(W_CH0, H_AMPERE);
 
 	watt->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
 	watt->setCoordinate(this->x, this->y + H_AMPERE);
 	watt->draw(0.0);
-	//tft_watt.pushSprite(W_CH0, H_WATT);
 }
 
 Channel::~Channel(void)
@@ -76,24 +73,13 @@ Screen::Screen()
 	pinMode(TFT_BL, OUTPUT);
 	digitalWrite(TFT_BL, HIGH);
 
-	/*
-	initSprite(&tft_header, W_HEADER, H_HEADER, TFT_RED, TFT_GREEN, TL_DATUM, 1);
-	drawHeader("SP3");
-	*/
 	header = new Component(&this->tft, W_HEADER, H_HEADER, 4);
 	header->init(TFT_RED, TFT_BLACK, 2, TL_DATUM);
 	header->draw("SP3", 0, 0);
 
 	initBaseMode();
 	channel[0] = new Channel(&tft, 10, 10);
-
-	/*
-	watt = new Component(&this->tft, IWIDTH, IHEIGHT, FONT_SEVEN_SEGMENT);
-	watt->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
-	watt->draw(0.0, 165, 100);
-
-	delete watt;
-	*/
+	channel[0]->init();
 }
 
 

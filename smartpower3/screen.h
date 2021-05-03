@@ -24,19 +24,19 @@ private:
 	Component *volt;
 	Component *ampere;
 	Component *watt;
-	void init(void);
 public:
 	Channel(TFT_eSPI *tft, uint16_t width, uint16_t height);
 	~Channel(void);
 	void drawVoltage(float watt);
 	void drawAmpere(float watt);
 	void drawWatt(float watt);
+	void init(void);
 };
 
 class Screen
 {
 private:
-	uint8_t mode = NULL;
+	uint8_t mode = 0;
 	TFT_eSPI tft = TFT_eSPI();
 	TFT_eSprite tft_ampere = TFT_eSprite(&tft);
 	TFT_eSprite tft_watt = TFT_eSprite(&tft);
@@ -52,6 +52,7 @@ private:
 	Channel *channel[2];
 
 public:
+	bool edit = 0;
 	Screen();
 	void setMode(uint8_t val);
 	uint8_t getMode(void);
