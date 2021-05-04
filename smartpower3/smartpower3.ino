@@ -5,7 +5,17 @@ float val_volt = 3;
 float val_ampere = 0;
 float val_watt = 0;
 
-int8_t dial;
+struct dial_t {
+	int8_t cnt;
+	bool direct;
+};
+
+struct dial_t dial;
+
+//int8_t dial;
+uint8_t mode;
+uint8_t pre_mode;
+bool direct;
 
 Screen screen;
 
@@ -13,36 +23,15 @@ Screen screen;
 #define BUTTON2 32
 
 Button button1(BUTTON1);
-//Button button2(BUTTON2);
-
-void gpioIntrHandler() {
-Serial.println("HJODJFOJSDFI");
-/*
-  if (millis() - DEBOUNCE_TIME >= btn[0].debounceTimer) {
-    if (digitalRead(btn[0].PIN) == 1) {
-      btn[0].debounceTimer = millis();
-      btn[0].numberKeyPresses += 1;
-      btn[0].pressed = true;
-	  Serial.println("hello");
-    }
-  }
-*/
-}
+Button button2(BUTTON2);
 
 void setup(void) {
 	Serial.begin(115200);
 
-	pinMode(19, INPUT_PULLUP);
-	pinMode(32, INPUT_PULLUP);
-	//attachInterrupt(digitalPinToInterrupt(19), btn2.gpioIntrHandler, RISING);
-	//attachInterrupt(digitalPinToInterrupt(32), gpioIntrHandler1, RISING);
-	attachInterrupt(digitalPinToInterrupt(32), gpioIntrHandler, RISING);
 	initEncoder(&dial);
 
 	xTaskCreate(draw_power, "Draw power", 1500, NULL, 1, NULL);
 }
-
-uint8_t mode = 0;
 
 void get_memory_info(void)
 {
@@ -55,39 +44,70 @@ void get_memory_info(void)
 void draw_power(void *parameter)
 {
 	for (;;) {
-		//Serial.printf("dr %d, %d\n", btn[0].pressed, btn[1].pressed);
-		/*
-		if (btn[0].pressed) {
-			Serial.printf("Button 0 has been pressed %u times\n", btn[0].numberKeyPresses);
-			btn[0].pressed = false;
-			//      screen.tft_header.deleteSprite();
-		}
-		if (btn[1].pressed) {
-			Serial.printf("Button 1 has been pressed %u times\n", btn[1].numberKeyPresses);
-			btn[1].pressed = false;
-			//      screen.tft_volt.deleteSprite();
-			mode = 1;
-			screen.getMode();
-		}
-		*/
 
 		screen.drawVoltage(val_volt, 0);
 		screen.drawAmpere(val_ampere, 0);
 		screen.drawWatt(val_watt, 0);
-		vTaskDelay(100);
+
+		pre_mode = mode;
+		mode = abs(dial.cnt%7);
+		Serial.printf("%d, %d, %d\n", dial.cnt%7, dial.cnt, mode);
+
+		switch (mode) {
+			case 6:
+				screen.channel[0]->clearOutLines(1);
+				screen.header->drawOutLines();
+			    screen.header->activate();
+				screen.channel[1]->clearOutLines(1);
+				break;
+			case 5:
+				screen.header->clearOutLines();
+				screen.channel[0]->drawOutLines(1);
+				screen.channel[0]->clearOutLines(2);
+				break;
+			case 4:
+				screen.channel[0]->clearOutLines(1);
+				screen.channel[0]->drawOutLines(2);
+				screen.channel[0]->clearOutLines(3);
+				break;
+			case 3:
+				screen.channel[0]->clearOutLines(2);
+				screen.channel[0]->drawOutLines(3);
+				screen.channel[1]->clearOutLines(3);
+				break;
+			case 2:
+				screen.channel[0]->clearOutLines(3);
+				screen.channel[1]->drawOutLines(3);
+				screen.channel[1]->clearOutLines(2);
+				break;
+			case 1:
+				screen.channel[1]->clearOutLines(3);
+				screen.channel[1]->drawOutLines(2);
+				screen.channel[1]->clearOutLines(1);
+				break;
+			case 0:
+				screen.channel[1]->clearOutLines(2);
+				screen.channel[1]->drawOutLines(1);
+				screen.header->clearOutLines();
+				break;
+		}
+		/*
+		screen.channel[0]->drawOutLines(3);
+		screen.channel[1]->drawOutLines(2);
+		*/
 		//get_memory_info();
 
+		vTaskDelay(100);
 	}
 }
 #endif
 
 void loop() {
     button1.checkPressed();
-    //button2.checkPressed();
+    button2.checkPressed();
 	if (screen.getMode() == 0) {
-		if (dial != 0)
+		if (dial.cnt != 0)
 			screen.edit = 1;
 	}
-    Serial.printf("HELLO %d", button1.pressed);
 	delay(100);
 }

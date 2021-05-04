@@ -1,69 +1,4 @@
 #include "screen.h"
-#define WAIT 1
-#define IWIDTH  138
-#define IHEIGHT 48
-#define W_HEADER 320
-#define H_HEADER 40
-
-#define W_CH0 20
-#define OFFSET_CH0 15
-#define H_VOLT (H_HEADER + OFFSET_CH0)
-#define H_AMPERE (H_VOLT + IHEIGHT + OFFSET_CH0)
-#define H_WATT (H_AMPERE + IHEIGHT + OFFSET_CH0)
-
-#define OFFSET_X 0
-#define OFFSET_Y H_HEADER
-
-Channel::Channel(TFT_eSPI *tft, uint16_t x, uint16_t y)
-{
-	this->x = x + OFFSET_X;
-	this->y = y + OFFSET_Y;
-	volt = new Component(tft, IWIDTH, IHEIGHT, FONT_SEVEN_SEGMENT);
-	ampere = new Component(tft, IWIDTH, IHEIGHT, FONT_SEVEN_SEGMENT);
-	watt = new Component(tft, IWIDTH, IHEIGHT, FONT_SEVEN_SEGMENT);
-}
-
-void Channel::init(void)
-{
-	volt->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
-	volt->setCoordinate(this->x, this->y);
-	volt->draw(0.0);
-
-	ampere->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
-	ampere->setCoordinate(this->x, this->y + H_VOLT);
-	ampere->draw(0.0);
-
-	watt->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
-	watt->setCoordinate(this->x, this->y + H_AMPERE);
-	watt->draw(0.0);
-}
-
-Channel::~Channel(void)
-{
-	delete volt;
-	delete ampere;
-	delete watt;
-	volt = NULL;
-	ampere = NULL;
-	watt = NULL;
-}
-
-
-void Channel::drawVoltage(float val)
-{
-	volt->draw(val);
-}
-
-void Channel::drawAmpere(float val)
-{
-	ampere->draw(val);
-}
-
-void Channel::drawWatt(float val)
-{
-	watt->draw(val);
-}
-
 
 Screen::Screen()
 {
@@ -75,11 +10,14 @@ Screen::Screen()
 
 	header = new Component(&this->tft, W_HEADER, H_HEADER, 4);
 	header->init(TFT_RED, TFT_BLACK, 2, TL_DATUM);
-	header->draw("SP3", 0, 0);
+	header->setCoordinate(5, 5);
+	header->draw("SP3");
 
 	initBaseMode();
 	channel[0] = new Channel(&tft, 10, 10);
 	channel[0]->init();
+	channel[1] = new Channel(&tft, 20 + W_SEG, 10);
+	channel[1]->init();
 }
 
 
@@ -137,8 +75,23 @@ void Screen::drawAmpere(float val, uint8_t ch)
 	channel[ch]->drawAmpere(val);
 }
 
-
 void Screen::drawWatt(float val, uint8_t ch)
 {
 	channel[ch]->drawWatt(val);
+}
+
+
+void Screen::activated(uint8_t idx)
+{
+	switch (idx) {
+		case 0:
+			header->activate();
+		case 1:
+			//channel[1]->volt->activate();
+			break;
+		case 2:
+			//channel[1]->ampere->activate();
+			break;
+	}
+
 }
