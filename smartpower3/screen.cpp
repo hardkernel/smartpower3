@@ -3,7 +3,7 @@
 Screen::Screen()
 {
 	tft.init();
-	tft.setRotation(3);
+	tft.setRotation(2);
 	tft.fillScreen(TFT_DARKGREY);
 	pinMode(TFT_BL, OUTPUT);
 	digitalWrite(TFT_BL, HIGH);
@@ -13,85 +13,93 @@ Screen::Screen()
 	header->setCoordinate(5, 5);
 	header->draw("SP3");
 
-	initBaseMode();
 	channel[0] = new Channel(&tft, 10, 10);
 	channel[0]->init();
+	channel[0]->powerOn(false);
+	/*
 	channel[1] = new Channel(&tft, 20 + W_SEG, 10);
 	channel[1]->init();
+	channel[1]->powerOn(false);
+	*/
 }
 
-
-void Screen::setMode(uint8_t val)
+void Screen::pushPower(float volt, float ampere, float watt, uint8_t ch)
 {
-	if (mode != val) {
-		mode = val;
-		changeMode(val);
-	}
+	channel[ch]->pushPower(volt, ampere, watt);
 }
 
-uint8_t Screen::getMode(void)
+void Screen::powerOn(uint8_t idx)
 {
-	return mode;
+	channel[idx]->powerOn();
 }
 
-void Screen::changeMode(uint8_t val)
+void Screen::drawScreen(dial_t dial)
 {
-	switch (val) {
-	case 0:
-		initBaseMode();
+	switch (mode) {
+	case BASE_MOVE:
+		activate(dial);
+	case BASE:
+		channel[0]->drawPower();
+		//channel[1]->drawPower();
+		break;
+	case BASE_EDIT:
+		break;
+	case SETTING:
 		break;
 	}
 }
 
-void Screen::initBaseMode(void)
-{
-	/*
-	initSprite(&tft_volt, IWIDTH, IHEIGHT, TFT_RED, TFT_BLACK, TR_DATUM, 1);
-	initSprite(&tft_ampere, IWIDTH, IHEIGHT, TFT_RED, TFT_BLACK, TR_DATUM, 1);
-	initSprite(&tft_watt, IWIDTH, IHEIGHT, TFT_RED, TFT_BLACK, TR_DATUM, 1);
-
-	watt = new Component(&this->tft, IWIDTH, IHEIGHT, FONT_SEVEN_SEGMENT);
-	watt->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
-	watt->draw(0.0, 165, 100);
-	*/
-}
-
-void Screen::drawHeader(String s)
-{
-	/*
-	tft_header.drawString(s, 0, 0, 4);
-	tft_header.pushSprite(0, 0);
-	delay(WAIT);
-	*/
-}
-
-void Screen::drawVoltage(float val, uint8_t ch)
-{
-	channel[ch]->drawVoltage(val);
-}
-
-void Screen::drawAmpere(float val, uint8_t ch)
-{
-	channel[ch]->drawAmpere(val);
-}
-
-void Screen::drawWatt(float val, uint8_t ch)
-{
-	channel[ch]->drawWatt(val);
-}
-
-
-void Screen::activated(uint8_t idx)
+void Screen::deActivate(uint8_t idx)
 {
 	switch (idx) {
 		case 0:
-			header->activate();
+			header->deActivate();
 		case 1:
-			//channel[1]->volt->activate();
+			channel[0]->deActivate(VOLT);
 			break;
 		case 2:
-			//channel[1]->ampere->activate();
+			//channel[1]->deActivate(VOLT);
 			break;
 	}
+}
 
+void Screen::activate(dial_t dial)
+{
+	if (mode_count == mode_count_old)
+		return;
+	mode_count_old = mode_count;
+	Serial.printf("mode_count : %d, abs : %d\n", mode_count, abs(mode_count%3));
+
+	switch (abs(mode_count%2)) {
+		case 0:
+			header->activate();
+			channel[0]->deActivate(VOLT);
+			//channel[1]->deActivate(VOLT);
+			break;
+		case 1:
+			channel[0]->activate(VOLT);
+			header->deActivate();
+			//channel[1]->deActivate(VOLT);
+			break;
+		case 2:
+			//channel[1]->activate(VOLT);
+			header->deActivate();
+			channel[0]->deActivate(VOLT);
+			break;
+	}
+}
+
+void Screen::setModeCounter(int8_t mode_count)
+{
+	this->mode_count += mode_count;
+}
+
+void Screen::setMode(screen_mode_t mode)
+{
+	this->mode = mode;
+}
+
+screen_mode_t Screen::getMode(void)
+{
+	return mode;
 }

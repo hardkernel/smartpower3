@@ -1,36 +1,31 @@
 #include "screen.h"
 #include "input.h"
+#include "pac1933.h"
+#include "Free_Fonts.h" // Include the header file attached to this sketch
 
-float val_volt = 3;
-float val_ampere = 0;
-float val_watt = 0;
-
-struct dial_t {
-	int8_t cnt;
-	bool direct;
-};
+#define BUTTON_0 33
+#define BUTTON_1 32
+#define BUTTON_MENU 39
+#define BUTTON_DIAL 19
 
 struct dial_t dial;
 
-//int8_t dial;
-uint8_t mode;
-uint8_t pre_mode;
-bool direct;
-
 Screen screen;
+PAC1933 pac1933;
 
-#define BUTTON1 19
-#define BUTTON2 32
+Button button[4] = {
+	Button(BUTTON_0), Button(BUTTON_1), Button(BUTTON_MENU), Button(BUTTON_DIAL)
+};
 
-Button button1(BUTTON1);
-Button button2(BUTTON2);
+bool check_btn[3] = {false,};
 
 void setup(void) {
 	Serial.begin(115200);
 
 	initEncoder(&dial);
 
-	xTaskCreate(draw_power, "Draw power", 1500, NULL, 1, NULL);
+	xTaskCreate(readPower, "Read Power", 2000, NULL, 1, NULL);
+	xTaskCreate(drawScreen, "Draw Screen", 2000, NULL, 1, NULL);
 }
 
 void get_memory_info(void)
@@ -40,74 +35,52 @@ void get_memory_info(void)
 	//  Serial.printf("Psram : %d, Free Psram : %d\n", ESP.getPsramSize(), ESP.getFreePsram());
 }
 
-#if 1
-void draw_power(void *parameter)
+void drawScreen(void *parameter)
 {
 	for (;;) {
-
-		screen.drawVoltage(val_volt, 0);
-		screen.drawAmpere(val_ampere, 0);
-		screen.drawWatt(val_watt, 0);
-
-		pre_mode = mode;
-		mode = abs(dial.cnt%7);
-		Serial.printf("%d, %d, %d\n", dial.cnt%7, dial.cnt, mode);
-
-		switch (mode) {
-			case 6:
-				screen.channel[0]->clearOutLines(1);
-				screen.header->drawOutLines();
-			    screen.header->activate();
-				screen.channel[1]->clearOutLines(1);
-				break;
-			case 5:
-				screen.header->clearOutLines();
-				screen.channel[0]->drawOutLines(1);
-				screen.channel[0]->clearOutLines(2);
-				break;
-			case 4:
-				screen.channel[0]->clearOutLines(1);
-				screen.channel[0]->drawOutLines(2);
-				screen.channel[0]->clearOutLines(3);
-				break;
-			case 3:
-				screen.channel[0]->clearOutLines(2);
-				screen.channel[0]->drawOutLines(3);
-				screen.channel[1]->clearOutLines(3);
-				break;
-			case 2:
-				screen.channel[0]->clearOutLines(3);
-				screen.channel[1]->drawOutLines(3);
-				screen.channel[1]->clearOutLines(2);
-				break;
-			case 1:
-				screen.channel[1]->clearOutLines(3);
-				screen.channel[1]->drawOutLines(2);
-				screen.channel[1]->clearOutLines(1);
-				break;
-			case 0:
-				screen.channel[1]->clearOutLines(2);
-				screen.channel[1]->drawOutLines(1);
-				screen.header->clearOutLines();
-				break;
-		}
-		/*
-		screen.channel[0]->drawOutLines(3);
-		screen.channel[1]->drawOutLines(2);
-		*/
-		//get_memory_info();
-
+		screen.drawScreen(dial);
 		vTaskDelay(100);
 	}
 }
-#endif
+void readPower(void *parameter)
+{
+	float volt, ampere, watt;
+	for (;;) {
+		volt = (float)pac1933.readVoltage()/10;
+		ampere = (float)pac1933.readAmpere()/10;
+		watt = (float)pac1933.readWatt()/100;
+		screen.pushPower(volt, ampere, watt, 0);
+		/*
+		volt = (float)pac1933.readVoltage()/10;
+		ampere = (float)pac1933.readAmpere()/10;
+		watt = (float)pac1933.readWatt()/100;
+		screen.pushPower(volt, ampere, watt, 1);
+		*/
+		vTaskDelay(500);
+	}
+}
 
 void loop() {
-    button1.checkPressed();
-    button2.checkPressed();
-	if (screen.getMode() == 0) {
-		if (dial.cnt != 0)
-			screen.edit = 1;
+	if (dial.cnt != 0) {
+		screen.setModeCounter(dial.cnt);
+		dial.cnt = 0;
+		screen.setMode(BASE_MOVE);
 	}
+	for (int i = 0; i < 4; i++) {
+		check_btn[i] = button[i].checkPressed();
+	}
+	if (check_btn[0] == true) {
+		screen.powerOn(0);
+	}
+	if (check_btn[1] == true) {
+		//screen.powerOn(1);
+	}
+
+	if (check_btn[2] == true) {
+		if (screen.getMode() == BASE_MOVE) {
+			screen.setMode(BASE_EDIT);
+		}
+	}
+
 	delay(100);
 }

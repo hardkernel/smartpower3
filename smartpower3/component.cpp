@@ -7,6 +7,7 @@ Component::Component(TFT_eSPI *tft, uint16_t width, uint16_t height, uint8_t fon
 	this->width = width;
 	this->height = height;
 	this->font = font;
+	value = 0;
 }
 
 Component::~Component(void)
@@ -46,20 +47,6 @@ void Component::clearOutLines(void)
 	}
 }
 
-void Component::draw(float val, uint16_t x, uint16_t y)
-{
-	img->drawString(String(val, 2), width, 0, font);
-	img->pushSprite(x, y);
-	delay(WAIT);
-}
-
-void Component::draw(float val)
-{
-	img->drawString(String(val, 2), width, 0, font);
-	img->pushSprite(x, y);
-	delay(WAIT);
-}
-
 void Component::draw(String s)
 {
 	img->drawString(s, 0, 0, font);
@@ -67,14 +54,30 @@ void Component::draw(String s)
 	delay(WAIT);
 }
 
-void Component::draw(String s, uint16_t x, uint16_t y)
+void Component::draw(void)
 {
-	img->drawString(s, 0, 0, font);
+	if (value == value_old)
+		return;
+	value_old = value;
+	if (value < 10)
+		img->drawString("0" + String(value, 2), width, 0, font);
+	else
+		img->drawString(String(value, 2), width, 0, font);
 	img->pushSprite(x, y);
 	delay(WAIT);
 }
 
+void Component::pushValue(float value)
+{
+	this->value = value;
+}
+
 void Component::activate(void)
 {
-	activated = true;
+	drawOutLines();
+}
+
+void Component::deActivate(void)
+{
+	clearOutLines();
 }

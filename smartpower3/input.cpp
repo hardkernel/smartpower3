@@ -18,12 +18,14 @@ void initEncoder(void *dial)
 void countEncoder(void *dial)
 {
   struct dial_t *tmp = (struct dial_t *)dial;
+  int8_t cnt;
   for (;;) {
-    if (encoder.getCount() > 1) {
+	cnt = encoder.getCount();
+    if (cnt > 1) {
       encoder.setCount(0);
 	  tmp->cnt += 1;
 	  tmp->direct = true;
-    } else if (encoder.getCount() < -1) {
+    } else if (cnt < -1) {
       encoder.setCount(0);
 	  tmp->cnt -= 1;
 	  tmp->direct = false;
@@ -31,3 +33,4 @@ void countEncoder(void *dial)
     vTaskDelay(50);
   }
 }
+
