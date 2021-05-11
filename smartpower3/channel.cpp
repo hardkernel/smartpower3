@@ -3,11 +3,13 @@
 Channel::Channel(TFT_eSPI *tft, uint16_t x, uint16_t y)
 {
 	this->tft = tft;
-	this->x = x + OFFSET_CH;
+	this->x = x + OFFSET_CH + 30;
 	this->y = y + OFFSET_CH + H_HEADER;
 	volt = new Component(tft, W_SEG, H_SEG, 7);
 	ampere = new Component(tft, W_SEG, H_SEG, 7);
 	watt = new Component(tft, W_SEG, H_SEG, 7);
+
+	_volt = new Component(tft, 64, 22, 4);
 }
 
 Channel::~Channel(void)
@@ -15,9 +17,11 @@ Channel::~Channel(void)
 	delete volt;
 	delete ampere;
 	delete watt;
+	delete _volt;
 	volt = NULL;
 	ampere = NULL;
 	watt = NULL;
+	_volt = NULL;
 }
 
 void Channel::init(void)
@@ -26,12 +30,16 @@ void Channel::init(void)
 	volt->setCoordinate(x, y);
 	volt->draw();
 
+	_volt->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
+	_volt->setCoordinate(x+76, y + H_SEG + 5);
+	_volt->draw();
+
 	ampere->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
-	ampere->setCoordinate(x, y + H_SEG + OFFSET_CH);
+	ampere->setCoordinate(x, y + H_SEG + OFFSET_SEG);
 	ampere->draw();
 
-	watt->init(TFT_RED, TFT_BLACK, 2, TR_DATUM);
-	watt->setCoordinate(x, y + H_SEG*2 + OFFSET_CH*2);
+	watt->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
+	watt->setCoordinate(x, y + H_SEG*2 + OFFSET_SEG*2);
 	watt->draw();
 }
 
@@ -124,9 +132,11 @@ void Channel::drawPower(void)
 {
 	if (onoff) {
 		volt->draw();
+		_volt->draw();
 		ampere->draw();
 		watt->draw();
 	} else {
+		/* This will remove after */
 		pushPower(0, 0, 0);
 		volt->draw();
 		ampere->draw();
@@ -137,6 +147,14 @@ void Channel::drawPower(void)
 void Channel::pushPower(float volt, float ampere, float watt)
 {
 	this->volt->pushValue(volt);
+	this->ampere->pushValue(ampere);
+	this->watt->pushValue(watt);
+}
+
+void Channel::pushPowerEdit(float volt, float ampere, float watt)
+{
+	this->volt->pushValue(volt_set);
+	this->_volt->pushValue(volt);
 	this->ampere->pushValue(ampere);
 	this->watt->pushValue(watt);
 }

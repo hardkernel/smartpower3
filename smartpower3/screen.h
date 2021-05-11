@@ -21,7 +21,8 @@ private:
 	screen_mode_t mode = BASE;
 	Component *header;
 	Channel *channel[2];
-	bool activated[3] = {false,};
+	uint8_t activated = 0;
+	uint32_t time_dial = 0;
 
 public:
 	Screen();
@@ -30,9 +31,11 @@ public:
 	void activate(dial_t dial);
 	void setMode(screen_mode_t mode);
 	screen_mode_t getMode(void);
-	int8_t mode_count = 0;
-	int8_t mode_count_old;
-	void setModeCounter(int8_t mode_count);
+	int8_t dial_cnt = 0;
+	int8_t dial_cnt_old;
+	void countDial(int8_t mode_count, uint32_t milisec);
 	void deActivate(uint8_t idx);
 	void powerOn(uint8_t idx);
+	uint32_t getTimeDial(void);
+	void enterMode(void);
 };

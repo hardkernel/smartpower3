@@ -9,7 +9,7 @@ Screen::Screen()
 	digitalWrite(TFT_BL, HIGH);
 
 	header = new Component(&this->tft, W_HEADER, H_HEADER, 4);
-	header->init(TFT_RED, TFT_BLACK, 2, TL_DATUM);
+	header->init(TFT_RED, TFT_BLACK, 1, TL_DATUM);
 	header->setCoordinate(5, 5);
 	header->draw("SP3");
 
@@ -25,7 +25,10 @@ Screen::Screen()
 
 void Screen::pushPower(float volt, float ampere, float watt, uint8_t ch)
 {
-	channel[ch]->pushPower(volt, ampere, watt);
+	if (mode == BASE_EDIT)
+		channel[ch]->pushPowerEdit(volt, ampere, watt);
+	else
+		channel[ch]->pushPower(volt, ampere, watt);
 }
 
 void Screen::powerOn(uint8_t idx)
@@ -43,6 +46,7 @@ void Screen::drawScreen(dial_t dial)
 		//channel[1]->drawPower();
 		break;
 	case BASE_EDIT:
+		channel[0]->drawPower();
 		break;
 	case SETTING:
 		break;
@@ -51,6 +55,7 @@ void Screen::drawScreen(dial_t dial)
 
 void Screen::deActivate(uint8_t idx)
 {
+	this->activated = HEADER;
 	switch (idx) {
 		case 0:
 			header->deActivate();
@@ -65,21 +70,23 @@ void Screen::deActivate(uint8_t idx)
 
 void Screen::activate(dial_t dial)
 {
-	if (mode_count == mode_count_old)
+	if (dial_cnt == dial_cnt_old)
 		return;
-	mode_count_old = mode_count;
-	Serial.printf("mode_count : %d, abs : %d\n", mode_count, abs(mode_count%3));
+	dial_cnt_old = dial_cnt;
+	Serial.printf("dial count : %d, abs : %d\n", dial_cnt, abs(dial_cnt%3));
 
-	switch (abs(mode_count%2)) {
+	switch (abs(dial_cnt%2)) {
 		case 0:
 			header->activate();
 			channel[0]->deActivate(VOLT);
 			//channel[1]->deActivate(VOLT);
+			this->activated = HEADER;
 			break;
 		case 1:
 			channel[0]->activate(VOLT);
 			header->deActivate();
 			//channel[1]->deActivate(VOLT);
+			this->activated = VOLT;
 			break;
 		case 2:
 			//channel[1]->activate(VOLT);
@@ -89,17 +96,34 @@ void Screen::activate(dial_t dial)
 	}
 }
 
-void Screen::setModeCounter(int8_t mode_count)
+void Screen::countDial(int8_t dial_cnt, uint32_t milisec)
 {
-	this->mode_count += mode_count;
+	this->dial_cnt += dial_cnt;
+	this->time_dial = milisec;
+}
+
+uint32_t Screen::getTimeDial(void)
+{
+	return time_dial;
 }
 
 void Screen::setMode(screen_mode_t mode)
 {
+	if (mode == BASE_EDIT)
+		this->dial_cnt = 0;
 	this->mode = mode;
 }
 
 screen_mode_t Screen::getMode(void)
 {
 	return mode;
+}
+
+void Screen::enterMode(void)
+{
+}
+
+void Screen::setVolt(uint8_t channel)
+{
+	this->channel[channel].setVolt()
 }

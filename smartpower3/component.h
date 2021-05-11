@@ -3,10 +3,10 @@
 #include "Free_Fonts.h"
 
 #define WAIT 1
-#define W_SEG 188
-#define H_SEG 75
-#define OFFSET_SEG 15
-#define OFFSET_CH 10
+#define W_SEG 140
+#define H_SEG 48
+#define OFFSET_SEG 45
+#define OFFSET_CH 15
 
 #define W_HEADER 230
 #define H_HEADER 40
@@ -32,6 +32,7 @@ private:
 	float value_old;
 	void drawOutLines(void);
 	void clearOutLines(void);
+	bool activated = false;
 public:
 	Component(TFT_eSPI *tft, uint16_t width, uint16_t height, uint8_t font);
 	~Component(void);

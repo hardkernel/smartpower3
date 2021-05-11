@@ -18,6 +18,13 @@ Button button[4] = {
 };
 
 bool check_btn[3] = {false,};
+unsigned long curTime;
+
+struct channel_ctrl {
+	float volt;
+};
+
+struct channel_ctrl ch_ctrl[2];
 
 void setup(void) {
 	Serial.begin(115200);
@@ -39,9 +46,11 @@ void drawScreen(void *parameter)
 {
 	for (;;) {
 		screen.drawScreen(dial);
+		curTime = millis();
 		vTaskDelay(100);
 	}
 }
+
 void readPower(void *parameter)
 {
 	float volt, ampere, watt;
@@ -60,12 +69,34 @@ void readPower(void *parameter)
 	}
 }
 
-void loop() {
-	if (dial.cnt != 0) {
-		screen.setModeCounter(dial.cnt);
-		dial.cnt = 0;
-		screen.setMode(BASE_MOVE);
+void modeMonitor(screen_mode_t mode)
+{
+	switch (mode) {
+	case BASE:
+		if (dial.cnt != 0) {
+			screen.countDial(dial.cnt, curTime);
+			dial.cnt = 0;
+			screen.setMode(BASE_MOVE);
+		}
+		break;
+	case BASE_MOVE:
+		if ((curTime - screen.getTimeDial()) > 5000) {
+			screen.deActivate(0);
+			screen.setMode(BASE);
+		}
+		if (button[2].checkPressed()) {
+			screen.enterMode();
+			screen.setMode(BASE_EDIT);
+		}
+		break;
+	case BASE_EDIT:
+		screen.setVolt(0);
+		break;
 	}
+}
+
+void loop() {
+	modeMonitor(screen.getMode());
 	for (int i = 0; i < 4; i++) {
 		check_btn[i] = button[i].checkPressed();
 	}

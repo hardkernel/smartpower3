@@ -75,9 +75,11 @@ void Component::pushValue(float value)
 void Component::activate(void)
 {
 	drawOutLines();
+	this->activated = true;
 }
 
 void Component::deActivate(void)
 {
 	clearOutLines();
+	this->activated = false;
 }
