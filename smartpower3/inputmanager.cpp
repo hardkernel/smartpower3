@@ -1,11 +1,6 @@
-#include "input.h"
+#include "inputmanager.h"
 
 ESP32Encoder encoder;
-
-struct dial_t {
-	int8_t cnt;
-	bool direct;
-};
 
 void initEncoder(void *dial)
 {

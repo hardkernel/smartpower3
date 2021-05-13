@@ -1,7 +1,6 @@
 #include "screen.h"
-#include "input.h"
+#include "inputmanager.h"
 #include "pac1933.h"
-#include "Free_Fonts.h" // Include the header file attached to this sketch
 
 #define BUTTON_0 33
 #define BUTTON_1 32
@@ -17,8 +16,7 @@ Button button[4] = {
 	Button(BUTTON_0), Button(BUTTON_1), Button(BUTTON_MENU), Button(BUTTON_DIAL)
 };
 
-bool check_btn[3] = {false,};
-unsigned long curTime;
+unsigned long cur_time;
 
 struct channel_ctrl {
 	float volt;
@@ -30,28 +28,17 @@ void setup(void) {
 	Serial.begin(115200);
 
 	initEncoder(&dial);
-
-	xTaskCreate(readPower, "Read Power", 2000, NULL, 1, NULL);
-	xTaskCreate(drawScreen, "Draw Screen", 2000, NULL, 1, NULL);
+	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
+	xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
+	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
 }
 
-void get_memory_info(void)
-{
-	Serial.printf("Heap : %d, Free Heap : %d\n", ESP.getHeapSize(), ESP.getFreeHeap());
-	Serial.printf("Stack High Water Mark %d\n", uxTaskGetStackHighWaterMark(NULL));
-	//  Serial.printf("Psram : %d, Free Psram : %d\n", ESP.getPsramSize(), ESP.getFreePsram());
+void loop() {
+
+	delay(100);
 }
 
-void drawScreen(void *parameter)
-{
-	for (;;) {
-		screen.drawScreen(dial);
-		curTime = millis();
-		vTaskDelay(100);
-	}
-}
-
-void readPower(void *parameter)
+void powerTask(void *parameter)
 {
 	float volt, ampere, watt;
 	for (;;) {
@@ -69,49 +56,34 @@ void readPower(void *parameter)
 	}
 }
 
-void modeMonitor(screen_mode_t mode)
+void screenTask(void *parameter)
 {
-	switch (mode) {
-	case BASE:
-		if (dial.cnt != 0) {
-			screen.countDial(dial.cnt, curTime);
-			dial.cnt = 0;
-			screen.setMode(BASE_MOVE);
-		}
-		break;
-	case BASE_MOVE:
-		if ((curTime - screen.getTimeDial()) > 5000) {
-			screen.deActivate(0);
-			screen.setMode(BASE);
-		}
-		if (button[2].checkPressed()) {
-			screen.enterMode();
-			screen.setMode(BASE_EDIT);
-		}
-		break;
-	case BASE_EDIT:
-		screen.setVolt(0);
-		break;
+	for (;;) {
+		screen.drawScreen();
+		vTaskDelay(100);
 	}
 }
 
-void loop() {
-	modeMonitor(screen.getMode());
-	for (int i = 0; i < 4; i++) {
-		check_btn[i] = button[i].checkPressed();
-	}
-	if (check_btn[0] == true) {
-		screen.powerOn(0);
-	}
-	if (check_btn[1] == true) {
-		//screen.powerOn(1);
-	}
-
-	if (check_btn[2] == true) {
-		if (screen.getMode() == BASE_MOVE) {
-			screen.setMode(BASE_EDIT);
+void inputTask(void *parameter)
+{
+	for (;;) {
+		cur_time = millis();
+		for (int i = 0; i < 4; i++) {
+			if (button[i].checkPressed() == true)
+				screen.getBtnPress(i);
 		}
+		if (dial.cnt != 0) {
+			screen.countDial(dial.cnt, cur_time);
+			dial.cnt = 0;
+		}
+		screen.setTime(cur_time);
+		vTaskDelay(100);
 	}
+}
 
-	delay(100);
+void get_memory_info(void)
+{
+	Serial.printf("Heap : %d, Free Heap : %d\n", ESP.getHeapSize(), ESP.getFreeHeap());
+	Serial.printf("Stack High Water Mark %d\n", uxTaskGetStackHighWaterMark(NULL));
+	Serial.printf("Psram : %d, Free Psram : %d\n", ESP.getPsramSize(), ESP.getFreePsram());
 }

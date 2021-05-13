@@ -36,23 +36,65 @@ void Screen::powerOn(uint8_t idx)
 	channel[idx]->powerOn();
 }
 
-void Screen::drawScreen(dial_t dial)
+void Screen::drawBase()
 {
-	switch (mode) {
-	case BASE_MOVE:
-		activate(dial);
-	case BASE:
-		channel[0]->drawPower();
-		//channel[1]->drawPower();
-		break;
-	case BASE_EDIT:
-		channel[0]->drawPower();
-		break;
-	case SETTING:
-		break;
+	if (dial_cnt != dial_cnt_old) {
+		dial_cnt_old = dial_cnt;
+		Serial.printf("dial count : %d, abs : %d\n", dial_cnt, abs(dial_cnt%3));
+		mode = BASE_MOVE;
+	}
+	channel[0]->drawPower();
+}
+
+void Screen::drawBaseMove()
+{
+	if ((cur_time - dial_time) > 5000) {
+		mode = BASE;
+		deActivate(0);
+	}
+	if (btn_pressed[2] == true) {
+		mode = BASE;
+		btn_pressed[2] = false;
+		deActivate(0);
+	}
+	if (btn_pressed[3] == true) {
+		/*
+		if (isActivated(POWER))
+			mode = BASE_EDIT;
+		*/
+		btn_pressed[2] = false;
 	}
 }
 
+void Screen::drawBaseEdit()
+{
+	if ((cur_time - dial_time) > 10000) {
+		mode = BASE;
+		deActivate(0);
+	}
+	if (btn_pressed[2] == true) {
+		mode = BASE_MOVE;
+		btn_pressed[2] = false;
+		// draw cancel state
+	}
+	if (btn_pressed[3] == true) {
+		mode = BASE_MOVE;
+		btn_pressed[2] = false;
+		// draw set state
+	}
+}
+
+void Screen::drawScreen()
+{
+	switch (mode) {
+	case BASE:
+		drawBase();
+	case BASE_MOVE:
+		drawBaseMove();
+	case BASE_EDIT:
+		drawBaseEdit();
+	}
+}
 void Screen::deActivate(uint8_t idx)
 {
 	this->activated = HEADER;
@@ -68,7 +110,7 @@ void Screen::deActivate(uint8_t idx)
 	}
 }
 
-void Screen::activate(dial_t dial)
+void Screen::activate()
 {
 	if (dial_cnt == dial_cnt_old)
 		return;
@@ -99,31 +141,27 @@ void Screen::activate(dial_t dial)
 void Screen::countDial(int8_t dial_cnt, uint32_t milisec)
 {
 	this->dial_cnt += dial_cnt;
-	this->time_dial = milisec;
+	this->dial_time = milisec;
 }
 
-uint32_t Screen::getTimeDial(void)
+uint32_t Screen::setTime(uint32_t milisec)
 {
-	return time_dial;
+	this->cur_time = milisec;
 }
 
-void Screen::setMode(screen_mode_t mode)
+void Screen::getBtnPress(uint8_t idx)
 {
-	if (mode == BASE_EDIT)
-		this->dial_cnt = 0;
-	this->mode = mode;
+	Serial.printf("button pressed %d\n\r", idx);
+	btn_pressed[idx] = true;
+	switch (idx) {
+	case 0: /* Channel0 ON/OFF */
+	case 1: /* Channel1 ON/OFF */
+		powerOn(idx);
+		break;
+	case 2: /* MENU/CANCEL */
+		break;
+	case 3: /* Set value */
+		break;
+	}
 }
 
-screen_mode_t Screen::getMode(void)
-{
-	return mode;
-}
-
-void Screen::enterMode(void)
-{
-}
-
-void Screen::setVolt(uint8_t channel)
-{
-	this->channel[channel].setVolt()
-}

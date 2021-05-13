@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>
-#include "Free_Fonts.h"
 
 #define WAIT 1
 #define W_SEG 140

@@ -7,6 +7,11 @@
 void countEncoder(void *val);
 void initEncoder(void *param);
 
+struct dial_t {
+	int8_t cnt;
+	bool direct;
+};
+
 class Button
 {
 public:
