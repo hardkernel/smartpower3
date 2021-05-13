@@ -1,8 +1,7 @@
-[submodule "libraries/TFT_eSPI"]
-	path = libraries/TFT_eSPI
-	url = https://github.com/Bodmer/TFT_eSPI
-	branch = master
 [submodule "libraries/ESP32Encoder"]
 	path = libraries/ESP32Encoder
 	url = https://github.com/madhephaestus/ESP32Encoder
 	branch = master
+[submodule "libraries/TFT_eSPI"]
+	path = libraries/TFT_eSPI
+	url = https://github.com/leeseungcheol/TFT_eSPI
