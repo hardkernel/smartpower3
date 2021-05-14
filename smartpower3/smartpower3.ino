@@ -34,8 +34,8 @@ void setup(void) {
 }
 
 void loop() {
-
 	delay(100);
+	//Serial.println(ESP.getFlashChipSize());
 }
 
 void powerTask(void *parameter)
@@ -45,14 +45,17 @@ void powerTask(void *parameter)
 		volt = (float)pac1933.readVoltage()/10;
 		ampere = (float)pac1933.readAmpere()/10;
 		watt = (float)pac1933.readWatt()/100;
-		screen.pushPower(volt, ampere, watt, 0);
+		if (!screen.getOnOff(0))
+			screen.pushPower(0, 0, 0, 0);
+		else
+			screen.pushPower(volt, ampere, watt, 0);
 		/*
 		volt = (float)pac1933.readVoltage()/10;
 		ampere = (float)pac1933.readAmpere()/10;
 		watt = (float)pac1933.readWatt()/100;
 		screen.pushPower(volt, ampere, watt, 1);
 		*/
-		vTaskDelay(500);
+		vTaskDelay(200);
 	}
 }
 
@@ -70,7 +73,7 @@ void inputTask(void *parameter)
 		cur_time = millis();
 		for (int i = 0; i < 4; i++) {
 			if (button[i].checkPressed() == true)
-				screen.getBtnPress(i);
+				screen.getBtnPress(i, cur_time);
 		}
 		if (dial.cnt != 0) {
 			screen.countDial(dial.cnt, cur_time);

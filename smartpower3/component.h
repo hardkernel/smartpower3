@@ -4,7 +4,7 @@
 #define WAIT 1
 #define W_SEG 140
 #define H_SEG 48
-#define OFFSET_SEG 45
+#define OFFSET_SEG 35
 #define OFFSET_CH 15
 
 #define W_HEADER 230
@@ -43,4 +43,5 @@ public:
 	void pushValue(float value);
 	void activate(void);
 	void deActivate(void);
+	void setTextColor(uint16_t fg_color, uint16_t bg_color);
 };

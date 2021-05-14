@@ -27,6 +27,11 @@ void Component::init(uint16_t fg_color, uint16_t bg_color, uint8_t size, uint8_t
 	img->setTextDatum(align);
 }
 
+void Component::setTextColor(uint16_t fg_color, uint16_t bg_color)
+{
+	img->setTextColor(fg_color, bg_color);
+}
+
 void Component::setCoordinate(uint16_t x, uint16_t y)
 {
 	this->x = x;
