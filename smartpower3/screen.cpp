@@ -3,7 +3,7 @@
 Screen::Screen()
 {
 	tft.init();
-	tft.setRotation(2);
+	tft.setRotation(3);
 	tft.fillScreen(TFT_DARKGREY);
 	//tft.fillScreen(TFT_BLACK);
 	pinMode(TFT_BL, OUTPUT);
@@ -39,32 +39,35 @@ void Screen::powerOn(uint8_t idx)
 
 void Screen::drawBase()
 {
-	Serial.println("BASE MODE");
 	if (dial_cnt != dial_cnt_old) {
 		clearBtnEvent();
 		mode = BASE_MOVE;
+		Serial.println("BASE MOVE");
 	}
 }
 
 void Screen::drawBaseMove()
 {
-	Serial.println("BASE MOVE MODE");
 	activate();
 	if ((cur_time - dial_time) > 5000) {
 		mode = BASE;
 		deActivate(0);
+		Serial.println("BASE");
 	}
 	if (btn_pressed[2] == true) {
 		mode = BASE;
 		btn_pressed[2] = false;
 		deActivate(0);
+		Serial.println("BASE");
 	}
 	if (btn_pressed[3] == true) {
 		if (this->activated == 1) { // POWER
 			mode = BASE_EDIT;
 			channel[0]->setCompColor(VOLT);
+			Serial.println("BASE_EDIT");
 		} else if (this->activated == 2) {
 			mode = BASE_EDIT;
+			Serial.println("BASE_EDIT");
 			channel[0]->setCompColor(AMPERE);
 		}
 		dial_cnt = 0;
@@ -75,9 +78,9 @@ void Screen::drawBaseMove()
 
 void Screen::drawBaseEdit()
 {
-	Serial.println("BASE EDIT MODE");
 	if ((cur_time - dial_time) > 10000) {
 		mode = BASE;
+		Serial.println("BASE");
 		deActivate(0);
 		channel[0]->clearCompColor();
 	}
@@ -189,11 +192,11 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 	Serial.printf("button pressed %d\n\r", idx);
 	btn_pressed[idx] = true;
 	switch (idx) {
-	case 0: /* Channel0 ON/OFF */
-	case 1: /* Channel1 ON/OFF */
+	case 0: /* MENU/CANCEL */
+	case 1: /* Channel0 ON/OFF */
 		powerOn(idx);
 		break;
-	case 2: /* MENU/CANCEL */
+	case 2:  /* Channel1 ON/OFF */
 		break;
 	case 3: /* Set value */
 		break;

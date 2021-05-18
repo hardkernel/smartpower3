@@ -2,10 +2,10 @@
 #include "inputmanager.h"
 #include "pac1933.h"
 
-#define BUTTON_0 33
-#define BUTTON_1 32
-#define BUTTON_MENU 39
-#define BUTTON_DIAL 19
+#define BUTTON_MENU 36
+#define BUTTON_CH0 39
+#define BUTTON_CH1 34
+#define BUTTON_DIAL 35
 
 struct dial_t dial;
 
@@ -13,7 +13,7 @@ Screen screen;
 PAC1933 pac1933;
 
 Button button[4] = {
-	Button(BUTTON_0), Button(BUTTON_1), Button(BUTTON_MENU), Button(BUTTON_DIAL)
+	Button(BUTTON_CH0), Button(BUTTON_CH1), Button(BUTTON_MENU), Button(BUTTON_DIAL)
 };
 
 unsigned long cur_time;
@@ -31,6 +31,10 @@ void setup(void) {
 	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
 	xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
+	pinMode(14, OUTPUT);
+	pinMode(27, OUTPUT);
+	digitalWrite(14, HIGH);
+	digitalWrite(27, HIGH);
 }
 
 void loop() {

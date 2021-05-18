@@ -5,7 +5,7 @@ ESP32Encoder encoder;
 void initEncoder(void *dial)
 {
   ESP32Encoder::useInternalWeakPullResistors = UP;
-  encoder.attachHalfQuad(15, 4);
+  encoder.attachHalfQuad(33, 32);
   encoder.setCount(0);
   xTaskCreate(countEncoder, "Task1", 1500, dial, 1, NULL);
 }
