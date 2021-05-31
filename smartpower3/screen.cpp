@@ -4,11 +4,11 @@ Screen::Screen()
 {
 	tft.init();
 	tft.setRotation(3);
-	tft.fillScreen(TFT_DARKGREY);
-	//tft.fillScreen(TFT_BLACK);
+	//tft.fillScreen(TFT_DARKGREY);
+	tft.fillScreen(TFT_BLACK);
 	pinMode(TFT_BL, OUTPUT);
 	digitalWrite(TFT_BL, HIGH);
-
+	/*
 	header = new Component(&this->tft, W_HEADER, H_HEADER, 2);
 	header->init(TFT_RED, TFT_BLACK, 1, TL_DATUM);
 	header->setCoordinate(5, 5);
@@ -17,6 +17,7 @@ Screen::Screen()
 	channel[0] = new Channel(&tft, 0, 10);
 	channel[0]->init();
 	channel[0]->powerOn(false);
+	*/
 	/*
 	channel[1] = new Channel(&tft, 20 + W_SEG, 10);
 	channel[1]->init();

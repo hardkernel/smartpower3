@@ -28,18 +28,20 @@ void setup(void) {
 	Serial.begin(115200);
 
 	initEncoder(&dial);
-	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
-	xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
-	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
+	//xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
+	//xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
+	//xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
+	/*
 	pinMode(14, OUTPUT);
 	pinMode(27, OUTPUT);
 	digitalWrite(14, HIGH);
 	digitalWrite(27, HIGH);
+	*/
 }
 
 void loop() {
-	delay(100);
-	//Serial.println(ESP.getFlashChipSize());
+	delay(1000);
+	//get_i2c_slaves();
 }
 
 void powerTask(void *parameter)
@@ -53,6 +55,7 @@ void powerTask(void *parameter)
 			screen.pushPower(0, 0, 0, 0);
 		else
 			screen.pushPower(volt, ampere, watt, 0);
+
 		/*
 		volt = (float)pac1933.readVoltage()/10;
 		ampere = (float)pac1933.readAmpere()/10;
@@ -87,6 +90,39 @@ void inputTask(void *parameter)
 		vTaskDelay(100);
 	}
 }
+/*
+void get_i2c_slaves(void)
+{
+	byte error, address;
+	int nDevices;
+
+	Serial.println("Scanning...");
+
+	nDevices = 0;
+	for (address = 1; address < 127; address++) {
+		Wire.beginTransmission(address);
+		error = Wire.endTransmission();
+
+		if (error == 0) {
+			Serial.print("I2C device found at address 0x");
+			if (address < 16)
+				Serial.print("0");
+			Serial.print(address, HEX);
+			Serial.println("  !");
+			nDevices++;
+		} else if (error == 4) {
+			Serial.println("Unknown error at address 0x");
+			if (address < 16)
+				Serial.print("0");
+			Serial.println(address, HEX);
+		}
+	}
+	if (nDevices == 0)
+		Serial.println("No I2C devices found");
+	else
+		Serial.println("done");
+}
+*/
 
 void get_memory_info(void)
 {

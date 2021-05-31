@@ -14,36 +14,17 @@ struct dial_t {
 
 class Button
 {
-public:
-	Button(uint8_t reqPin) : PIN(reqPin){
-		pinMode(PIN, INPUT_PULLUP);
-		attachInterrupt(PIN, std::bind(&Button::isr, this), RISING);
-	};
-	~Button() {
-		detachInterrupt(PIN);
-	}
-
-	void IRAM_ATTR isr(void) {
-		if (millis() - debounceTimer >= DEBOUNCE_TIME) {
-			if (digitalRead(PIN) == 1) {
-				debounceTimer = millis();
-				numberKeyPresses += 1;
-				pressed = true;
-			}
-		}
-	}
-
-	bool checkPressed(void) {
-		if (pressed) {
-			pressed = false;
-			return true;
-		}
-		return false;
-	}
-
 private:
 	const uint8_t PIN;
     volatile uint8_t numberKeyPresses;
     volatile bool pressed;
 	volatile uint32_t debounceTimer;
+
+public:
+	Button(uint8_t pin);
+	~Button() {
+		detachInterrupt(PIN);
+	}
+	void IRAM_ATTR isr(void);
+	bool checkPressed(void);
 };

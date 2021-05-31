@@ -2,6 +2,30 @@
 
 ESP32Encoder encoder;
 
+Button::Button(uint8_t pin) : PIN(pin)
+{
+	pinMode(pin, INPUT_PULLUP);
+	attachInterrupt(pin, std::bind(&Button::isr, this), RISING);
+}
+
+void Button::isr(void) {
+	if (millis() - debounceTimer >= DEBOUNCE_TIME) {
+		if (digitalRead(PIN) == 1) {
+			debounceTimer = millis();
+			numberKeyPresses += 1;
+			pressed = true;
+		}
+	}
+}
+
+bool Button::checkPressed(void) {
+	if (pressed) {
+		pressed = false;
+		return true;
+	}
+	return false;
+}
+
 void initEncoder(void *dial)
 {
   ESP32Encoder::useInternalWeakPullResistors = UP;
