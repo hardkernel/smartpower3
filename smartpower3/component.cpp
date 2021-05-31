@@ -41,14 +41,14 @@ void Component::setCoordinate(uint16_t x, uint16_t y)
 void Component::drawOutLines(void)
 {
 	for (int i = 0; i < 3; i++) {
-		tft->drawRect(x-(i+2), y-(i+2), width+(4+i*2), height+(4 +2*i), TFT_YELLOW);
+		tft->drawRect(x-(3-i), y-(3-i), width+(6-i*2), height+(6-i*2), TFT_YELLOW);
 	}
 }
 
 void Component::clearOutLines(void)
 {
 	for (int i = 0; i < 3; i++) {
-		tft->drawRect(x-(i+2), y-(i+2), width+(4+i*2), height+(4 +2*i), TFT_BLACK);
+		tft->drawRect(x-(3-i), y-(3-i), width+(6-i*2), height+(6-i*2), TFT_BLACK);
 	}
 }
 

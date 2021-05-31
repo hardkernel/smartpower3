@@ -2,15 +2,15 @@
 
 uint16_t PAC1933::readVoltage(void)
 {
-	return (uint16_t)random(140, 160);
+	return (uint16_t)random(1400, 1600);
 }
 
 uint16_t PAC1933::readAmpere(void)
 {
-	return (uint16_t)random(1, 15);
+	return (uint16_t)random(10, 150);
 }
 
 uint16_t PAC1933::readWatt(void)
 {
-	return (uint16_t)random(140, 2400);
+	return (uint16_t)random(1400, 160*15);
 }
