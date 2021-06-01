@@ -172,7 +172,7 @@ void loop() {
 	//get_memory_info();
 	//get_i2c_slaves();
 	//write8(0x6, 0x0);
-#if 1
+#if 0
 	reg2 = read8(&I2CA, 0x2);
 	reg3 = read8(&I2CA, 0x3);
 	reg4 = read8(&I2CA, 0x4);

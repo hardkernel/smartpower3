@@ -37,8 +37,10 @@ void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch
 		return;
 	if (mode == BASE_EDIT)
 		channel[ch]->pushPowerEdit(volt, ampere, watt);
-	else
+	else {
 		channel[ch]->pushPower(volt, ampere, watt);
+		Serial.println(watt);
+	}
 }
 
 void Screen::powerOn(uint8_t idx)
@@ -169,32 +171,48 @@ void Screen::activate()
 	if (dial_cnt == dial_cnt_old)
 		return;
 	dial_cnt_old = dial_cnt;
-	Serial.printf("dial_cnt : %d, mod : %d\n", dial_cnt, abs(dial_cnt%3));
+	Serial.printf("dial_cnt : %d, mod : %d\n", dial_cnt, abs(dial_cnt%5));
 
-	switch (abs(dial_cnt%3)) {
+	switch (abs(dial_cnt%5)) {
 		case 0:
 			this->activated = 0;
 			header->activate();
-			if (channel[0] == NULL)
-				return;
 			channel[0]->deActivate(VOLT);
 			channel[0]->deActivate(AMPERE);
+			channel[1]->deActivate(VOLT);
+			channel[1]->deActivate(AMPERE);
 			break;
 		case 1:
 			this->activated = 1;
 			header->deActivate();
-			if (channel[0] == NULL)
-				return;
 			channel[0]->activate(VOLT);
 			channel[0]->deActivate(AMPERE);
+			channel[1]->deActivate(VOLT);
+			channel[1]->deActivate(AMPERE);
 			break;
 		case 2:
 			this->activated = 2;
 			header->deActivate();
-			if (channel[0] == NULL)
-				return;
 			channel[0]->deActivate(VOLT);
 			channel[0]->activate(AMPERE);
+			channel[1]->deActivate(VOLT);
+			channel[1]->deActivate(AMPERE);
+			break;
+		case 3:
+			this->activated = 3;
+			header->deActivate();
+			channel[0]->deActivate(VOLT);
+			channel[0]->deActivate(AMPERE);
+			channel[1]->activate(VOLT);
+			channel[1]->deActivate(AMPERE);
+			break;
+		case 4:
+			this->activated = 4;
+			header->deActivate();
+			channel[0]->deActivate(VOLT);
+			channel[0]->deActivate(AMPERE);
+			channel[1]->deActivate(VOLT);
+			channel[1]->activate(AMPERE);
 			break;
 	}
 }
