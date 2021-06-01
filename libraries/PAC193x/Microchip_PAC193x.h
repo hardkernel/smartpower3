@@ -1,38 +1,3 @@
-/***********************************************************
-
-   This is a library for Microchip PAC193x
-	
-   © 2020 Microchip Technology Inc. and its subsidiaries.  
- 
-   Subject to your compliance with these terms, you may use Microchip
-   software and any derivatives of this software. You must retain the above
-   copyright notice with any redistribution of this software and the 
-   following disclaimers. 
-   It is your responsibility to comply with third party license terms 
-   applicable to your use of third party software (including open source 
-   software) that may accompany this Microchip software.
-  
-   THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS".  NO WARRANTIES, WHETHER 
-   EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE, INCLUDING 
-   ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS
-   FOR A PARTICULAR PURPOSE.  
-  
-   IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE,
-   INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND 
-   WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP
-   HAS BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE. 
-   TO THE FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL
-   CLAIMS IN ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF
-   FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
-   
-***********************************************************/
-
-/***********************************************************
-
-	Version 1.0.0
-
-***********************************************************/
-
 #ifndef Microchip_PAC193x_h
 #define Microchip_PAC193x_h
 
@@ -46,8 +11,6 @@
 #define RSENSE 24900000 //microohm
 #define I2C_ADDRESS 0x10
 #define CHANNEL 1
-
-// PAC193x register addresses
 
 #define PAC1934_REFRESH_CMD_ADDR            0x00
 #define PAC1934_CTRL_ADDR                   0x01
@@ -94,12 +57,9 @@
 
 class Microchip_PAC193x {  
 		public:
-//class constructors:
 			Microchip_PAC193x();
 			Microchip_PAC193x(uint32_t resistorValue);
-			
-//class public functions:
-			void begin();
+			void begin(TwoWire *_wire = &Wire);
 /*
     Function
 		Refresh()
@@ -134,7 +94,7 @@ class Microchip_PAC193x {
     Returns
 		In case of execution error, the returned value is an error code.
 */			
-			int16_t UpdateVoltageRaw(); //vbus
+			int16_t UpdateVoltageRaw(uint8_t reg); //vbus
 
 
 /*
@@ -152,8 +112,11 @@ class Microchip_PAC193x {
     Returns
 		In case of execution error, the returned value is an error code.
 */
-			int16_t UpdateVoltage();
+			int16_t UpdateVoltage(uint8_t reg);
 
+		int16_t UpdateVoltageSense1(void);
+		int16_t UpdateVoltageSense2(void);
+		int16_t UpdateVoltageSense3(void);
 
 /*
     Function
@@ -169,7 +132,7 @@ class Microchip_PAC193x {
     Returns
 		In case of execution error, the returned value is an error code.
 */
-			int16_t UpdateVsenseRaw(); //vsense
+			int16_t UpdateVsenseRaw(uint8_t reg); //vsense
 
 
 /*
@@ -187,7 +150,10 @@ class Microchip_PAC193x {
     Returns
 		In case of execution error, the returned value is an error code.
 */
-			int16_t UpdateVsense();
+			int16_t UpdateVsense(uint8_t reg);
+			int16_t UpdateCurrentSense1(void);
+			int16_t UpdateCurrentSense2(void);
+			int16_t UpdateCurrentSense3(void);
 
 
 /*
@@ -205,7 +171,7 @@ class Microchip_PAC193x {
     Returns
 		In case of execution error, the returned value is an error code.
 */
-			int16_t UpdateCurrent(); //isense
+			int16_t UpdateCurrent(uint8_t reg); //isense
 
 
 /*
@@ -222,7 +188,7 @@ class Microchip_PAC193x {
     Returns
 		In case of execution error, the returned value is an error code.
 */			
-			int16_t UpdatePowerRaw();
+			int16_t UpdatePowerRaw(uint8_t reg);
 
 
 /*
@@ -240,7 +206,10 @@ class Microchip_PAC193x {
     Returns
 		In case of execution error, the returned value is an error code.
 */
-			int16_t UpdatePower();
+			int16_t UpdatePower(uint8_t reg);
+			int16_t UpdatePowerSense1();
+			int16_t UpdatePowerSense2();
+			int16_t UpdatePowerSense3();
 
 
 /*
@@ -474,6 +443,7 @@ class Microchip_PAC193x {
 			
 		private:
 //class private functions:		
+			TwoWire *_wire;
 			void Read(uint8_t reg_address, int Nbytes, uint8_t *pBuffer);
 			uint8_t Read8(uint8_t reg_address);
 			uint16_t Read16(uint8_t reg_address);

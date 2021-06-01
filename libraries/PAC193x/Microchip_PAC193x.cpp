@@ -49,7 +49,8 @@ Microchip_PAC193x::Microchip_PAC193x(uint32_t resistorValue) {
 
 }
 
-void Microchip_PAC193x::begin(){ 
+void Microchip_PAC193x::begin(TwoWire *_wire){ 
+	this->_wire = _wire;
 		
 		Write8(PAC1934_NEG_PWR_ADDR, 0);
 		Write8(PAC1934_CTRL_ADDR, 2);
@@ -63,30 +64,30 @@ void Microchip_PAC193x::begin(){
 void Microchip_PAC193x::Read(uint8_t reg_address, int Nbytes, uint8_t *pBuffer) {
 	
     int byteCount = Nbytes;
-	Wire.beginTransmission (I2C_ADDRESS);
+	_wire->beginTransmission (I2C_ADDRESS);
 #if (ARDUINO >= 100)
-	Wire.write(reg_address); 
+	_wire->write(reg_address); 
 #else
-	Wire.send(reg_address); 
+	_wire->send(reg_address); 
 #endif
-	errorCode = Wire.endTransmission(false); 
+	errorCode = _wire->endTransmission(false); 
 	if (errorCode != 0){
 		errorCode = (-1);
 	}
   
-	Wire.beginTransmission(I2C_ADDRESS); 
-	Wire.requestFrom(I2C_ADDRESS, Nbytes); 
+	_wire->beginTransmission(I2C_ADDRESS); 
+	_wire->requestFrom(I2C_ADDRESS, Nbytes); 
 #if (ARDUINO >= 100)
-	while(Wire.available() && (byteCount > 0))    // slave may send less than requested
+	while(_wire->available() && (byteCount > 0))    // slave may send less than requested
   {  
-	*pBuffer = Wire.read();
+	*pBuffer = _wire->read();
 	pBuffer++;
     byteCount--;
   }
 #else
-	while(Wire.available() && (byteCount > 0))    // slave may send less than requested
+	while(_wire->available() && (byteCount > 0))    // slave may send less than requested
   {  
-	*pBuffer = Wire.receive();
+	*pBuffer = _wire->receive();
 	pBuffer++;
     byteCount--;
   }
@@ -134,15 +135,15 @@ uint64_t Microchip_PAC193x::Read64(uint8_t reg_address) {
 } 
 
 void Microchip_PAC193x::Write8(uint8_t reg_address, uint8_t data) {
-	Wire.beginTransmission(I2C_ADDRESS); // start transmission to device 
+	_wire->beginTransmission(I2C_ADDRESS); // start transmission to device 
 #if (ARDUINO >= 100)
-	Wire.write(reg_address); // sends register address to read from
-	Wire.write(data);  // write data
+	_wire->write(reg_address); // sends register address to read from
+	_wire->write(data);  // write data
 #else
-	Wire.send(reg_address); // sends register address to read from
-	Wire.send(data);  // write data
+	_wire->send(reg_address); // sends register address to read from
+	_wire->send(data);  // write data
 #endif
-	errorCode = Wire.endTransmission();  // end transmission
+	errorCode = _wire->endTransmission();  // end transmission
 	if (errorCode != 0){
 		errorCode = (-2);
 	}
@@ -177,25 +178,40 @@ void Microchip_PAC193x::Refresh(){
 	Write8(PAC1934_REFRESH_CMD_ADDR, 1); //refresh
 }
 
-int16_t Microchip_PAC193x::UpdateVoltageRaw(){
+int16_t Microchip_PAC193x::UpdateVoltageSense1(void)
+{
+	UpdateVoltage(PAC1934_VBUS1_ADDR);
+}
+
+int16_t Microchip_PAC193x::UpdateVoltageSense2(void)
+{
+	UpdateVoltage(PAC1934_VBUS2_ADDR);
+}
+
+int16_t Microchip_PAC193x::UpdateVoltageSense3(void)
+{
+	UpdateVoltage(PAC1934_VBUS3_ADDR);
+}
+
+int16_t Microchip_PAC193x::UpdateVoltageRaw(uint8_t reg){
     uint16_t VbusRaw; 
 	
 	errorCode = 0;
 	Write8(PAC1934_REFRESH_V_CMD_ADDR, 1); //refreshV
 	delay(2);
-	VbusRaw = Read16(PAC1934_VBUS1_ADDR);
+	VbusRaw = Read16(reg);
 	VbusRaw = (VbusRaw << 8) | (VbusRaw >> 8);
 	VoltageRaw = VbusRaw;
 	
 	return errorCode;
 }
 
-int16_t Microchip_PAC193x::UpdateVoltage(){
+int16_t Microchip_PAC193x::UpdateVoltage(uint8_t reg){
 	float VbusReal;
     float VbusLsb;
 
 	errorCode = 0;
-	UpdateVoltageRaw();
+	UpdateVoltageRaw(reg);
 	VbusLsb = 32000 / 65536.0;
     VbusReal = (float)VoltageRaw;  
     VbusReal = VbusReal * VbusLsb; 
@@ -204,23 +220,23 @@ int16_t Microchip_PAC193x::UpdateVoltage(){
 	return errorCode;
 }
 
-int16_t Microchip_PAC193x::UpdateVsenseRaw(){
+int16_t Microchip_PAC193x::UpdateVsenseRaw(uint8_t reg){
 	
 	errorCode = 0;
 	Write8(PAC1934_REFRESH_V_CMD_ADDR, 1); //refreshV
 	delay(2);
-	VsenseRaw = Read16(PAC1934_VSENSE1_ADDR);
+	VsenseRaw = Read16(reg);
 	VsenseRaw = (VsenseRaw << 8) | (VsenseRaw >> 8 );
 		
 	return errorCode;
 }
 
-int16_t Microchip_PAC193x::UpdateVsense(){
+int16_t Microchip_PAC193x::UpdateVsense(uint8_t reg){
 	uint16_t registerAddr;
     float VsenseLsb;
 
 	errorCode = 0;
-	UpdateVsenseRaw();
+	UpdateVsenseRaw(reg);
 	VsenseLsb = 100 / 65536.0;
     Vsense = (float)VsenseRaw;       
     Vsense = Vsense * VsenseLsb; 
@@ -228,10 +244,25 @@ int16_t Microchip_PAC193x::UpdateVsense(){
 	return errorCode;
 }
 
-int16_t Microchip_PAC193x::UpdateCurrent(){
+int16_t Microchip_PAC193x::UpdateCurrentSense1(void)
+{
+	UpdateCurrent(PAC1934_VSENSE1_ADDR);
+}
+
+int16_t Microchip_PAC193x::UpdateCurrentSense2(void)
+{
+	UpdateCurrent(PAC1934_VSENSE2_ADDR);
+}
+
+int16_t Microchip_PAC193x::UpdateCurrentSense3(void)
+{
+	UpdateCurrent(PAC1934_VSENSE3_ADDR);
+}
+
+int16_t Microchip_PAC193x::UpdateCurrent(uint8_t reg){
 
 	errorCode = 0;
-	UpdateVsense();
+	UpdateVsense(reg);
 	Current = (Vsense / rsense) * 1000000; //mA
 	
 	if (rsense <= 0){
@@ -241,24 +272,39 @@ int16_t Microchip_PAC193x::UpdateCurrent(){
 	return errorCode;
 }
 
-int16_t Microchip_PAC193x::UpdatePowerRaw(){
+int16_t Microchip_PAC193x::UpdatePowerSense1()
+{
+	UpdatePower(PAC1934_VPOWER1_ADDR);
+}
+
+int16_t Microchip_PAC193x::UpdatePowerSense2()
+{
+	UpdatePower(PAC1934_VPOWER2_ADDR);
+}
+
+int16_t Microchip_PAC193x::UpdatePowerSense3()
+{
+	UpdatePower(PAC1934_VPOWER3_ADDR);
+}
+
+int16_t Microchip_PAC193x::UpdatePowerRaw(uint8_t reg){
 	
 	errorCode = 0;	
 	Write8(PAC1934_REFRESH_V_CMD_ADDR, 1); //refreshV
 	delay(2);
-	PowerRaw = Read32(PAC1934_VPOWER1_ADDR);
+	PowerRaw = Read32(reg);
 	PowerRaw = ((PowerRaw << 8) & 0xFF00FF00 ) | ((PowerRaw >> 8) & 0xFF00FF ); 
     PowerRaw = (PowerRaw << 16) | (PowerRaw >> 16);
 	
 	return errorCode;
 }
 
-int16_t Microchip_PAC193x::UpdatePower(){
+int16_t Microchip_PAC193x::UpdatePower(uint8_t reg){
     uint32_t PowerRegScale = 0x10000000;
     double PowerFSR;
 
 	errorCode = 0;
-	UpdatePowerRaw();
+	UpdatePowerRaw(reg);
 	Power = (double)PowerRaw / 16;
 	PowerFSR = (3.2 * 1000000) / rsense; 
     Power = (Power * PowerFSR);
