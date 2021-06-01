@@ -11,11 +11,11 @@
 #define BUTTON_CH1 34
 #define BUTTON_DIAL 35
 
-uint8_t _addr = 0x4;
+uint8_t _addr = 0x5;
 struct dial_t dial;
 
 Screen screen;
-Microchip_PAC193x PAC = Microchip_PAC193x(10000);
+Microchip_PAC193x PAC = Microchip_PAC193x(15000);
 
 Button button[4] = {
 	Button(BUTTON_CH0), Button(BUTTON_CH1), Button(BUTTON_MENU), Button(BUTTON_DIAL)
@@ -30,20 +30,20 @@ struct channel_ctrl {
 struct channel_ctrl ch_ctrl[2];
 
 
-uint8_t read8(uint8_t reg) {
-	Wire.beginTransmission(_addr);
-	Wire.write(reg);
-	Wire.endTransmission();
+uint8_t read8(TwoWire *theWire, uint8_t reg) {
+	theWire->beginTransmission(_addr);
+	theWire->write(reg);
+	theWire->endTransmission();
 
-	Wire.requestFrom(_addr, (byte)1);
-	return Wire.read();
+	theWire->requestFrom(_addr, (byte)1);
+	return theWire->read();
 }
 
-void write8(uint8_t reg, uint8_t val) {
-	Wire.beginTransmission(_addr);
-	Wire.write(reg);
-	Wire.write(val);
-	Wire.endTransmission();
+void write8(TwoWire *theWire, uint8_t reg, uint8_t val) {
+	theWire->beginTransmission(_addr);
+	theWire->write(reg);
+	theWire->write(val);
+	theWire->endTransmission();
 }
 
 TwoWire I2CA = TwoWire(0);
@@ -51,20 +51,22 @@ TwoWire I2CB = TwoWire(1);
 
 void setup(void) {
 	Serial.begin(115200);
+	pinMode(27, OUTPUT);
+	pinMode(14, OUTPUT);
+	digitalWrite(27, HIGH);
+	digitalWrite(14, HIGH);
 	I2CA.begin(15, 4);
 	I2CB.begin(21, 22);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
 
 	initEncoder(&dial);
-	pinMode(27, OUTPUT);
-	pinMode(14, OUTPUT);
-	digitalWrite(27, HIGH);
-	digitalWrite(14, HIGH);
+	initPAC1933();
+	//write8(&I2CA, 0x04, 0xff);
+
 	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
 	xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
-	initPAC1933();
 }
 
 void initPAC1933(void)
@@ -156,19 +158,40 @@ void inputTask(void *parameter)
 
 void testVoltage(void)
 {
+	/*
 	for (int i = 0; i < 0xF1; i++) {
 		delay(100);
 		write8(0x0, i);
 	}
+	*/
 }
 
+uint8_t reg2, reg3, reg4;
 void loop() {
 
 	//get_memory_info();
 	//get_i2c_slaves();
 	//write8(0x6, 0x0);
-	//Serial.printf("reg 0x6 : %x\n", read8(0x6));
+#if 1
+	reg2 = read8(&I2CA, 0x2);
+	reg3 = read8(&I2CA, 0x3);
+	reg4 = read8(&I2CA, 0x4);
+
+	Serial.println("=============");
+	Serial.print("status: ");
+	for (int i = 7; i >= 0; i--)
+		Serial.print(bitRead(reg2, i));
+	Serial.println();
+	Serial.print("latch:  ");
+	for (int i = 7; i >= 0; i--)
+		Serial.print(bitRead(reg3, i));
+	Serial.println();
+	Serial.print("mask:   ");
+	for (int i = 7; i >= 0; i--)
+		Serial.print(bitRead(reg4, i));
+	Serial.println("=============");
 	//testVoltage();
+#endif
 	delay(100);
 }
 

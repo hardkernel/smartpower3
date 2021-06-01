@@ -27,6 +27,8 @@ void Screen::begin(TwoWire *theWire)
 	_wire = theWire;
 	stpd01_ch0.begin(0x5, _wire);
 	stpd01_ch1.begin(0x4, _wire);
+	stpd01_ch0.setCurrentLimit(3000);
+	stpd01_ch1.setCurrentLimit(3000);
 }
 
 void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch)
@@ -127,6 +129,7 @@ void Screen::drawBaseEdit()
 
 void Screen::drawScreen()
 {
+	//stpd01_ch0.monitorInterrupt(0);
 	switch (mode) {
 	case BASE:
 		drawBase();
