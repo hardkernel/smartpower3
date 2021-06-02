@@ -7,13 +7,13 @@
 #define STPD01_ADDRESS 0x04
 
 enum {
-	STPD01_REGISTER_0 = 0x0,
-	STPD01_REGISTER_1,
-	STPD01_REGISTER_2,
-	STPD01_REGISTER_3,
-	STPD01_REGISTER_4,
-	STPD01_REGISTER_5,
-	STPD01_REGISTER_6
+	STPD01_REGISTER_0 = 0x0,	// output voltage configuration
+	STPD01_REGISTER_1,			// output current limitation configuration
+	STPD01_REGISTER_2,			// interrupt status
+	STPD01_REGISTER_3,			// interrupt latch
+	STPD01_REGISTER_4,			// interrupt mask
+	STPD01_REGISTER_5,			// discharge, switching frequency, cable drop etc
+	STPD01_REGISTER_6			// digital enable, watchdog enable
 };
 
 /*
@@ -27,6 +27,7 @@ enum {
 #define STPD01_MAX_VOLTAGE			0xF1
 #define STPD01_MAX_CURRENT_LIMIT	0x1D // 100m ~ 3A, step : 100mA
 #define STPD01_DIGITAL_ENABLE 0x1
+#define STPD01_WATCHDOG_ENABLE	0x2
 
 enum {
 	INT_OVERVOLTAGE_PROTECTION = 0x1,
@@ -37,6 +38,14 @@ enum {
 	INT_OVERTEMPERATURE_PROTECTION = 0x20, // Junction temperature 165 celcious degrees.
 	INT_OVERTEMPERATURE_WARNING = 0x40, // Junction temperature 145 celcious degrees.
 	INT_INDUCTOR_PEAK_CURRENT_PROTECTION = 0x80
+};
+
+enum {
+	DISCHARGE				= 0x1,
+	DITHERING				= 0x02,
+	SWITCHING_FREQUENCY		= 0x04,
+	CABLE_DROP_COMPENSATION	= 0x18,
+	WATCHDOG_TIMER			= 0x80
 };
 
 class STPD01
