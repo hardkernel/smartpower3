@@ -1,6 +1,10 @@
-#include <Arduino.h>
+#pragma once
+#ifndef FNDWIDGET_H
+#define FNDWIDGET_H
+
 #include <TFT_eSPI.h>
 #include "fnd_font.h"
+#include "component.h"
 
 #define WAIT 1
 #define W_SEG 140
@@ -17,23 +21,8 @@
 #define OFFSET_X 0
 #define OFFSET_Y H_HEADER
 
-class FndWidget
+class FndWidget : public Component
 {
-private:
-	uint8_t mode = 0;
-	uint16_t x;
-	uint16_t y;
-	uint16_t width;
-	uint16_t height;
-	uint8_t font;
-	TFT_eSPI *tft;
-	uint16_t value;
-	uint16_t old_value;
-	float value_old;
-	void drawOutLines(void);
-	void clearOutLines(void);
-	bool activated = false;
-	struct fnd *f;
 public:
 	FndWidget(TFT_eSPI *tft);
 	~FndWidget(void);
@@ -54,4 +43,20 @@ public:
 	void fnd_update();
 	void fnd_fb_write(int8_t f_pos, int8_t f_value, int16_t color);
 	void fnd_dd_clear(void);
+private:
+	uint8_t mode = 0;
+	uint16_t x;
+	uint16_t y;
+	uint16_t width;
+	uint16_t height;
+	uint8_t font;
+	TFT_eSPI *tft;
+	uint16_t value;
+	uint16_t old_value;
+	float value_old;
+	void drawOutLines(void);
+	void clearOutLines(void);
+	struct fnd *f;
 };
+
+#endif

@@ -10,7 +10,8 @@ Screen::Screen()
 	pinMode(TFT_BL, OUTPUT);
 	digitalWrite(TFT_BL, HIGH);
 
-	header = new Component(&tft, 470, H_HEADER, 2);
+	//header = new Component(&tft, 470, H_HEADER, 2);
+	header = new Header(&tft, 470, H_HEADER, 2);
 	header->init(TFT_RED, TFT_BLACK, 2, TL_DATUM);
 	header->setCoordinate(5, 5);
 	header->draw("SP3");
@@ -20,6 +21,9 @@ Screen::Screen()
 	channel[1] = new Channel(&tft);
 	channel[1]->init(260, 60);
 
+	Node *n[5];
+	//n[0]->activate = header->activate;
+	//n[1]->activate = channel[0]->activate;
 }
 
 void Screen::begin(TwoWire *theWire)
@@ -135,22 +139,17 @@ void Screen::drawScreen()
 	switch (mode) {
 	case BASE:
 		drawBase();
-		if (header != NULL)
-			header->draw("SP3 MODE : BASE");
+		header->draw("SP3 MODE : BASE");
 		break;
 	case BASE_MOVE:
-		if (header != NULL)
-			header->draw("SP3 MODE : DIAL");
+		header->draw("SP3 MODE : DIAL");
 		drawBaseMove();
 		break;
 	case BASE_EDIT:
-		if (header != NULL)
-			header->draw("SP3 MODE : EDIT");
+		header->draw("SP3 MODE : EDIT");
 		drawBaseEdit();
 		break;
 	}
-	if ((channel[0] == NULL) or (channel[1] == NULL))
-		return;
 	channel[0]->drawPower();
 	channel[1]->drawPower();
 }

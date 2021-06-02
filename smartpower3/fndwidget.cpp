@@ -1,6 +1,6 @@
 #include "fndwidget.h"
 
-FndWidget::FndWidget(TFT_eSPI *tft)
+FndWidget::FndWidget(TFT_eSPI *tft) : Component(tft)
 {
 	this->tft = tft;
 	value = 0;
@@ -36,8 +36,6 @@ struct fnd* FndWidget::fnd_init(uint8_t cnt, uint8_t dot_pos, bool rbo,
 		return NULL;
 	}
 
-	f->x 		= x;
-	f->y 		= y;
 	this->x = x;
 	this->y = y;
 	f->bg_color 	= bg_color;
@@ -73,7 +71,7 @@ void FndWidget::fnd_num_write(uint16_t f_pos)
 	if (f->dot_en && (f_pos >= f->dot_pos))
 		w_offset += IMG_DOT_WIDTH;
 
-	tft->pushImage(f->x + w_offset, f->y,
+	tft->pushImage(x + w_offset, y,
 			FONT_WIDTH, FONT_HEIGHT, &f->fb[0]);
 }
 
@@ -92,7 +90,7 @@ void FndWidget::fnd_clear_all(void)
 		for (w = 0; w < FONT_WIDTH; w++)
 			f->fb[w + h * FONT_WIDTH] = f->bg_color;
 	}
-	tft->fillRect(f->x, f->y, f_width, FONT_HEIGHT, f->bg_color);
+	tft->fillRect(x, y, f_width, FONT_HEIGHT, f->bg_color);
 }
 
 void FndWidget::fnd_dot_write(void)
@@ -101,8 +99,8 @@ void FndWidget::fnd_dot_write(void)
 	uint8_t		f_mask;
 	const uint8_t	*f_img;
 
-	w     = f->x + f->dot_x_offset;
-	h     = f->y + IMG_DOT_YOFFSET;
+	w     = x + f->dot_x_offset;
+	h     = y + IMG_DOT_YOFFSET;
 	h_end = h    + IMG_DOT_HEIGHT;
 	f_img = &IMG_DOT_DATA[0];
 
@@ -284,11 +282,9 @@ void FndWidget::pushValue(uint16_t value)
 void FndWidget::activate(void)
 {
 	drawOutLines();
-	this->activated = true;
 }
 
 void FndWidget::deActivate(void)
 {
 	clearOutLines();
-	this->activated = false;
 }

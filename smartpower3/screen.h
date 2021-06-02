@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 #include "channel.h"
+#include "header.h"
 #include <STPD01.h>
 
 enum screen_mode_t {
@@ -10,26 +11,13 @@ enum screen_mode_t {
 	SETTING
 };
 
+struct Node {
+	void *activate;
+	void *deActivate;
+};
+
 class Screen
 {
-private:
-	TFT_eSPI tft = TFT_eSPI();
-	screen_mode_t mode = BASE;
-	Component *header;
-	Channel *channel[2];
-	STPD01 stpd01_ch0;
-	STPD01 stpd01_ch1;
-	TwoWire *_wire;
-	uint8_t activated = 0;
-	uint32_t dial_time = 0;
-	uint32_t cur_time = 0;
-	bool btn_pressed[4] = {false,};
-	int8_t dial_cnt = 0;
-	int8_t dial_cnt_old;
-	void drawBase(void);
-	void drawBaseEdit(void);
-	void drawBaseMove(void);
-
 public:
 	Screen();
 	void begin(TwoWire *theWire = &Wire);
@@ -43,4 +31,22 @@ public:
 	uint32_t setTime(uint32_t milisec);
 	void clearBtnEvent(void);
 	bool getOnOff(uint8_t idx);
+private:
+	TFT_eSPI tft = TFT_eSPI();
+	screen_mode_t mode = BASE;
+	Channel *channel[2];
+	Header *header;
+	STPD01 stpd01_ch0;
+	STPD01 stpd01_ch1;
+	TwoWire *_wire;
+	uint8_t activated = 0;
+	uint32_t dial_time = 0;
+	uint32_t cur_time = 0;
+	bool btn_pressed[4] = {false,};
+	int8_t dial_cnt = 0;
+	int8_t dial_cnt_old;
+	void drawBase(void);
+	void drawBaseEdit(void);
+	void drawBaseMove(void);
+
 };

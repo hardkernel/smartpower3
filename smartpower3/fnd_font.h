@@ -147,9 +147,6 @@ struct fnd {
 	/* num of fnd */
 	uint8_t			cnt;
 
-	/* fnd position */
-	uint16_t		x, y;
-
 	/* dot enable */
 	bool			dot_en, dot_on;
 	uint8_t			dot_pos;

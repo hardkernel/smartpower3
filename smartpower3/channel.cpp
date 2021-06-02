@@ -45,31 +45,6 @@ void Channel::init(uint16_t x, uint16_t y)
 	tft->drawString("V", x + W_SEG-8, y + 38, 4);
 	tft->drawString("A", x + W_SEG-8, y + 29 + H_SEG + OFFSET_SEG, 4);
 	tft->drawString("W", x + W_SEG-8, y + 20 + H_SEG*2 + OFFSET_SEG*2, 4);
-
-#if 0
-	volt->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
-	volt->setCoordinate(x, y);
-	volt->draw();
-	tft->drawString("V", x + W_SEG, y + 20, 4);
-
-	_volt->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
-	_volt->setCoordinate(x+76, y + H_SEG);
-	_volt->draw();
-
-	ampere->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
-	ampere->setCoordinate(x, y + H_SEG + OFFSET_SEG);
-	ampere->draw();
-	tft->drawString("A", x + W_SEG, y + 20 + H_SEG + OFFSET_SEG, 4);
-
-	_ampere->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
-	_ampere->setCoordinate(x+76, y + H_SEG*2 + OFFSET_SEG*1);
-	_ampere->draw();
-
-	watt->init(TFT_RED, TFT_BLACK, 1, TR_DATUM);
-	watt->setCoordinate(x, y + H_SEG*2 + OFFSET_SEG*2);
-	watt->draw();
-	tft->drawString("W", x + W_SEG, y + 20 + H_SEG*2 + OFFSET_SEG*2, 4);
-#endif
 }
 
 void Channel::powerOn(bool onoff)
@@ -89,7 +64,6 @@ bool Channel::getOnOff()
 
 void Channel::setVolt(float volt_set)
 {
-	//this->_volt_set = volt_set;
 	this->volt_set = this->volt_set + volt_set*10;
 }
 
@@ -105,7 +79,6 @@ void Channel::editVolt(float volt_set)
 
 void Channel::setAmpereLimit(float ampere_limit)
 {
-	//this->ampere_limit = ampere_limit;
 	this->ampere_limit = this->ampere_limit + ampere_limit/10;
 }
 
@@ -120,32 +93,20 @@ void Channel::drawPower(void)
 	volt->fnd_update();
 	ampere->fnd_update();
 	watt->fnd_update();
-#if 0
-	volt->draw();
-	_volt->draw();
-	ampere->draw();
-	_ampere->draw();
-	watt->draw();
-#endif
 }
 
 void Channel::clearCompColor(void)
 {
 	volt->setTextColor(TFT_RED, TFT_BLACK);
-	//_volt->setTextColor(TFT_YELLOW, TFT_BLACK);
 	ampere->setTextColor(TFT_RED, TFT_BLACK);
-	//_ampere->setTextColor(TFT_YELLOW, TFT_BLACK);
 }
 
 void Channel::setCompColor(comp_t comp)
 {
-	if (comp == VOLT) {
+	if (comp == VOLT)
 		volt->setTextColor(TFT_YELLOW, TFT_BLACK);
-		//_volt->setTextColor(TFT_RED, TFT_BLACK);
-	} else if (comp == AMPERE) {
+	else if (comp == AMPERE)
 		ampere->setTextColor(TFT_YELLOW, TFT_BLACK);
-		//_ampere->setTextColor(TFT_RED, TFT_BLACK);
-	}
 }
 
 void Channel::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt)
@@ -153,12 +114,6 @@ void Channel::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 	this->volt->pushValue(volt);
 	this->ampere->pushValue(ampere);
 	this->watt->pushValue(watt);
-#if 0
-	this->ampere->pushValue(ampere);
-	this->watt->pushValue(watt);
-	this->_volt->pushValue(volt_set);
-	this->_ampere->pushValue(ampere_limit);
-#endif
 }
 
 void Channel::pushPowerEdit(float volt, float ampere, float watt)
@@ -166,8 +121,6 @@ void Channel::pushPowerEdit(float volt, float ampere, float watt)
 	this->volt->pushValue(_volt_set);
 	this->ampere->pushValue(_ampere_limit);
 	this->watt->pushValue(watt);
-	//this->_volt->pushValue(volt);
-	//this->_ampere->pushValue(ampere);
 }
 
 void Channel::activate(comp_t comp)

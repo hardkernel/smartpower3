@@ -1,4 +1,6 @@
-#include <Arduino.h>
+#ifndef COMPONENT_H
+#define COMPONENT_H
+
 #include <TFT_eSPI.h>
 
 #define WAIT 1
@@ -19,7 +21,6 @@
 class Component
 {
 private:
-	uint8_t mode = 0;
 	uint16_t width;
 	uint16_t height;
 	uint16_t x;
@@ -31,8 +32,8 @@ private:
 	float value_old;
 	void drawOutLines(void);
 	void clearOutLines(void);
-	bool activated = false;
 public:
+	Component(TFT_eSPI *tft);
 	Component(TFT_eSPI *tft, uint16_t width, uint16_t height, uint8_t font);
 	~Component(void);
 
@@ -45,3 +46,5 @@ public:
 	void deActivate(void);
 	void setTextColor(uint16_t fg_color, uint16_t bg_color);
 };
+
+#endif

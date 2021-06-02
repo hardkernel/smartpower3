@@ -10,6 +10,12 @@ Component::Component(TFT_eSPI *tft, uint16_t width, uint16_t height, uint8_t fon
 	value = 0;
 }
 
+Component::Component(TFT_eSPI *tft)
+{
+	this->tft = tft;
+	value = 0;
+}
+
 Component::~Component(void)
 {
 	img->deleteSprite();
@@ -80,11 +86,9 @@ void Component::pushValue(float value)
 void Component::activate(void)
 {
 	drawOutLines();
-	this->activated = true;
 }
 
 void Component::deActivate(void)
 {
 	clearOutLines();
-	this->activated = false;
 }
