@@ -19,13 +19,13 @@ private:
 	bool activated;
 	bool onoff;
 	TFT_eSPI *tft;
-	uint16_t volt_set = 500;
-	uint16_t _volt_set = 500;
-	float ampere_limit = 2.0;
-	float _ampere_limit = 2.0;
+	uint16_t volt_set = 5000;
+	uint16_t _volt_set = 5000;
+	uint16_t current_limit = 500;
+	uint16_t _current_limit = 500;
 	FndWidget *volt;
-	FndWidget *_volt;
-	FndWidget *_ampere;
+	Component *_volt;
+	Component *_current;
 	FndWidget *ampere;
 	FndWidget *watt;
 public:
@@ -38,14 +38,15 @@ public:
 	void powerOn(bool onoff);
 	void powerOn();
 	void setVolt(float volt_set);
-	void setAmpereLimit(float ampere_limit);
+	void setCurrentLimit(float val);
 	void activate(comp_t comp);
 	void deActivate(comp_t comp);
 	void setCompColor(comp_t comp);
 	void clearCompColor(void);
 	void editVolt(float volt_set);
-	void editAmpereLimit(float ampere_limit);
+	void editCurrentLimit(float val);
 	bool getOnOff(void);
 	uint16_t getVolt(void);
+	uint16_t getCurrentLimit(void);
 };
 

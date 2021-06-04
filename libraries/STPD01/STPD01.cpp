@@ -72,19 +72,18 @@ void STPD01::onOff(void)
 	tmp = read8(STPD01_REGISTER_6);
 	tmp = tmp & 0b10;
 	tmp |= onoff;
-	Serial.println(tmp);
 	write8(STPD01_REGISTER_6, tmp);
 }
 
 void STPD01::setVoltage(uint16_t volt)
 {
 	uint8_t val;
-	if (volt < 590) {
-		val = (volt - 300)/2;
-	} else if (volt < 1100) {
-		val = 0x91 + (volt - 590)/10;
-	} else if (volt < 2000) {
-		val = 0xc4 + (uint16_t)(volt - 1100)/20;
+	if (volt < 5900) {
+		val = (volt - 3000)/20;
+	} else if (volt < 11000) {
+		val = 0x91 + (volt - 5900)/100;
+	} else if (volt < 20000) {
+		val = 0xc4 + (uint16_t)(volt - 11000)/200;
 	}
 	write8(STPD01_REGISTER_0, val);
 }

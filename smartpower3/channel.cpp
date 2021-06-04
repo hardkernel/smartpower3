@@ -7,6 +7,16 @@ Channel::Channel(TFT_eSPI *tft)
 	volt = new FndWidget(tft);
 	ampere = new FndWidget(tft);
 	watt = new FndWidget(tft);
+	/*
+	_volt = new Component(tft, 64, 22, 4);
+	_current = new Component(tft, 64, 22, 4);
+	_volt->init(TFT_YELLOW, TFT_BLACK, 1, TL_DATUM);
+	_volt->setCoordinate(5, 280);
+	_volt->draw("5.0V");
+	_current->init(TFT_YELLOW, TFT_BLACK, 1, TL_DATUM);
+	_current->setCoordinate(100, 280);
+	_current->draw("3.0A");
+	*/
 #if 0
 	this->tft = tft;
 	this->x = x + OFFSET_CH + 20;
@@ -64,7 +74,7 @@ bool Channel::getOnOff()
 
 void Channel::setVolt(float volt_set)
 {
-	this->volt_set = this->volt_set + volt_set*10;
+	this->volt_set = this->volt_set + volt_set*100;
 }
 
 uint16_t Channel::getVolt(void)
@@ -74,17 +84,24 @@ uint16_t Channel::getVolt(void)
 
 void Channel::editVolt(float volt_set)
 {
-	this->_volt_set = this->volt_set + volt_set*10;
+	this->_volt_set = this->volt_set + volt_set*100;
 }
 
-void Channel::setAmpereLimit(float ampere_limit)
+uint16_t Channel::getCurrentLimit(void)
 {
-	this->ampere_limit = this->ampere_limit + ampere_limit/10;
+	return current_limit;
 }
 
-void Channel::editAmpereLimit(float ampere_limit)
+void Channel::setCurrentLimit(float val)
 {
-	this->_ampere_limit = this->ampere_limit + ampere_limit/10;
+	current_limit += val*100;
+	current_limit = min((uint16_t)3000, current_limit);
+}
+
+void Channel::editCurrentLimit(float val)
+{
+	_current_limit = current_limit + val*100;
+	_current_limit = min((uint16_t)3000, _current_limit);
 }
 
 
@@ -119,7 +136,7 @@ void Channel::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 void Channel::pushPowerEdit(float volt, float ampere, float watt)
 {
 	this->volt->pushValue(_volt_set);
-	this->ampere->pushValue(_ampere_limit);
+	this->ampere->pushValue(_current_limit);
 	this->watt->pushValue(watt);
 }
 
