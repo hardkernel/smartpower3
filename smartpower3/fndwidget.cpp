@@ -276,7 +276,7 @@ void FndWidget::draw(void)
 
 void FndWidget::pushValue(uint16_t value)
 {
-	this->value = value;
+	this->value = value/10;
 }
 
 void FndWidget::activate(void)

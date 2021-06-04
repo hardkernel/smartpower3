@@ -49,7 +49,7 @@ void countEncoder(void *dial)
 	  tmp->cnt -= 1;
 	  tmp->direct = false;
     }
-    vTaskDelay(50);
+    vTaskDelay(100);
   }
 }
 

@@ -85,10 +85,14 @@ void Component::pushValue(float value)
 
 void Component::activate(void)
 {
+	activated = true;
 	drawOutLines();
 }
 
 void Component::deActivate(void)
 {
-	clearOutLines();
+	if (activated) {
+		clearOutLines();
+		activated = false;
+	}
 }

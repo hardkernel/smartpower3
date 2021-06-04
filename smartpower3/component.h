@@ -20,18 +20,6 @@
 
 class Component
 {
-private:
-	uint16_t width;
-	uint16_t height;
-	uint16_t x;
-	uint16_t y;
-	uint8_t font;
-	TFT_eSprite *img;
-	TFT_eSPI *tft;
-	float value;
-	float value_old;
-	void drawOutLines(void);
-	void clearOutLines(void);
 public:
 	Component(TFT_eSPI *tft);
 	Component(TFT_eSPI *tft, uint16_t width, uint16_t height, uint8_t font);
@@ -45,6 +33,19 @@ public:
 	void activate(void);
 	void deActivate(void);
 	void setTextColor(uint16_t fg_color, uint16_t bg_color);
+private:
+	uint16_t width;
+	uint16_t height;
+	uint16_t x;
+	uint16_t y;
+	uint8_t font;
+	bool activated;
+	TFT_eSprite *img;
+	TFT_eSPI *tft;
+	float value;
+	float value_old;
+	void drawOutLines(void);
+	void clearOutLines(void);
 };
 
 #endif

@@ -11,9 +11,12 @@ enum screen_mode_t {
 	SETTING
 };
 
-struct Node {
-	void *activate;
-	void *deActivate;
+enum state {
+	STATE_HEADER = 0,
+	STATE_VOLT1,
+	STATE_AMPERE1,
+	STATE_AMPERE0,
+	STATE_VOLT0,
 };
 
 class Screen
@@ -24,8 +27,8 @@ public:
 	void pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch);
 	void drawScreen();
 	void activate();
-	void countDial(int8_t mode_count, uint32_t milisec);
-	void deActivate(uint8_t idx);
+	void countDial(int8_t mode_count, bool direct, uint32_t milisec);
+	void deActivate();
 	void powerOn(uint8_t idx);
 	void getBtnPress(uint8_t idx, uint32_t cur_time);
 	uint32_t setTime(uint32_t milisec);
@@ -45,6 +48,8 @@ private:
 	bool btn_pressed[4] = {false,};
 	int8_t dial_cnt = 0;
 	int8_t dial_cnt_old;
+	bool dial_direct;
+	uint8_t dial_state;
 	void drawBase(void);
 	void drawBaseEdit(void);
 	void drawBaseMove(void);

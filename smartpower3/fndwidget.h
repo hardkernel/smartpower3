@@ -12,14 +12,10 @@
 #define OFFSET_SEG 35
 #define OFFSET_CH 15
 
-#define W_HEADER 230
-#define H_HEADER 40
-
 #define W_CH0 20
 
 #define FONT_SEVEN_SEGMENT 7
 #define OFFSET_X 0
-#define OFFSET_Y H_HEADER
 
 class FndWidget : public Component
 {

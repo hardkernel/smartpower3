@@ -1,53 +1,6 @@
-#include <Arduino.h>
-#include <TFT_eSPI.h>
-#include <Microchip_PAC193x.h>
-#include "screen.h"
-#include "inputmanager.h"
-
+#include "smartpower3.h"
 #include <Wire.h>
-
-#define BUTTON_MENU 36
-#define BUTTON_CH0 39
-#define BUTTON_CH1 34
-#define BUTTON_DIAL 35
-
-uint8_t _addr = 0x5;
-struct dial_t dial;
-
-Screen screen;
-Microchip_PAC193x PAC = Microchip_PAC193x(15000);
-
-Button button[4] = {
-	Button(BUTTON_CH0), Button(BUTTON_CH1), Button(BUTTON_MENU), Button(BUTTON_DIAL)
-};
-
-unsigned long cur_time;
-
-struct channel_ctrl {
-	float volt;
-};
-
-struct channel_ctrl ch_ctrl[2];
-
-
-uint8_t read8(TwoWire *theWire, uint8_t reg) {
-	theWire->beginTransmission(_addr);
-	theWire->write(reg);
-	theWire->endTransmission();
-
-	theWire->requestFrom(_addr, (byte)1);
-	return theWire->read();
-}
-
-void write8(TwoWire *theWire, uint8_t reg, uint8_t val) {
-	theWire->beginTransmission(_addr);
-	theWire->write(reg);
-	theWire->write(val);
-	theWire->endTransmission();
-}
-
-TwoWire I2CA = TwoWire(0);
-TwoWire I2CB = TwoWire(1);
+#include <SPIFFS.h>
 
 void setup(void) {
 	Serial.begin(115200);
@@ -67,6 +20,13 @@ void setup(void) {
 	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
 	xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
+	pinMode(25, INPUT_PULLUP);
+	attachInterrupt(25, isr_stp, FALLING);
+}
+
+void isr_stp()
+{
+	Serial.println("Hello isr stp");
 }
 
 void initPAC1933(void)
@@ -117,14 +77,14 @@ void powerTask(void *parameter)
 	uint16_t volt, ampere, watt;
 	for (;;) {
 		updatePowerSense2();
-		volt = (uint16_t)(PAC.Voltage/10);
-		ampere = (uint16_t)(PAC.Current/10);
-		watt = (uint16_t)(PAC.Power*100);
+		volt = (uint16_t)(PAC.Voltage);
+		ampere = (uint16_t)(PAC.Current);
+		watt = (uint16_t)(PAC.Power);
 		screen.pushPower(volt, ampere, watt, 0);
 		updatePowerSense3();
-		volt = (uint16_t)(PAC.Voltage/10);
-		ampere = (uint16_t)(PAC.Current/10);
-		watt = (uint16_t)(PAC.Power*100);
+		volt = (uint16_t)(PAC.Voltage);
+		ampere = (uint16_t)(PAC.Current);
+		watt = (uint16_t)(PAC.Power);
 		screen.pushPower(volt, ampere, watt, 1);
 
 		vTaskDelay(100);
@@ -148,7 +108,7 @@ void inputTask(void *parameter)
 				screen.getBtnPress(i, cur_time);
 		}
 		if (dial.cnt != 0) {
-			screen.countDial(dial.cnt, cur_time);
+			screen.countDial(dial.cnt, dial.direct, cur_time);
 			dial.cnt = 0;
 		}
 		screen.setTime(cur_time);
@@ -156,42 +116,9 @@ void inputTask(void *parameter)
 	}
 }
 
-void testVoltage(void)
-{
-	/*
-	for (int i = 0; i < 0xF1; i++) {
-		delay(100);
-		write8(0x0, i);
-	}
-	*/
-}
-
-uint8_t reg2, reg3, reg4;
 void loop() {
-
 	//get_memory_info();
 	//get_i2c_slaves();
-	//write8(0x6, 0x0);
-#if 0
-	reg2 = read8(&I2CA, 0x2);
-	reg3 = read8(&I2CA, 0x3);
-	reg4 = read8(&I2CA, 0x4);
-
-	Serial.println("=============");
-	Serial.print("status: ");
-	for (int i = 7; i >= 0; i--)
-		Serial.print(bitRead(reg2, i));
-	Serial.println();
-	Serial.print("latch:  ");
-	for (int i = 7; i >= 0; i--)
-		Serial.print(bitRead(reg3, i));
-	Serial.println();
-	Serial.print("mask:   ");
-	for (int i = 7; i >= 0; i--)
-		Serial.print(bitRead(reg4, i));
-	Serial.println("=============");
-	//testVoltage();
-#endif
 	delay(100);
 }
 
