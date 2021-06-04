@@ -1,70 +1,24 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-#define	FONT_WIDTH	32
-#define	FONT_HEIGHT	64
+#include "fnd_font_32x64.h"
+//#include "fnd_font_40x80.h"
+//#include "fnd_font_48x96.h"
 
 //------------------------------------------------------------------------------
-/* Vertical Segment Image */
-//------------------------------------------------------------------------------
-#define	IMG_V		0
-#define	IMG_V_WIDTH	5
-#define	IMG_V_HEIGHT	26
-
 #define	NUM_OF_FND	4
 #define	DOT_POS		1
 #define	FG_COLOR	TFT_RED
 #define	BG_COLOR	TFT_BLACK
-//uint16_t bg_color = TFT_DARKGREY;
-
-const uint8_t	IMG_V_DATA[] = {
-	0xFC, 0xFE, 0xFF, 0xFE, 0xFC,
-	0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-	0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-	0x00, 0x01, 0x03, 0x01, 0x00
-};
 
 //------------------------------------------------------------------------------
-/* Horizontal Segment Image */
-//------------------------------------------------------------------------------
-#define	IMG_H		1
-#define	IMG_H_WIDTH	20
-#define	IMG_H_HEIGHT	5
-
-const uint8_t	IMG_H_DATA[] = {
-	0x04, 0x0E, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F,
-	0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x0E, 0x04
-};
+#define	FND_CLEAR_NUM	8
 
 //------------------------------------------------------------------------------
-/* Dot Segment Image */
-//------------------------------------------------------------------------------
-#define	IMG_DOT		2
-#define	IMG_DOT_WIDTH	4
-#define	IMG_DOT_HEIGHT	4
-
-#define	IMG_DOT_YOFFSET	58
-
-const uint8_t	IMG_DOT_DATA[] = {
-	0x0F, 0x0F, 0x0F, 0x0F
-};
-
-//------------------------------------------------------------------------------
-/* Segment display data table (x offsset, y offset, img select */
-//------------------------------------------------------------------------------
-#define SEG_ON_A 	{  6,  3, IMG_H	}
-#define SEG_ON_B 	{ 25,  6, IMG_V	}
-#define SEG_ON_C 	{ 25, 33, IMG_V	}
-#define SEG_ON_D 	{  6, 57, IMG_H	}
-#define SEG_ON_E 	{  2, 33, IMG_V	}
-#define SEG_ON_F 	{  2,  6, IMG_V	}
-#define SEG_ON_G 	{  6, 30, IMG_H	}
-#define SEG_END 	{ -1, -1, -1	}
-
 const int8_t FONT_IMG_TABLE[16][8][3] = {
 	{
 		/* FND 0 */
 		SEG_ON_A, SEG_ON_B, SEG_ON_C, SEG_ON_D,
-		SEG_ON_E, SEG_ON_F, SEG_END, SEG_END
+		SEG_ON_E, SEG_ON_F, SEG_END
 	},{
 		/* FND 1 */
 		SEG_ON_B, SEG_ON_C, SEG_END,
@@ -128,7 +82,6 @@ const int8_t FONT_IMG_TABLE[16][8][3] = {
 };
 
 //------------------------------------------------------------------------------
-#define	FND_CLEAR_NUM	8
 
 struct font_table {
 	int8_t		x_offset, y_offset;
@@ -141,11 +94,14 @@ struct display_data {
 };
 
 struct fnd {
-	uint16_t			*fb;
+	uint16_t		*fb;
 	struct display_data	*dd;
 
 	/* num of fnd */
 	uint8_t			cnt;
+
+	/* fnd position */
+	uint16_t		x, y;
 
 	/* dot enable */
 	bool			dot_en, dot_on;

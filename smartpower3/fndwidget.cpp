@@ -175,24 +175,22 @@ void FndWidget::fnd_update()
 			value /= 10;
 		} else {
 			if (f->dd[pos].value) {
-				f->dd[pos].value  = -1;
+				f->dd[pos].value  = 0;
 				f->dd[pos].update = true;
 			}
 		}
 	}
 
 	for (i = 0; i < f->cnt; i++) {
+		fnd_fb_write (i, FND_CLEAR_NUM,  f->bg_color);
 		if (f->dd[i].update) {
 			f->dd[i].update = false;
 
-			fnd_fb_write (i, FND_CLEAR_NUM,  f->bg_color);
+			if ((i + 1 < f->cnt) && (f->dd[i +1].value == 0))
+				f->dd[i +1].update = true;
 
-			/* force update */
-			if (f->dd[i].value == -1) {
-				f->dd[i].value = 0;
-				fnd_num_write(i);
-			}
 			if (rbo && (f->dd[i].value == 0)) {
+				fnd_num_write(i);
 				if ( f->dot_en && ((i + 1) < f->dot_pos))
 					continue;
 				if (!f->dot_en && ((i + 1) < f->cnt))
