@@ -13,6 +13,8 @@ void STPD01::begin(uint8_t addr, TwoWire *theWire)
 {
 	_i2caddr = addr;
 	_wire = theWire;
+	write8(STPD01_REGISTER_5, 0x00);
+	write8(STPD01_REGISTER_4, 0xff);
 }
 
 uint8_t STPD01::read8(uint8_t reg)
@@ -31,6 +33,22 @@ void STPD01::write8(uint8_t reg, uint8_t val)
     _wire->write(reg);
     _wire->write(val);
     _wire->endTransmission();
+}
+
+void STPD01::clearInterrupt(uint8_t reg)
+{
+	uint8_t tmp;
+	tmp = read8(STPD01_REGISTER_4);
+	tmp &= ~(1 << reg);
+	write8(STPD01_REGISTER_4, tmp);
+}
+
+void STPD01::setInterrupt(uint8_t reg)
+{
+	uint8_t tmp;
+	tmp = read8(STPD01_REGISTER_4);
+	tmp |= reg;
+	write8(STPD01_REGISTER_4, tmp);
 }
 
 void STPD01::monitorInterrupt(uint8_t ch)
@@ -77,13 +95,16 @@ void STPD01::onOff(void)
 
 void STPD01::setVoltage(uint16_t volt)
 {
-	uint8_t val;
-	if (volt < 5900) {
+	uint8_t val = 0;
+	if (volt < 3000) {
+		val = 0x00;
+	} else if (volt < 5900) {
 		val = (volt - 3000)/20;
 	} else if (volt < 11000) {
 		val = 0x91 + (volt - 5900)/100;
 	} else if (volt < 20000) {
 		val = 0xc4 + (uint16_t)(volt - 11000)/200;
 	}
+	Serial.println(val);
 	write8(STPD01_REGISTER_0, val);
 }

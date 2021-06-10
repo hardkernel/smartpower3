@@ -16,35 +16,56 @@ Screen::Screen()
 	header->draw("SP3");
 
 	channel[0] = new Channel(&tft);
-	channel[0]->init(30, 60);
+	channel[0]->init(30, 55);
 	channel[1] = new Channel(&tft);
-	channel[1]->init(260, 60);
+	channel[1]->init(260, 55);
+
+	stpd01[0] = new STPD01();
+	stpd01[1] = new STPD01();
+	pinMode(25, INPUT_PULLUP);
+	//attachInterrupt(25, isr_stp, FALLING);
+	//xTaskCreate(hello, "Hello", 2000, NULL, 1, NULL);
+}
+
+void Screen::hello(void *param)
+{
+	for (;;) {
+		vTaskDelay(1000);
+	}
+}
+
+void Screen::isr_stp(void)
+{
+	Serial.println("Hello");
 }
 
 void Screen::begin(TwoWire *theWire)
 {
 	_wire = theWire;
-	stpd01_ch0.begin(0x5, _wire);
-	stpd01_ch1.begin(0x4, _wire);
-	stpd01_ch0.setCurrentLimit(3000);
-	stpd01_ch1.setCurrentLimit(3000);
+	stpd01[0]->begin(0x5, _wire);
+	stpd01[1]->begin(0x4, _wire);
+	stpd01[0]->setCurrentLimit(3000);
+	stpd01[1]->setCurrentLimit(3000);
 }
 
 void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch)
 {
-	if (channel[ch] == NULL)
-		return;
-	if (mode == BASE_EDIT)
-		channel[ch]->pushPowerEdit(volt, ampere, watt);
-	else {
-		channel[ch]->pushPower(volt, ampere, watt);
+	bool onoff = channel[ch]->getOnOff();
+	if (mode == BASE_EDIT) {
+		if (onoff)
+			channel[ch]->pushPowerEdit(volt, ampere, watt);
+		else
+			channel[ch]->pushPowerEdit(0, 0, 0);
+	} else {
+		if (onoff)
+			channel[ch]->pushPower(volt, ampere, watt);
+		else
+			channel[ch]->pushPower(0, 0, 0);
 	}
 }
 
 void Screen::powerOn(uint8_t idx)
 {
-	if (channel[idx] == NULL)
-		return;
 	channel[idx]->powerOn();
 }
 
@@ -114,16 +135,16 @@ void Screen::drawBaseEdit()
 		btn_pressed[3] = false;
 		if (activated == STATE_VOLT0) {
 			channel[0]->setVolt(dial_cnt);
-			stpd01_ch0.setVoltage(channel[0]->getVolt());
+			stpd01[0]->setVoltage(channel[0]->getVolt());
 		} else if (activated == STATE_AMPERE0) {
 			channel[0]->setCurrentLimit(dial_cnt);
-			stpd01_ch0.setCurrentLimit(channel[0]->getCurrentLimit());
+			stpd01[0]->setCurrentLimit(channel[0]->getCurrentLimit());
 		} else if (activated == STATE_VOLT1) {
 			channel[1]->setVolt(dial_cnt);
-			stpd01_ch1.setVoltage(channel[1]->getVolt());
+			stpd01[1]->setVoltage(channel[1]->getVolt());
 		} else if (activated == STATE_AMPERE1) {
 			channel[1]->setCurrentLimit(dial_cnt);
-			stpd01_ch1.setCurrentLimit(channel[1]->getCurrentLimit());
+			stpd01[1]->setCurrentLimit(channel[1]->getCurrentLimit());
 		}
 		dial_cnt = dial_state;
 		return;
@@ -144,7 +165,8 @@ void Screen::drawBaseEdit()
 
 void Screen::drawScreen()
 {
-	stpd01_ch0.monitorInterrupt(0);
+	stpd01[1]->monitorInterrupt(1);
+
 	switch (mode) {
 	case BASE:
 		drawBase();
@@ -157,6 +179,8 @@ void Screen::drawScreen()
 	case BASE_EDIT:
 		header->draw("SP3 MODE : EDIT");
 		drawBaseEdit();
+		break;
+	case SETTING:
 		break;
 	}
 	channel[0]->drawPower();
@@ -182,7 +206,7 @@ void Screen::activate()
 		dial_cnt = 0;
 	else if (dial_cnt < 0)
 		dial_cnt = 4;
-	Serial.printf("dial_cnt : %d, mod : %d\n", dial_cnt);
+	Serial.printf("dial_cnt : %d\n", dial_cnt);
 
 	deActivate();
 	activated = dial_cnt;
@@ -212,7 +236,7 @@ void Screen::countDial(int8_t dial_cnt, bool direct, uint32_t milisec)
 	this->dial_direct = direct;
 }
 
-uint32_t Screen::setTime(uint32_t milisec)
+void Screen::setTime(uint32_t milisec)
 {
 	this->cur_time = milisec;
 }
@@ -230,11 +254,11 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 	switch (idx) {
 	case 0: /* Channel0 ON/OFF */
 		powerOn(idx);
-		stpd01_ch0.onOff();
+		stpd01[0]->onOff();
 		break;
 	case 1: /* Channel1 ON/OFF */
 		powerOn(idx);
-		stpd01_ch1.onOff();
+		stpd01[1]->onOff();
 		break;
 	case 2:  /* MENU/CANCEL */
 		dial_time = cur_time;

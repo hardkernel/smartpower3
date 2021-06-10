@@ -38,3 +38,5 @@ void write8(TwoWire *theWire, uint8_t reg, uint8_t val) {
 	theWire->write(val);
 	theWire->endTransmission();
 }
+
+uint8_t mode;

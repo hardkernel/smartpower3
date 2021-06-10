@@ -54,7 +54,7 @@ void Component::drawOutLines(void)
 void Component::clearOutLines(void)
 {
 	for (int i = 0; i < 3; i++) {
-		tft->drawRect(x-(3-i), y-(3-i), width+(6-i*2), height+(6-i*2), TFT_BLACK);
+		tft->drawRect(x-(3-i), y-(3-i), width+(6-i*2), height+(6-i*2), TFT_DARKGREY);
 	}
 }
 

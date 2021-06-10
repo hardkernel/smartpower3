@@ -64,6 +64,8 @@ public:
 	void setVoltage(uint16_t val);
 	void setCurrentLimit(uint16_t milliampere);
 	void monitorInterrupt(uint8_t ch);
+	void setInterrupt(uint8_t reg);
+	void clearInterrupt(uint8_t reg);
 };
 
 #endif

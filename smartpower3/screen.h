@@ -7,8 +7,7 @@
 enum screen_mode_t {
 	BASE,
 	BASE_MOVE,
-	BASE_EDIT,
-	SETTING
+	BASE_EDIT, SETTING
 };
 
 enum state {
@@ -31,16 +30,17 @@ public:
 	void deActivate();
 	void powerOn(uint8_t idx);
 	void getBtnPress(uint8_t idx, uint32_t cur_time);
-	uint32_t setTime(uint32_t milisec);
+	void setTime(uint32_t milisec);
 	void clearBtnEvent(void);
 	bool getOnOff(uint8_t idx);
+	STPD01 *stpd01[2];
+	static void isr_stp(void);
+	static void hello(void *param);
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
 	Channel *channel[2];
 	Header *header;
-	STPD01 stpd01_ch0;
-	STPD01 stpd01_ch1;
 	TwoWire *_wire;
 	uint8_t activated = 0;
 	uint32_t dial_time = 0;

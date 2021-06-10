@@ -2,6 +2,8 @@
 #include <Wire.h>
 #include <SPIFFS.h>
 
+STPD01 *stpd01[2];
+
 void setup(void) {
 	Serial.begin(115200);
 	pinMode(27, OUTPUT);
@@ -15,18 +17,10 @@ void setup(void) {
 
 	initEncoder(&dial);
 	initPAC1933();
-	//write8(&I2CA, 0x04, 0xff);
 
 	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
 	xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
-	pinMode(25, INPUT_PULLUP);
-	attachInterrupt(25, isr_stp, FALLING);
-}
-
-void isr_stp()
-{
-	Serial.println("Hello isr stp");
 }
 
 void initPAC1933(void)
@@ -46,7 +40,7 @@ void updatePowerSense3(void)
 {
 	PAC.UpdateVoltageSense3();
 	PAC.UpdateCurrentSense3();
-	PAC.UpdatePowerSense3();
+	//PAC.UpdatePowerSense3();
 	/*
 	PAC.UpdatePowerAcc();
 	*/
@@ -56,7 +50,7 @@ void updatePowerSense2(void)
 {
 	PAC.UpdateVoltageSense2();
 	PAC.UpdateCurrentSense2();
-	PAC.UpdatePowerSense2();
+	//PAC.UpdatePowerSense2();
 	/*
 	PAC.UpdatePowerAcc();
 	*/
@@ -66,7 +60,7 @@ void updatePowerSense1(void)
 {
 	PAC.UpdateVoltageSense1();
 	PAC.UpdateCurrentSense1();
-	PAC.UpdatePowerSense1();
+	//PAC.UpdatePowerSense1();
 	/*
 	PAC.UpdatePowerAcc();
 	*/
@@ -86,6 +80,13 @@ void powerTask(void *parameter)
 		ampere = (uint16_t)(PAC.Current);
 		watt = (uint16_t)(PAC.Power);
 		screen.pushPower(volt, ampere, watt, 1);
+		//updatePowerSense1();
+		/*
+		volt = (uint16_t)(PAC.Voltage);
+		ampere = (uint16_t)(PAC.Current);
+		watt = (uint16_t)(PAC.Power);
+		Serial.printf("%d V, %d A, %d W\n\r", volt, ampere, watt);
+		*/
 
 		vTaskDelay(100);
 	}
@@ -104,8 +105,13 @@ void inputTask(void *parameter)
 	for (;;) {
 		cur_time = millis();
 		for (int i = 0; i < 4; i++) {
-			if (button[i].checkPressed() == true)
+			if (button[i].checkPressed() == true) {
 				screen.getBtnPress(i, cur_time);
+				/*
+				if (i < 2)
+					stpd01[i]->onOff();
+				*/
+			}
 		}
 		if (dial.cnt != 0) {
 			screen.countDial(dial.cnt, dial.direct, cur_time);
@@ -118,8 +124,8 @@ void inputTask(void *parameter)
 
 void loop() {
 	//get_memory_info();
-	//get_i2c_slaves();
-	delay(100);
+	//get_i2c_slaves(&I2CA);
+	delay(1000);
 }
 
 void get_memory_info(void)

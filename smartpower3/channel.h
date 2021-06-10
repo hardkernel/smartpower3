@@ -21,8 +21,8 @@ private:
 	TFT_eSPI *tft;
 	uint16_t volt_set = 5000;
 	uint16_t _volt_set = 5000;
-	uint16_t current_limit = 500;
-	uint16_t _current_limit = 500;
+	uint16_t current_limit = 3000;
+	uint16_t _current_limit = 3000;
 	FndWidget *volt;
 	Component *_volt;
 	Component *_current;
