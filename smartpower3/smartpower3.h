@@ -1,5 +1,3 @@
-#include <Arduino.h>
-#include <TFT_eSPI.h>
 #include <Microchip_PAC193x.h>
 #include "screen.h"
 #include "inputmanager.h"
@@ -8,6 +6,9 @@
 #define BUTTON_CH0 39
 #define BUTTON_CH1 34
 #define BUTTON_DIAL 35
+
+#define STPD01_CH0 27
+#define STPD01_CH1 14
 
 Button button[4] = {
 	Button(BUTTON_CH0), Button(BUTTON_CH1), Button(BUTTON_MENU), Button(BUTTON_DIAL)

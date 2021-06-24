@@ -60,12 +60,15 @@ public:
 	void begin(uint8_t addr = STPD01_ADDRESS, TwoWire *theWire = &Wire);
 	uint8_t read8(uint8_t reg);
 	void write8(uint8_t reg, uint8_t val);
-	void onOff(void);
+	bool on(void);
+	bool off(void);
 	void setVoltage(uint16_t val);
 	void setCurrentLimit(uint16_t milliampere);
 	void monitorInterrupt(uint8_t ch);
 	void setInterrupt(uint8_t reg);
 	void clearInterrupt(uint8_t reg);
+	uint8_t readInterrupt(void);
+	bool readOnOff(void);
 };
 
 #endif

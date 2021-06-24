@@ -1,6 +1,71 @@
 #include "header.h"
 
-Header::Header(TFT_eSPI *tft, uint16_t width, uint16_t height, uint8_t font) :
-	Component(tft, width, height, font)
+Header::Header(TFT_eSPI *tft)
 {
+	this->tft = tft;
+	input = new Component(tft, 104, 30, 4);
+	mode = new Component(tft, 64, 30, 4);
+
+}
+
+void Header::init(uint16_t x, uint16_t y)
+{
+	this->x = x;
+	this->y = y;
+	input->init(TFT_YELLOW, TFT_BLACK, 1, TL_DATUM);
+	input->setCoordinate(x, y);
+	input->draw("IN:0.0V");
+}
+
+void Header::activate(void)
+{
+}
+
+void Header::deActivate(void)
+{
+}
+
+void Header::drawMode(String str)
+{
+}
+
+void Header::setLowInput(bool low_input)
+{
+	this->low_input = low_input;
+}
+
+bool Header::getLowInput(void)
+{
+	return low_input;
+}
+
+bool Header::checkInput(void)
+{
+	if (v_input > 10)
+		return true;
+	return false;
+}
+
+uint16_t Header::getInputVoltage(void)
+{
+	return v_input;
+}
+
+void Header::draw(void)
+{
+	if (v_update) {
+		v_update = false;
+		if (low_input)
+			input->setTextColor(TFT_BLACK, TFT_RED);
+		else
+			input->setTextColor(TFT_BLACK, TFT_GREEN);
+		input->clear();
+		input->draw("IN:" + String(v_input/1000.0, 1) + "V");
+	}
+}
+
+void Header::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt)
+{
+	v_input = volt;
+	v_update = true;
 }

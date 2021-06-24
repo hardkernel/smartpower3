@@ -26,10 +26,11 @@ public:
 	~Component(void);
 
 	void init(uint16_t fg_color, uint16_t bg_color, uint8_t size, uint8_t align);
-	void draw(void);
+	void draw(bool force_update = false);
+	void clear(void);
 	void draw(String s);
 	void setCoordinate(uint16_t x, uint16_t y);
-	void pushValue(float value);
+	void pushValue(uint16_t value);
 	void activate(void);
 	void deActivate(void);
 	void setTextColor(uint16_t fg_color, uint16_t bg_color);
@@ -42,10 +43,11 @@ private:
 	bool activated;
 	TFT_eSprite *img;
 	TFT_eSPI *tft;
-	float value;
-	float value_old;
+	uint16_t value;
+	uint16_t value_old;
 	void drawOutLines(void);
 	void clearOutLines(void);
+	uint8_t align = TL_DATUM;
 };
 
 #endif

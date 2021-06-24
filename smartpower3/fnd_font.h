@@ -7,7 +7,7 @@
 //------------------------------------------------------------------------------
 #define	NUM_OF_FND	4
 #define	DOT_POS		1
-#define	FG_COLOR	TFT_RED
+#define	FG_COLOR	TFT_DARKGREY
 #define	BG_COLOR	TFT_BLACK
 
 //------------------------------------------------------------------------------
@@ -111,6 +111,7 @@ struct fnd {
 	// FND ripple blanking control
 	bool			rbo;
 	uint16_t		bg_color, fg_color;
+	bool			refresh;
 };
 
 //------------------------------------------------------------------------------

@@ -49,7 +49,7 @@ private:
 	TFT_eSPI *tft;
 	uint16_t value;
 	uint16_t old_value;
-	float value_old;
+	uint16_t value_old;
 	void drawOutLines(void);
 	void clearOutLines(void);
 	struct fnd *f;

@@ -13,18 +13,29 @@ void STPD01::begin(uint8_t addr, TwoWire *theWire)
 {
 	_i2caddr = addr;
 	_wire = theWire;
-	write8(STPD01_REGISTER_5, 0x00);
-	write8(STPD01_REGISTER_4, 0xff);
+	//write8(STPD01_REGISTER_5, 0x00);
+	write8(STPD01_REGISTER_4, 0x00);
 }
 
 uint8_t STPD01::read8(uint8_t reg)
 {
+	byte error;
     _wire->beginTransmission(_i2caddr);
     _wire->write(reg);
-    _wire->endTransmission();
+    error = _wire->endTransmission();
+	if (error != 0)
+		return -1;
 
     _wire->requestFrom(_i2caddr, (byte)1);
     return _wire->read();
+}
+
+uint8_t STPD01::readInterrupt()
+{
+	byte tmp;
+	tmp = read8(STPD01_REGISTER_2);
+
+	return tmp;
 }
 
 void STPD01::write8(uint8_t reg, uint8_t val)
@@ -35,15 +46,19 @@ void STPD01::write8(uint8_t reg, uint8_t val)
     _wire->endTransmission();
 }
 
-void STPD01::clearInterrupt(uint8_t reg)
+void STPD01::setInterrupt(uint8_t reg)
 {
+	/*
 	uint8_t tmp;
 	tmp = read8(STPD01_REGISTER_4);
 	tmp &= ~(1 << reg);
+	Serial.println(tmp);
 	write8(STPD01_REGISTER_4, tmp);
+	*/
+	write8(STPD01_REGISTER_4, 0x00);
 }
 
-void STPD01::setInterrupt(uint8_t reg)
+void STPD01::clearInterrupt(uint8_t reg)
 {
 	uint8_t tmp;
 	tmp = read8(STPD01_REGISTER_4);
@@ -83,14 +98,35 @@ void STPD01::setCurrentLimit(uint16_t milliampere)
 	write8(STPD01_REGISTER_1, val);
 }
 
-void STPD01::onOff(void)
+bool STPD01::readOnOff(void)
 {
 	byte tmp;
-	onoff = !onoff;
+	tmp = read8(STPD01_REGISTER_6);
+	tmp = tmp & 0b01;
+	return tmp;
+}
+
+bool STPD01::on(void)
+{
+	byte tmp;
 	tmp = read8(STPD01_REGISTER_6);
 	tmp = tmp & 0b10;
-	tmp |= onoff;
+	tmp |= 1;
 	write8(STPD01_REGISTER_6, tmp);
+	if (readOnOff() != 1)
+		return 1;
+	return 0;
+}
+
+bool STPD01::off(void)
+{
+	byte tmp;
+	tmp = read8(STPD01_REGISTER_6);
+	tmp = tmp & 0b10;
+	write8(STPD01_REGISTER_6, tmp);
+	if (readOnOff() != 0)
+		return 1;
+	return 0;
 }
 
 void STPD01::setVoltage(uint16_t volt)
@@ -104,7 +140,8 @@ void STPD01::setVoltage(uint16_t volt)
 		val = 0x91 + (volt - 5900)/100;
 	} else if (volt < 20000) {
 		val = 0xc4 + (uint16_t)(volt - 11000)/200;
+	} else if (volt >= 20000) {
+		val = 0xf1;
 	}
-	Serial.println(val);
 	write8(STPD01_REGISTER_0, val);
 }

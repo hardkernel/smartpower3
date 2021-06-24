@@ -164,6 +164,14 @@ void FndWidget::fnd_update()
 {
 	uint16_t	i, pos;
 	bool		rbo = f->rbo;
+	uint16_t value = this->value;
+
+	if (f->refresh) {
+		f->refresh = false;
+	} else if (value == old_value) {
+		return;
+	}
+	old_value = value;
 
 	for (i = 0; i < f->cnt; i++) {
 		pos = f->cnt -i -1;
@@ -222,6 +230,8 @@ void FndWidget::init(uint16_t fg_color, uint16_t bg_color, uint8_t size, uint8_t
 
 void FndWidget::setTextColor(uint16_t fg_color, uint16_t bg_color)
 {
+	if ((f->fg_color != fg_color) || (f->bg_color != bg_color))
+		f->refresh = true;
 	f->fg_color = fg_color;
 	f->bg_color = bg_color;
 	f->dot_on = false;

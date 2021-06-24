@@ -31,11 +31,13 @@ void Component::init(uint16_t fg_color, uint16_t bg_color, uint8_t size, uint8_t
 	img->setTextColor(fg_color, bg_color);
 	img->setTextSize(size);
 	img->setTextDatum(align);
+	this->align = align;
 }
 
 void Component::setTextColor(uint16_t fg_color, uint16_t bg_color)
 {
-	img->setTextColor(fg_color, bg_color);
+	if ((img->textcolor != fg_color) || (img->textbgcolor != bg_color))
+		img->setTextColor(fg_color, bg_color);
 }
 
 void Component::setCoordinate(uint16_t x, uint16_t y)
@@ -54,31 +56,41 @@ void Component::drawOutLines(void)
 void Component::clearOutLines(void)
 {
 	for (int i = 0; i < 3; i++) {
-		tft->drawRect(x-(3-i), y-(3-i), width+(6-i*2), height+(6-i*2), TFT_DARKGREY);
+		tft->drawRect(x-(3-i), y-(3-i), width+(6-i*2), height+(6-i*2), TFT_BLACK);
 	}
 }
 
 void Component::draw(String s)
 {
-	img->drawString(s, 0, 0, font);
-	img->pushSprite(x, y);
-	delay(WAIT);
-}
-
-void Component::draw(void)
-{
-	if (value == value_old)
-		return;
-	value_old = value;
-	if (value < 10)
-		img->drawString("0" + String(value, 2), width, 0, font);
+	if (align == TR_DATUM)
+		img->drawString(s, width, 0, font);
 	else
-		img->drawString(String(value, 2), width, 0, font);
+		img->drawString(s, 0, 0, font);
 	img->pushSprite(x, y);
 	delay(WAIT);
 }
 
-void Component::pushValue(float value)
+void Component::draw(bool force_update)
+{
+	if ((value == value_old) && !force_update)
+		return;
+	if ((value_old >= 10000) && (value < 10000))
+		clear();
+	value_old = value;
+	if (align == TR_DATUM)
+		img->drawString(String(value/1000.0, 1), width, 0, font);
+	else
+		img->drawString(String(value/1000.0, 1), 0, 0, font);
+	img->pushSprite(x, y);
+	delay(WAIT);
+}
+
+void Component::clear(void)
+{
+	img->fillSprite(TFT_BLACK);
+}
+
+void Component::pushValue(uint16_t value)
 {
 	this->value = value;
 }
