@@ -69,6 +69,8 @@ public:
 	void clearInterrupt(uint8_t reg);
 	uint8_t readInterrupt(void);
 	bool readOnOff(void);
+	uint16_t readVoltage();
+	uint16_t readCurrentLimit();
 };
 
 #endif

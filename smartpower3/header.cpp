@@ -4,7 +4,7 @@ Header::Header(TFT_eSPI *tft)
 {
 	this->tft = tft;
 	input = new Component(tft, 104, 30, 4);
-	mode = new Component(tft, 64, 30, 4);
+	//save = new Component(tft, 64, 22, 4);
 
 }
 
@@ -12,17 +12,48 @@ void Header::init(uint16_t x, uint16_t y)
 {
 	this->x = x;
 	this->y = y;
-	input->init(TFT_YELLOW, TFT_BLACK, 1, TL_DATUM);
+	input->init(TFT_BLACK, TFT_RED, 1, TL_DATUM);
 	input->setCoordinate(x, y);
 	input->draw("IN:0.0V");
+
+	/*
+	save->init(FG_DISABLED, BG_DISABLED, 1, TL_DATUM);
+	save->setCoordinate(480 - 70, y);
+	save->draw("SAVE");
+	*/
+}
+
+bool Header::isEnabledSave(void)
+{
+	return enabled_save;
+}
+
+void Header::enableSave(void)
+{
+	enabled_save = true;
+	/*
+	save->setTextColor(FG_ENABLED, BG_ENABLED);
+	save->draw("SAVE");
+	*/
+}
+
+void Header::diableSave(void)
+{
+	enabled_save = false;
+	/*
+	save->setTextColor(FG_DISABLED, BG_DISABLED);
+	save->draw("SAVE");
+	*/
 }
 
 void Header::activate(void)
 {
+	//save->activate();
 }
 
 void Header::deActivate(void)
 {
+	//save->deActivate();
 }
 
 void Header::drawMode(String str)

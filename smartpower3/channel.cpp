@@ -11,16 +11,33 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint8_t channel)
 	//watt = new Component(tft, W_SEG, H_SEG, 7);
 
 	stpd01 = new STPD01();
+	/*
+	 * Rev0.4 sptd01 address
+	 * I2CA : 0x5
+	 * I2CB : 0x4
+	 * stpd01->begin(0x5 -(channel*1), theWire);
+	 *
+	 * Rev1.0 sptd01 address
+	 * I2CA : 0x5
+	 * I2CB : 0x7
+	 * stpd01->begin(0x5 +(channel*2), theWire);
+	 */
+	//stpd01->begin(0x5 +(channel*2), theWire);
 	stpd01->begin(0x5 -(channel*1), theWire);
-	//stpd01->setCurrentLimit(3000);
 
-	_volt = new Component(tft, 64, 22, 4);
-	_current = new Component(tft, 64, 22, 4);
+	_volt = new Component(tft, 48, 22, 4);
+	_current = new Component(tft, 48, 22, 4);
 
-	_int_cc = new Component(tft, 40, 22, 2);
-	_int_ovp = new Component(tft, 48, 22, 2);
-	_int_otp = new Component(tft, 48, 22, 2);
-	_int_otw = new Component(tft, 54, 22, 2);
+	_int_cc = new Component(tft, 40, 22, 4);
+	_int_ovp = new Component(tft, 48, 22, 4);
+	_int_otp = new Component(tft, 48, 22, 4);
+	_int_otw = new Component(tft, 54, 22, 4);
+	_int_scp = new Component(tft, 54, 22, 4);
+
+	__volt = new Component(tft, 48, 22, 4);
+	__current = new Component(tft, 48, 22, 4);
+
+	stpd = new Component(tft, 38, 16, 2);
 }
 
 Channel::~Channel(void)
@@ -37,6 +54,26 @@ Channel::~Channel(void)
 	_volt = NULL;
 	_ampere = NULL;
 #endif
+}
+
+void Channel::monitorSTPD01()
+{
+	if (test() == 0xff) {
+		//__volt->draw("OFF");
+		//__current->draw("OFF");
+		stpd->setTextColor(FG_DISABLED, BG_DISABLED);
+		stpd->draw("STPD");
+	} else {
+		stpd->setTextColor(FG_ENABLED, BG_ENABLED);
+		stpd->draw("STPD");
+		/*
+		char str[5];
+		sprintf(str, "%4.1f", stpd01->readVoltage()/1000.0);
+		__volt->draw(str);
+		sprintf(str, "%3.1f", stpd01->readCurrentLimit()/1000.0);
+		__current->draw(str);
+		*/
+	}
 }
 
 void Channel::initPower()
@@ -59,25 +96,44 @@ void Channel::initScreen(uint16_t x, uint16_t y)
 	_volt->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
 	_volt->pushValue(5000);
 
+	__volt->setCoordinate(x + 165, y + 27);
+	__volt->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
+	__volt->pushValue(5000);
+
 	_current->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
 	_current->setCoordinate(x + 145, y + 5 + Y_CURRENT);
 	_current->pushValue(3000);
 
+	__current->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
+	__current->setCoordinate(x + 165, y + 27 + Y_CURRENT);
+	__current->pushValue(3000);
+
 	_int_cc->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
-	_int_cc->setCoordinate(x-10, y + 230);
+	_int_cc->setCoordinate(x, y + 230);
 	_int_cc->draw(String("CC"));
 
 	_int_ovp->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
-	_int_ovp->setCoordinate(x + 40, y + 230);
+	_int_ovp->setCoordinate(x + 60, y + 230);
 	_int_ovp->draw(String("OVP"));
 
 	_int_otp->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
-	_int_otp->setCoordinate(x + 100, y + 230);
+	_int_otp->setCoordinate(x + 150, y + 230);
 	_int_otp->draw(String("OTP"));
 
 	_int_otw->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
-	_int_otw->setCoordinate(x + 160, y + 230);
+	_int_otw->setCoordinate(x + 30, y + 253);
 	_int_otw->draw(String("OTW"));
+
+	_int_scp->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
+	_int_scp->setCoordinate(x + 120, y + 253);
+	_int_scp->draw(String("SCP"));
+
+	//FG_DISABLED, BG_DISABLED
+	//stpd->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
+	stpd->init(FG_ENABLED, BG_ENABLED, 1, TR_DATUM);
+	//stpd->init(FG_DISABLED, BG_DISABLED, 1, TR_DATUM);
+	stpd->setCoordinate(x + 180, y + 200);
+	stpd->draw(String("STPD"));
 
 	tft->drawString("V", x + W_SEG-4, y + 38, 4);
 	tft->drawString("A", x + W_SEG-4, y + 29 + H_SEG + OFFSET_SEG, 4);
@@ -108,8 +164,7 @@ bool Channel::off(void)
 	volt->setTextColor(TFT_DARKGREY, TFT_BLACK);
 	current->setTextColor(TFT_DARKGREY, TFT_BLACK);
 	watt->setTextColor(TFT_DARKGREY, TFT_BLACK);
-	//clearInterruptUI();
-	Serial.printf("channel off %d\n\r", err);
+	clearInterruptUI();
 	return err;
 }
 
@@ -142,11 +197,22 @@ uint16_t Channel::getCurrentLimit(void)
 	return current_limit/100;
 }
 
-void Channel::setCurrentLimit(float val)
+void Channel::setCurrentLimit(float val, uint8_t mode)
 {
-	current_limit += val*100;
-	current_limit = min((uint16_t)3000, current_limit);
-	stpd01->setCurrentLimit(current_limit);
+	if (mode == 0) {
+		current_limit += val*100;
+		current_limit = min((uint16_t)3000, current_limit);
+		stpd01->setCurrentLimit(current_limit);
+	} else if (mode == 1) {
+		_current_limit = current_limit + val*100;
+		_current_limit = min((uint16_t)3000, _current_limit);
+		_current_limit = max((uint16_t)500, _current_limit);
+	} else if (mode == 2) {
+		_current_limit = val;
+		_current_limit = min((uint16_t)3000, _current_limit);
+		_current_limit = max((uint16_t)500, _current_limit);
+		this->_current->pushValue(_current_limit);
+	}
 }
 
 void Channel::editCurrentLimit(float val)
@@ -250,6 +316,8 @@ void Channel::clearInterruptUI(void)
 	_int_otp->draw(String("OTP"));
 	_int_otw->setTextColor(TFT_WHITE, TFT_DARKGREY);
 	_int_otw->draw(String("OTW"));
+	_int_scp->setTextColor(TFT_WHITE, TFT_DARKGREY);
+	_int_scp->draw(String("SCP"));
 }
 
 void Channel::checkInterrupt(void)
@@ -263,6 +331,7 @@ void Channel::checkInterrupt(void)
 		_int_cc->setTextColor(TFT_YELLOW, TFT_BLACK);
 		_int_cc->draw(String("CC"));
 	}
+
 	if (reg & INT_OVERVOLTAGE_PROTECTION) {
 		_int_ovp->setTextColor(TFT_YELLOW, TFT_BLACK);
 		_int_ovp->draw(String("OVP"));
@@ -270,10 +339,15 @@ void Channel::checkInterrupt(void)
 		_int_ovp->setTextColor(TFT_WHITE, TFT_DARKGREY);
 		_int_ovp->draw(String("OVP"));
 	}
-	/*
-	if (reg & INT_SHORT_CIRCUIT_PROTECTION)
-		Serial.println("SCP");
-		*/
+
+	if (reg & INT_SHORT_CIRCUIT_PROTECTION) {
+		_int_scp->setTextColor(TFT_YELLOW, TFT_BLACK);
+		_int_scp->draw(String("SCP"));
+	} else {
+		_int_scp->setTextColor(TFT_WHITE, TFT_DARKGREY);
+		_int_scp->draw(String("SCP"));
+	}
+
 	if (reg & INT_OVERTEMPERATURE_PROTECTION) {
 		_int_ovp->setTextColor(TFT_YELLOW, TFT_BLACK);
 		_int_otp->draw(String("OTP"));

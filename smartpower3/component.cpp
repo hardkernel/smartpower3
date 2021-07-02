@@ -25,7 +25,7 @@ Component::~Component(void)
 
 void Component::init(uint16_t fg_color, uint16_t bg_color, uint8_t size, uint8_t align)
 {
-	img->setColorDepth(8);
+	img->setColorDepth(16);
 	img->fillSprite(TFT_BLACK);
 	img->createSprite(width, height);
 	img->setTextColor(fg_color, bg_color);
@@ -58,6 +58,16 @@ void Component::clearOutLines(void)
 	for (int i = 0; i < 3; i++) {
 		tft->drawRect(x-(3-i), y-(3-i), width+(6-i*2), height+(6-i*2), TFT_BLACK);
 	}
+}
+
+void Component::draw(char *s)
+{
+	if (align == TR_DATUM)
+		img->drawString(s, width, 0, font);
+	else
+		img->drawString(s, 0, 0, font);
+	img->pushSprite(x, y);
+	delay(WAIT);
 }
 
 void Component::draw(String s)

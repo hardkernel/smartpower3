@@ -1,0 +1,6 @@
+auto_onoff=0
+voltage0=05.0
+voltage1=05.0
+current_limit0=03.0
+current_limit1=03.0
+firstboot=0

@@ -29,7 +29,7 @@ public:
 	bool on(void);
 	bool off(void);
 	void setVolt(float volt_set, uint8_t mode = 0);
-	void setCurrentLimit(float val);
+	void setCurrentLimit(float val, uint8_t mode = 0);
 	void activate(comp_t comp);
 	void deActivate(comp_t comp);
 	void setCompColor(comp_t comp);
@@ -42,6 +42,7 @@ public:
 	void checkInterrupt(void);
 	void clearInterruptUI(void);
 	uint8_t test(void);
+	void monitorSTPD01();
 private:
 	bool activated;
 	TFT_eSPI *tft;
@@ -52,10 +53,14 @@ private:
 	FndWidget *volt;
 	Component *_volt;
 	Component *_current;
+	Component *__volt;
+	Component *__current;
 	Component *_int_ovp;
 	Component *_int_cc;
 	Component *_int_otp;
 	Component *_int_otw;
+	Component *_int_scp;
+	Component *stpd;
 	FndWidget *current;
 	FndWidget *watt;
 	//Component *watt;

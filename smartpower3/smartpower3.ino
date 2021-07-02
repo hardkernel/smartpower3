@@ -11,26 +11,27 @@ uint16_t amax2 = 0;
 uint16_t vmin2 = -1;
 uint16_t amin2 = -1;
 
+uint16_t vmax3 = 0;
+uint16_t amax3 = 0;
+uint16_t vmin3 = -1;
+uint16_t amin3 = -1;
+
 uint32_t ctime0 = 0;
+uint32_t ctime1 = 0;
+uint32_t ctime3 = 0;
 
 void setup(void) {
-	pinMode(STPD01_CH0, OUTPUT);
-	pinMode(STPD01_CH1, OUTPUT);
-	digitalWrite(STPD01_CH0, LOW);
-	digitalWrite(STPD01_CH1, LOW);
-
 	Serial.begin(115200);
 	I2CA.begin(15, 4);
 	I2CB.begin(21, 22);
 	PAC.begin(&I2CB);
-
+	//PAC2.begin(&I2CA);
 	screen.begin(&I2CA);
 
 	initEncoder(&dial);
-	//initPAC1933();
 
 	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
-	xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
+	xTaskCreate(screenTask, "Draw Screen", 3000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
 }
 
@@ -117,11 +118,14 @@ void powerTask(void *parameter)
 			ctime0 = millis();
 		}
 
-		updatePowerSense1();
-		volt = (uint16_t)(PAC.Voltage);
-		ampere = (uint16_t)(PAC.Current);
-		watt = (uint16_t)(PAC.Power*100);
-		screen.pushInputPower(volt, ampere, watt);
+		if ((millis() - ctime1) > 500) {
+			updatePowerSense1();
+			volt = (uint16_t)(PAC.Voltage);
+			ampere = (uint16_t)(PAC.Current);
+			watt = (uint16_t)(PAC.Power*100);
+			screen.pushInputPower(volt, ampere, watt);
+			ctime1 = millis();
+		}
 
 		vTaskDelay(10);
 	}
@@ -147,10 +151,16 @@ void inputTask(void *parameter)
 					amax = 0;
 					vmin = -1;
 					amin = -1;
+
 					vmax2 = 0;
 					amax2 = 0;
 					vmin2 = -1;
 					amin2 = -1;
+
+					vmax3 = 0;
+					amax3 = 0;
+					vmin3 = -1;
+					amin3 = -1;
 				}
 				/*
 				if (i < 2)
@@ -167,11 +177,52 @@ void inputTask(void *parameter)
 	}
 }
 
+void updatePowerSense1_PAC2(void)
+{
+	/*
+	PAC2.UpdateVoltageSense1();
+	PAC2.UpdateCurrentSense1();
+	PAC2.UpdatePowerSense1();
+	*/
+}
+
+
+void testI2CA()
+{
+	screen.run();
+#if 0
+	uint16_t volt, ampere, watt;
+	updatePowerSense1_PAC2();
+	volt = (uint16_t)(PAC2.Voltage);
+	ampere = (uint16_t)(PAC2.Current);
+	watt = (uint16_t)(PAC2.Power*100);
+
+	if (volt > vmax3)
+		vmax3 = volt;
+	if (ampere > amax3)
+		amax3 = ampere;
+	if (volt < vmin3)
+		vmin3 = volt;
+	if (ampere < amin3)
+		amin3 = ampere;
+
+	if ((millis() - ctime3) > 3000) {
+		Serial.printf("================== CH0_PAC2 =============\n\r");
+		Serial.printf("vmax : [[ %d ]], vmin : [[ %d ]], vcur : [[ %d ]], vdiff : [[ %d ]] \n\r", vmax3, vmin3, volt, vmax3 - vmin3);
+		Serial.printf("amax : [[ %d ]], amin : [[ %d ]], acur : [[ %d ]], adiff : [[[[ %d ]]]] \n\r", amax3, amin3, ampere, amax3 - amin3);
+		Serial.printf("===============================\n\r");
+		ctime3 = millis();
+	}
+#endif
+}
+
 void loop() {
 	//get_memory_info();
+	//get_i2c_slaves(&I2CB);
 	//get_i2c_slaves(&I2CA);
 	//Serial.println(digitalRead(25));
-	delay(1000);
+	//testI2CA();
+	delay(100);
 }
 
 void get_memory_info(void)
@@ -212,4 +263,3 @@ void get_i2c_slaves(TwoWire *theWire)
 	else
 		Serial.println("done");
 }
-

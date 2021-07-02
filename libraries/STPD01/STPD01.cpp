@@ -98,6 +98,15 @@ void STPD01::setCurrentLimit(uint16_t milliampere)
 	write8(STPD01_REGISTER_1, val);
 }
 
+uint16_t STPD01::readCurrentLimit()
+{
+	uint8_t val = 0;
+	uint16_t current = 0;
+	val = read8(STPD01_REGISTER_1);
+	current = (val + 1)*100;
+	return current;
+}
+
 bool STPD01::readOnOff(void)
 {
 	byte tmp;
@@ -127,6 +136,21 @@ bool STPD01::off(void)
 	if (readOnOff() != 0)
 		return 1;
 	return 0;
+}
+
+uint16_t STPD01::readVoltage()
+{
+	uint8_t val = 0;
+	uint16_t volt = 0;
+	val = read8(STPD01_REGISTER_0);
+	if (val < 0x91)
+		volt = val*20 + 3000;
+	else if (val < 0xc4)
+		volt = (val - 0x91)*100 + 5900;
+	else if (val < 0xf1)
+		volt = (val - 0xc4)*200 + 11000;
+	return volt;
+
 }
 
 void STPD01::setVoltage(uint16_t volt)

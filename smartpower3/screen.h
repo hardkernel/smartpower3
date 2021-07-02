@@ -5,6 +5,10 @@
 #include "channel.h"
 #include "header.h"
 #include <STPD01.h>
+#include <Adafruit_BME280.h>
+
+#define STPD01_CH0 27
+#define STPD01_CH1 14
 
 enum screen_mode_t {
 	BASE,
@@ -39,6 +43,11 @@ public:
 	static void isr_stp(void);
 	void listDir(const char * dirname, uint8_t levels);
 	void readFile(const char * path);
+	void changeVolt(screen_mode_t mode);
+	void fsInit(void);
+	void setSysParam(char *key, String value);
+	void setSysParam(char *key, float value);
+	bool isFirstBoot();
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
@@ -48,6 +57,7 @@ private:
 	uint8_t activated = 0;
 	uint32_t dial_time = 0;
 	uint32_t cur_time = 0;
+	uint32_t task_time = 0;
 	int8_t onoff[2] = {2, 2};
 	bool btn_pressed[4] = {false,};
 	int8_t dial_cnt = 0;
@@ -65,4 +75,9 @@ private:
 	uint16_t current_limit = 3;
 	uint16_t volt_set = 5;
 	uint16_t volt_limit = 20;
+	bool saved = false;
+	bool changed[5] = {false,};
+	Adafruit_BME280 bme;
+	Adafruit_Sensor *bme_temp = bme.getTemperatureSensor();
+	Adafruit_Sensor *bme_humidity = bme.getHumiditySensor();
 };
