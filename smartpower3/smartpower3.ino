@@ -20,6 +20,13 @@ uint32_t ctime0 = 0;
 uint32_t ctime1 = 0;
 uint32_t ctime3 = 0;
 
+#define BL_LCD	17
+#define LED2	13
+#define LED1	2
+
+#define FREQ	5000
+#define RESOLUTION	8
+
 void setup(void) {
 	Serial.begin(115200);
 	I2CA.begin(15, 4);
@@ -33,6 +40,16 @@ void setup(void) {
 	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
 	xTaskCreate(screenTask, "Draw Screen", 3000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
+
+	ledcSetup(0, FREQ, RESOLUTION);
+	ledcSetup(1, FREQ, RESOLUTION);
+	ledcSetup(2, FREQ, RESOLUTION);
+	ledcAttachPin(LED2, 0);
+	ledcAttachPin(LED1, 1);
+	ledcAttachPin(BL_LCD, 2);
+	ledcWrite(0, 50);
+	ledcWrite(1, 50);
+	ledcWrite(2, 50);
 }
 
 void initPAC1933(void)
@@ -82,6 +99,7 @@ void powerTask(void *parameter)
 		ampere = (uint16_t)(PAC.Current);
 		watt = (uint16_t)(PAC.Power*100);
 		screen.pushPower(volt, ampere, watt, 0);
+		//Serial.printf("ch0:%d,%d,%d\n\r", volt, ampere, watt);
 
 		if (volt > vmax)
 			vmax = volt;
@@ -92,11 +110,20 @@ void powerTask(void *parameter)
 		if (ampere < amin)
 			amin = ampere;
 
+		if ((millis() - ctime3) > 3000) {
+			Serial.printf("================== CH0 =============\n\r");
+			Serial.printf("vmax : [[ %d ]], vmin : [[ %d ]], vcur : [[ %d ]], vdiff : [[ %d ]] \n\r", vmax, vmin, volt, vmax - vmin);
+			Serial.printf("amax : [[ %d ]], amin : [[ %d ]], acur : [[ %d ]], adiff : [[[[ %d ]]]] \n\r", amax, amin, ampere, amax - amin);
+			Serial.printf("===============================\n\r");
+			ctime3 = millis();
+		}
+
 		updatePowerSense3();
 		volt = (uint16_t)(PAC.Voltage);
 		ampere = (uint16_t)(PAC.Current);
 		watt = (uint16_t)(PAC.Power*100);
 		screen.pushPower(volt, ampere, watt, 1);
+		//Serial.printf("ch1:%d,%d,%d\n\r", volt, ampere, watt);
 		if (volt > vmax2)
 			vmax2 = volt;
 		if (ampere > amax2)
@@ -106,17 +133,15 @@ void powerTask(void *parameter)
 		if (ampere < amin2)
 			amin2 = ampere;
 
+#if 1
 		if ((millis() - ctime0) > 3000) {
-			Serial.printf("================== CH0 =============\n\r");
-			Serial.printf("vmax : [[ %d ]], vmin : [[ %d ]], vcur : [[ %d ]], vdiff : [[ %d ]] \n\r", vmax, vmin, volt, vmax - vmin);
-			Serial.printf("amax : [[ %d ]], amin : [[ %d ]], acur : [[ %d ]], adiff : [[[[ %d ]]]] \n\r", amax, amin, ampere, amax - amin);
-			Serial.printf("===============================\n\r");
 			Serial.printf("================== CH1 =============\n\r");
 			Serial.printf("vmax : [[ %d ]], vmin : [[ %d ]], vcur : [[ %d ]], vdiff : [[ %d ]] \n\r", vmax2, vmin2, volt, vmax2 - vmin2);
 			Serial.printf("amax : [[ %d ]], amin : [[ %d ]], acur : [[ %d ]], adiff : [[[[ %d ]]]] \n\r", amax2, amin2, ampere, amax2 - amin2);
 			Serial.printf("===============================\n\r");
 			ctime0 = millis();
 		}
+#endif
 
 		if ((millis() - ctime1) > 500) {
 			updatePowerSense1();
@@ -222,7 +247,10 @@ void loop() {
 	//get_i2c_slaves(&I2CA);
 	//Serial.println(digitalRead(25));
 	//testI2CA();
-	delay(100);
+	ledcWrite(0, 0);
+	delay(500);
+	ledcWrite(0, 50);
+	delay(500);
 }
 
 void get_memory_info(void)

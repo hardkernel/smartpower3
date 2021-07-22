@@ -22,8 +22,8 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint8_t channel)
 	 * I2CB : 0x7
 	 * stpd01->begin(0x5 +(channel*2), theWire);
 	 */
-	//stpd01->begin(0x5 +(channel*2), theWire);
-	stpd01->begin(0x5 -(channel*1), theWire);
+	stpd01->begin(0x5 +(channel*2), theWire);
+	//stpd01->begin(0x5 -(channel*1), theWire);
 
 	_volt = new Component(tft, 48, 22, 4);
 	_current = new Component(tft, 48, 22, 4);

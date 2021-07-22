@@ -9,8 +9,9 @@ Screen::Screen()
 	tft.fillScreen(TFT_BLACK);
 	tft.fillScreen(TFT_BLACK);
 	tft.setSwapBytes(true);
-	pinMode(TFT_BL, OUTPUT);
+	/*pinMode(TFT_BL, OUTPUT);
 	digitalWrite(TFT_BL, HIGH);
+	*/
 	for (int i = 0; i < 3; i++) {
 		tft.drawLine(0, 33 + i, 480, 33 + i, TFT_WHITE);
 		tft.drawLine(0, 270 + i, 480, 270 + i, TFT_WHITE);
