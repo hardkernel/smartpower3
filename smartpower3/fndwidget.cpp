@@ -287,6 +287,11 @@ void FndWidget::pushValue(uint16_t value)
 	this->value = value/10;
 }
 
+uint16_t FndWidget::getValue()
+{
+	return this->value;
+}
+
 void FndWidget::activate(void)
 {
 	drawOutLines();

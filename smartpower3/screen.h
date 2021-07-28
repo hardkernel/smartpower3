@@ -58,6 +58,7 @@ private:
 	uint32_t dial_time = 0;
 	uint32_t cur_time = 0;
 	uint32_t task_time = 0;
+	uint32_t time_print[2] = {0, 0};
 	int8_t onoff[2] = {2, 2};
 	bool btn_pressed[4] = {false,};
 	int8_t dial_cnt = 0;
@@ -80,4 +81,6 @@ private:
 	Adafruit_BME280 bme;
 	Adafruit_Sensor *bme_temp = bme.getTemperatureSensor();
 	Adafruit_Sensor *bme_humidity = bme.getHumiditySensor();
+	uint32_t cnt[2] = {0, 0};
+	bool flag_int = 0;
 };

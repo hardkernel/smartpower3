@@ -1,24 +1,7 @@
 #include "smartpower3.h"
 #include <Wire.h>
 
-uint16_t vmax = 0;
-uint16_t amax = 0;
-uint16_t vmin = -1;
-uint16_t amin = -1;
-
-uint16_t vmax2 = 0;
-uint16_t amax2 = 0;
-uint16_t vmin2 = -1;
-uint16_t amin2 = -1;
-
-uint16_t vmax3 = 0;
-uint16_t amax3 = 0;
-uint16_t vmin3 = -1;
-uint16_t amin3 = -1;
-
-uint32_t ctime0 = 0;
 uint32_t ctime1 = 0;
-uint32_t ctime3 = 0;
 
 #define BL_LCD	17
 #define LED2	13
@@ -29,8 +12,10 @@ uint32_t ctime3 = 0;
 
 void setup(void) {
 	Serial.begin(115200);
-	I2CA.begin(15, 4);
-	I2CB.begin(21, 22);
+	I2CA.begin(15, 4, 200000);
+	I2CB.begin(21, 22, 200000);
+	I2CA.setClock(200000UL);
+	I2CB.setClock(200000UL);
 	PAC.begin(&I2CB);
 	//PAC2.begin(&I2CA);
 	screen.begin(&I2CA);
@@ -40,6 +25,8 @@ void setup(void) {
 	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
 	xTaskCreate(screenTask, "Draw Screen", 3000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
+	pinMode(25, INPUT_PULLUP);
+	//attachInterrupt(25, isr_stp, FALLING);
 
 	ledcSetup(0, FREQ, RESOLUTION);
 	ledcSetup(1, FREQ, RESOLUTION);
@@ -50,6 +37,11 @@ void setup(void) {
 	ledcWrite(0, 50);
 	ledcWrite(1, 50);
 	ledcWrite(2, 50);
+}
+
+void isr_stp()
+{
+	Serial.println("Hello");
 }
 
 void initPAC1933(void)
@@ -97,52 +89,14 @@ void powerTask(void *parameter)
 		updatePowerSense2();
 		volt = (uint16_t)(PAC.Voltage);
 		ampere = (uint16_t)(PAC.Current);
-		watt = (uint16_t)(PAC.Power*100);
+		watt = (uint16_t)(PAC.Power*1000);
 		screen.pushPower(volt, ampere, watt, 0);
-		//Serial.printf("ch0:%d,%d,%d\n\r", volt, ampere, watt);
-
-		if (volt > vmax)
-			vmax = volt;
-		if (ampere > amax)
-			amax = ampere;
-		if (volt < vmin)
-			vmin = volt;
-		if (ampere < amin)
-			amin = ampere;
-
-		if ((millis() - ctime3) > 3000) {
-			Serial.printf("================== CH0 =============\n\r");
-			Serial.printf("vmax : [[ %d ]], vmin : [[ %d ]], vcur : [[ %d ]], vdiff : [[ %d ]] \n\r", vmax, vmin, volt, vmax - vmin);
-			Serial.printf("amax : [[ %d ]], amin : [[ %d ]], acur : [[ %d ]], adiff : [[[[ %d ]]]] \n\r", amax, amin, ampere, amax - amin);
-			Serial.printf("===============================\n\r");
-			ctime3 = millis();
-		}
 
 		updatePowerSense3();
 		volt = (uint16_t)(PAC.Voltage);
 		ampere = (uint16_t)(PAC.Current);
-		watt = (uint16_t)(PAC.Power*100);
+		watt = (uint16_t)(PAC.Power*1000);
 		screen.pushPower(volt, ampere, watt, 1);
-		//Serial.printf("ch1:%d,%d,%d\n\r", volt, ampere, watt);
-		if (volt > vmax2)
-			vmax2 = volt;
-		if (ampere > amax2)
-			amax2 = ampere;
-		if (volt < vmin2)
-			vmin2 = volt;
-		if (ampere < amin2)
-			amin2 = ampere;
-
-#if 1
-		if ((millis() - ctime0) > 3000) {
-			Serial.printf("================== CH1 =============\n\r");
-			Serial.printf("vmax : [[ %d ]], vmin : [[ %d ]], vcur : [[ %d ]], vdiff : [[ %d ]] \n\r", vmax2, vmin2, volt, vmax2 - vmin2);
-			Serial.printf("amax : [[ %d ]], amin : [[ %d ]], acur : [[ %d ]], adiff : [[[[ %d ]]]] \n\r", amax2, amin2, ampere, amax2 - amin2);
-			Serial.printf("===============================\n\r");
-			ctime0 = millis();
-		}
-#endif
-
 		if ((millis() - ctime1) > 500) {
 			updatePowerSense1();
 			volt = (uint16_t)(PAC.Voltage);
@@ -152,7 +106,7 @@ void powerTask(void *parameter)
 			ctime1 = millis();
 		}
 
-		vTaskDelay(10);
+		vTaskDelay(100);
 	}
 }
 
@@ -171,26 +125,6 @@ void inputTask(void *parameter)
 		for (int i = 0; i < 4; i++) {
 			if (button[i].checkPressed() == true) {
 				screen.getBtnPress(i, cur_time);
-				if (i == 2) {
-					vmax = 0;
-					amax = 0;
-					vmin = -1;
-					amin = -1;
-
-					vmax2 = 0;
-					amax2 = 0;
-					vmin2 = -1;
-					amin2 = -1;
-
-					vmax3 = 0;
-					amax3 = 0;
-					vmin3 = -1;
-					amin3 = -1;
-				}
-				/*
-				if (i < 2)
-					stpd01[i]->onOff();
-				*/
 			}
 		}
 		if (dial.cnt != 0) {
@@ -241,16 +175,18 @@ void testI2CA()
 #endif
 }
 
+int int_old = -1;
 void loop() {
 	//get_memory_info();
 	//get_i2c_slaves(&I2CB);
 	//get_i2c_slaves(&I2CA);
-	//Serial.println(digitalRead(25));
-	//testI2CA();
+	/*
 	ledcWrite(0, 0);
 	delay(500);
 	ledcWrite(0, 50);
 	delay(500);
+	*/
+	delay(10);
 }
 
 void get_memory_info(void)

@@ -43,6 +43,12 @@ public:
 	void clearInterruptUI(void);
 	uint8_t test(void);
 	void monitorSTPD01();
+	uint8_t getIntStatus(void);
+	uint8_t getIntMask(void);
+	uint16_t getValueVolt();
+	uint16_t getValueCurrent();
+	uint16_t getValueWatt();
+	void write(uint8_t addr, uint8_t reg);
 private:
 	bool activated;
 	TFT_eSPI *tft;
@@ -53,13 +59,8 @@ private:
 	FndWidget *volt;
 	Component *_volt;
 	Component *_current;
-	Component *__volt;
-	Component *__current;
-	Component *_int_ovp;
-	Component *_int_cc;
-	Component *_int_otp;
-	Component *_int_otw;
-	Component *_int_scp;
+	Component *int_stat[8];
+	Component *int_latch[8];
 	Component *stpd;
 	FndWidget *current;
 	FndWidget *watt;

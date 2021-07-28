@@ -20,6 +20,13 @@ Screen::Screen()
 		tft.drawLine(238 + i, 35, 238 + i, 320, TFT_WHITE);
 }
 
+/*
+static void isr_stp(void)
+{
+	Serial.println("hello isr");
+}
+*/
+
 void Screen::begin(TwoWire *theWire)
 {
 	_wire = theWire;
@@ -27,12 +34,9 @@ void Screen::begin(TwoWire *theWire)
 	header->init(3, 3);
 
 	pinMode(25, INPUT_PULLUP);
-	digitalWrite(25, HIGH);
 
 	channel[0] = new Channel(&tft, _wire, 0);
-	channel[0]->initScreen(10, 45);
 	channel[1] = new Channel(&tft, _wire, 1);
-	channel[1]->initScreen(260, 45);
 
 	SPIFFS.begin(false);
 	fs = &SPIFFS;
@@ -51,11 +55,15 @@ void Screen::begin(TwoWire *theWire)
 	channel[1]->setVolt(f.readStringUntil('\n').toFloat()*1000, 1);
 	f.findUntil("current_limit0", "\n\r");
 	f.seek(1, SeekCur);
-	channel[0]->setCurrentLimit(f.readStringUntil('\n').toFloat()*1000, 2);
+	channel[0]->setCurrentLimit(f.readStringUntil('\n').toFloat()*1000, 1);
 	f.findUntil("current_limit1", "\n\r");
 	f.seek(1, SeekCur);
-	channel[1]->setCurrentLimit(f.readStringUntil('\n').toFloat()*1000, 2);
+	channel[1]->setCurrentLimit(f.readStringUntil('\n').toFloat()*1000, 1);
 	f.close();
+	readFile("/setting.txt");
+
+	channel[0]->initScreen(10, 45);
+	channel[1]->initScreen(255, 45);
 	
 	fsInit();
 	if (!bme.begin(0x76, _wire)) {
@@ -65,7 +73,6 @@ void Screen::begin(TwoWire *theWire)
 	bme_humidity->printSensorDetails();
 	pinMode(0, INPUT);
 	pinMode(2, OUTPUT);
-
 }
 
 void Screen::readFile(const char * path){
@@ -146,13 +153,6 @@ void Screen::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 		header->setLowInput(false);
 		state_power = 3;
 	}
-	/*
-	if (low_input) {
-		low_input = false;
-		header->setLowInput(false);
-		state_power = 3;
-	}
-	*/
 
 	if (header->getInputVoltage()/1000 != volt/1000) {
 		header->pushPower(volt, ampere, watt);
@@ -202,11 +202,13 @@ void Screen::drawBaseMove()
 			channel[1]->setCompColor(CURRENT);
 			current_limit = channel[1]->getCurrentLimit();
 		} else if (activated == STATE_HEADER) {
+			/*
 			if (header->isEnabledSave()) {
 				header->diableSave();
 				mode = BASE;
 				deActivate();
 			}
+			*/
 		}
 		dial_state = dial_cnt;
 		dial_cnt = 0;
@@ -214,7 +216,6 @@ void Screen::drawBaseMove()
 		btn_pressed[3] = false;
 	}
 }
-
 
 void Screen::fsInit(void)
 {
@@ -258,11 +259,6 @@ void Screen::setSysParam(char *key, float value)
 	f.findUntil(key, "\n\r");
 	f.seek(1, SeekCur);
 	f.print(str);
-	/*
-	f.print("    ");
-	f.seek(-4, SeekCur);
-	f.print(value);
-	*/
 	f.flush();
 	f.close();
 }
@@ -287,7 +283,6 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[0]->setVolt(dial_cnt);
 			if (dial_cnt != 0) {
-				//header->enableSave();
 				setSysParam("voltage0", channel[0]->getVolt()/1000.0);
 				readFile("/setting.txt");
 			}
@@ -302,12 +297,11 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[0]->setCurrentLimit(dial_cnt);
 			if (dial_cnt != 0) {
-				//header->enableSave();
 				setSysParam("current_limit0", channel[0]->getCurrentLimit()/10.0);
 				readFile("/setting.txt");
 			}
 		} else {
-			channel[0]->setCurrentLimit(dial_cnt, 1);
+			channel[0]->editCurrentLimit(dial_cnt);
 		}
 
 	} else if (activated == STATE_VOLT1) {
@@ -316,7 +310,6 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[1]->setVolt(dial_cnt);
 			if (dial_cnt != 0) {
-				//header->enableSave();
 				setSysParam("voltage1", channel[1]->getVolt()/1000.0);
 				readFile("/setting.txt");
 			}
@@ -331,12 +324,11 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[1]->setCurrentLimit(dial_cnt);
 			if (dial_cnt != 0) {
-				header->enableSave();
 				setSysParam("current_limit1", channel[1]->getCurrentLimit()/10.0);
 				readFile("/setting.txt");
 			}
 		} else {
-			channel[1]->setCurrentLimit(dial_cnt, 1);
+			channel[1]->editCurrentLimit(dial_cnt);
 		}
 	}
 
@@ -391,20 +383,6 @@ void Screen::drawScreen()
 	channel[0]->drawChannel();
 	channel[1]->drawChannel();
 	header->draw();
-	/*
-	if (btn_pressed[2]) {
-		btn_pressed[2] = false;
-		tft.fillRoundRect(150, 50, 200, 50, 10, TFT_WHITE);
-		for (int i = 0; i < 3; i++) {
-			tft.drawRoundRect(150-i, 50-i, 200 +(i*2), 50 + (i*2), 10, TFT_RED);
-		}
-		tft.drawString("Change the voltage set", 160, 80, 4);
-		sleep(3);
-		tft.fillRect(150, 50, 200, 50, 10, TFT_BLACK);
-		channel[0]->init(10, 45);
-		channel[1]->init(260, 45);
-	}
-	*/
 }
 
 void Screen::checkOnOff()
@@ -418,20 +396,16 @@ void Screen::checkOnOff()
 		onoff[0] = 2;
 		onoff[1] = 2;
 	} else if (state_power == 3) {
-		Serial.println("ONONONONONON");
 		state_power = 4;
 		pinMode(STPD01_CH0, OUTPUT);
 		pinMode(STPD01_CH1, OUTPUT);
 		digitalWrite(27, HIGH);
 		digitalWrite(14, HIGH);
-		delay(500);
 		channel[0]->initPower();
 		channel[1]->initPower();
 	} else if (state_power == 4) {
 		Serial.println("check interrupt");
 		state_power = 5;
-		channel[0]->checkInterrupt();
-		channel[1]->checkInterrupt();
 	} else if (state_power == 5) {
 		Serial.println("check autostart");
 		state_power = 6;
@@ -440,37 +414,15 @@ void Screen::checkOnOff()
 			if (onoff[i] == 3) {
 				channel[i]->on();
 				onoff[i] = 1;
-				Serial.printf("Channel %d on\n\r", i);
 			} else if (onoff[i] == 2) {
 				channel[i]->off();
 				onoff[i] = 0;
-				Serial.printf("Channel %d off\n\r", i);
 			}
+			channel[i]->checkInterrupt();
 		}
 
 	}
 	
-
-	/*
-	for (int i = 0; i < 2; i++) {
-		if (header->getLowInput() and onoff[i] == 1) {
-			channel[i]->off();
-			onoff[i] = 0;
-		} else if (onoff[i] == 3) {
-			if (header->getLowInput()) {
-				onoff[i] = 0;
-				continue;
-			}
-			channel[i]->on();
-			channel[i]->checkInterrupt();
-			onoff[i] = 1;
-		} else if (onoff[i] == 2) {
-			channel[i]->off();
-			onoff[i] = 0;
-		}
-	}
-	*/
-	//Serial.printf("onoff0 : %d, onoff1 : %d\n\r", onoff[0], onoff[1]);
 	if (state_power != old_state_power) {
 		old_state_power = state_power;
 		Serial.printf("[ power state ] : %d\n\r", state_power);
@@ -489,16 +441,25 @@ void Screen::run()
 		channel[0]->monitorSTPD01();
 		channel[1]->monitorSTPD01();
 	}
+	if (btn_pressed[2]) {
+		btn_pressed[2] = false;
+		channel[0]->write(4, 0xff);
+		channel[1]->write(4, 0xff);
+	}
+	if (btn_pressed[3]) {
+		btn_pressed[3] = false;
+		channel[0]->write(4, 0x00);
+		channel[1]->write(4, 0x00);
+	}
 
-	//Serial.println(cur_time);
 	sensors_event_t temp_event, humidity_event;
 	bme_temp->getEvent(&temp_event);
 	bme_humidity->getEvent(&humidity_event);
 
-	/*
-	Serial.println(temp_event.temperature);
-	Serial.println(humidity_event.relative_humidity);
-	*/
+	if (digitalRead(25))
+		header->highIntPin();
+	else
+		header->lowIntPin();
 }
 
 void Screen::deActivate()
@@ -563,7 +524,7 @@ void Screen::clearBtnEvent(void)
 
 void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 {
-	Serial.printf("button pressed %d\n\r", idx);
+	//Serial.printf("button pressed %d\n\r", idx);
 	btn_pressed[idx] = true;
 	switch (idx) {
 	case 0: /* Channel0 ON/OFF */
@@ -572,7 +533,7 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 			onoff[idx] = 2;
 		else if (onoff[idx] == 0)
 			onoff[idx] = 3;
-		Serial.printf("onoff0 : %d, onoff1 : %d\n\r", onoff[0], onoff[1]);
+		//Serial.printf("onoff0 : %d, onoff1 : %d\n\r", onoff[0], onoff[1]);
 		break;
 	case 2:  /* MENU/CANCEL */
 		dial_time = cur_time;

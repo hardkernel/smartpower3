@@ -18,9 +18,8 @@ public:
 	bool getLowInput(void);
 	void setLowInput(bool low_input);
 	uint16_t getInputVoltage(void);
-	void enableSave(void);
-	void diableSave(void);
-	bool isEnabledSave(void);
+	void lowIntPin();
+	void highIntPin();
 
 private:
 	TFT_eSPI *tft;
@@ -29,9 +28,9 @@ private:
 	uint16_t v_input = 0;
 	bool v_update;
 	bool low_input = 1;
-	bool enabled_save = false;
+	uint8_t intPin = -1;
 	Component *input;
-	Component *save;
+	Component *int0;
 
 };
 

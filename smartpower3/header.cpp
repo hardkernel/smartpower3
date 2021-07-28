@@ -4,8 +4,7 @@ Header::Header(TFT_eSPI *tft)
 {
 	this->tft = tft;
 	input = new Component(tft, 104, 30, 4);
-	//save = new Component(tft, 64, 22, 4);
-
+	int0 = new Component(tft, 64, 22, 4);
 }
 
 void Header::init(uint16_t x, uint16_t y)
@@ -16,34 +15,27 @@ void Header::init(uint16_t x, uint16_t y)
 	input->setCoordinate(x, y);
 	input->draw("IN:0.0V");
 
-	/*
-	save->init(FG_DISABLED, BG_DISABLED, 1, TL_DATUM);
-	save->setCoordinate(480 - 70, y);
-	save->draw("SAVE");
-	*/
+	int0->init(FG_DISABLED, BG_DISABLED, 1, TL_DATUM);
+	int0->setCoordinate(480 - 70, y);
+	int0->draw("INT");
 }
 
-bool Header::isEnabledSave(void)
+void Header::lowIntPin(void)
 {
-	return enabled_save;
+	if (intPin != 0) {
+		intPin = 0;
+		int0->setTextColor(FG_ENABLED, BG_ENABLED);
+		int0->draw("INT");
+	}
 }
 
-void Header::enableSave(void)
+void Header::highIntPin(void)
 {
-	enabled_save = true;
-	/*
-	save->setTextColor(FG_ENABLED, BG_ENABLED);
-	save->draw("SAVE");
-	*/
-}
-
-void Header::diableSave(void)
-{
-	enabled_save = false;
-	/*
-	save->setTextColor(FG_DISABLED, BG_DISABLED);
-	save->draw("SAVE");
-	*/
+	if (intPin != 1) {
+		intPin = 1;
+		int0->setTextColor(FG_DISABLED, BG_DISABLED);
+		int0->draw("INT");
+	}
 }
 
 void Header::activate(void)

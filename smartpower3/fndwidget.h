@@ -39,6 +39,8 @@ public:
 	void fnd_update();
 	void fnd_fb_write(int8_t f_pos, int8_t f_value, int16_t color);
 	void fnd_dd_clear(void);
+	uint16_t getValue(void);
+	
 private:
 	uint8_t mode = 0;
 	uint16_t x;

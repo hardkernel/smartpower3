@@ -5,6 +5,8 @@
 #include <Wire.h>
 
 #define STPD01_ADDRESS 0x04
+#define STPD01_EN_CH0 27
+#define STPD01_EN_CH1 14
 
 enum {
 	STPD01_REGISTER_0 = 0x0,	// output voltage configuration
@@ -54,6 +56,9 @@ private:
 	uint8_t _i2caddr;
 	TwoWire *_wire;
 	bool onoff;
+	uint8_t reg_status;
+	uint8_t reg_mask;
+	uint8_t reg_latch;
 public:
 	STPD01();
 	~STPD01();
@@ -62,15 +67,20 @@ public:
 	void write8(uint8_t reg, uint8_t val);
 	bool on(void);
 	bool off(void);
-	void setVoltage(uint16_t val);
-	void setCurrentLimit(uint16_t milliampere);
+	uint8_t setVoltage(uint16_t val);
+	uint8_t setCurrentLimit(uint16_t milliampere);
 	void monitorInterrupt(uint8_t ch);
 	void setInterrupt(uint8_t reg);
 	void clearInterrupt(uint8_t reg);
 	uint8_t readInterrupt(void);
 	bool readOnOff(void);
 	uint16_t readVoltage();
+	uint16_t readVoltSet();
 	uint16_t readCurrentLimit();
+	uint8_t readIntMask();
+	uint8_t readIntStatus();
+	uint8_t readIntLatch();
+	void initInterrupt();
 };
 
 #endif
