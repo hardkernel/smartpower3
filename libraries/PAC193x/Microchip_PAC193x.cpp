@@ -180,17 +180,17 @@ void Microchip_PAC193x::Refresh(){
 
 int16_t Microchip_PAC193x::UpdateVoltageSense1(void)
 {
-	UpdateVoltage(PAC1934_VBUS1_ADDR);
+	return UpdateVoltage(PAC1934_VBUS1_ADDR);
 }
 
 int16_t Microchip_PAC193x::UpdateVoltageSense2(void)
 {
-	UpdateVoltage(PAC1934_VBUS2_ADDR);
+	return UpdateVoltage(PAC1934_VBUS2_ADDR);
 }
 
 int16_t Microchip_PAC193x::UpdateVoltageSense3(void)
 {
-	UpdateVoltage(PAC1934_VBUS3_ADDR);
+	return UpdateVoltage(PAC1934_VBUS3_ADDR);
 }
 
 int16_t Microchip_PAC193x::UpdateVoltageRaw(uint8_t reg){
@@ -232,7 +232,6 @@ int16_t Microchip_PAC193x::UpdateVsenseRaw(uint8_t reg){
 }
 
 int16_t Microchip_PAC193x::UpdateVsense(uint8_t reg){
-	uint16_t registerAddr;
     float VsenseLsb;
 
 	errorCode = 0;
@@ -246,17 +245,17 @@ int16_t Microchip_PAC193x::UpdateVsense(uint8_t reg){
 
 int16_t Microchip_PAC193x::UpdateCurrentSense1(void)
 {
-	UpdateCurrent(PAC1934_VSENSE1_ADDR);
+	return UpdateCurrent(PAC1934_VSENSE1_ADDR);
 }
 
 int16_t Microchip_PAC193x::UpdateCurrentSense2(void)
 {
-	UpdateCurrent(PAC1934_VSENSE2_ADDR);
+	return UpdateCurrent(PAC1934_VSENSE2_ADDR);
 }
 
 int16_t Microchip_PAC193x::UpdateCurrentSense3(void)
 {
-	UpdateCurrent(PAC1934_VSENSE3_ADDR);
+	return UpdateCurrent(PAC1934_VSENSE3_ADDR);
 }
 
 int16_t Microchip_PAC193x::UpdateCurrent(uint8_t reg){
@@ -274,17 +273,17 @@ int16_t Microchip_PAC193x::UpdateCurrent(uint8_t reg){
 
 int16_t Microchip_PAC193x::UpdatePowerSense1()
 {
-	UpdatePower(PAC1934_VPOWER1_ADDR);
+	return UpdatePower(PAC1934_VPOWER1_ADDR);
 }
 
 int16_t Microchip_PAC193x::UpdatePowerSense2()
 {
-	UpdatePower(PAC1934_VPOWER2_ADDR);
+	return UpdatePower(PAC1934_VPOWER2_ADDR);
 }
 
 int16_t Microchip_PAC193x::UpdatePowerSense3()
 {
-	UpdatePower(PAC1934_VPOWER3_ADDR);
+	return UpdatePower(PAC1934_VPOWER3_ADDR);
 }
 
 int16_t Microchip_PAC193x::UpdatePowerRaw(uint8_t reg){
