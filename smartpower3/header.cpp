@@ -5,6 +5,7 @@ Header::Header(TFT_eSPI *tft)
 	this->tft = tft;
 	input = new Component(tft, 104, 30, 4);
 	int0 = new Component(tft, 64, 22, 4);
+	setting = new Component(tft, 100, 24, 4);
 }
 
 void Header::init(uint16_t x, uint16_t y)
@@ -18,13 +19,17 @@ void Header::init(uint16_t x, uint16_t y)
 	int0->init(FG_DISABLED, BG_DISABLED, 1, TL_DATUM);
 	int0->setCoordinate(480 - 70, y);
 	int0->draw("INT");
+
+	setting->init(TFT_YELLOW, TFT_BLACK, 1, TL_DATUM);
+	setting->setCoordinate(x + 150, y);
+	setting->draw("SETTING");
 }
 
 void Header::lowIntPin(void)
 {
 	if (intPin != 0) {
 		intPin = 0;
-		int0->setTextColor(FG_ENABLED, BG_ENABLED);
+		int0->setTextColor(FG_DISABLED, BG_DISABLED);
 		int0->draw("INT");
 	}
 }
@@ -33,19 +38,19 @@ void Header::highIntPin(void)
 {
 	if (intPin != 1) {
 		intPin = 1;
-		int0->setTextColor(FG_DISABLED, BG_DISABLED);
+		int0->setTextColor(FG_ENABLED, BG_ENABLED);
 		int0->draw("INT");
 	}
 }
 
 void Header::activate(void)
 {
-	//save->activate();
+	setting->activate();
 }
 
 void Header::deActivate(void)
 {
-	//save->deActivate();
+	setting->deActivate();
 }
 
 void Header::drawMode(String str)

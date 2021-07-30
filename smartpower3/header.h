@@ -31,7 +31,7 @@ private:
 	uint8_t intPin = -1;
 	Component *input;
 	Component *int0;
-
+	Component *setting;
 };
 
 #endif

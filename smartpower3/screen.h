@@ -13,7 +13,8 @@
 enum screen_mode_t {
 	BASE,
 	BASE_MOVE,
-	BASE_EDIT, SETTING
+	BASE_EDIT,
+	SETTING
 };
 
 enum state {
@@ -48,6 +49,9 @@ public:
 	void setSysParam(char *key, String value);
 	void setSysParam(char *key, float value);
 	bool isFirstBoot();
+	bool flag_int = 0;
+	void isrSTPD01();
+	void initScreen();
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
@@ -82,5 +86,4 @@ private:
 	Adafruit_Sensor *bme_temp = bme.getTemperatureSensor();
 	Adafruit_Sensor *bme_humidity = bme.getHumiditySensor();
 	uint32_t cnt[2] = {0, 0};
-	bool flag_int = 0;
 };

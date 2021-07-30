@@ -1,13 +1,19 @@
 #include "channel.h"
 
-Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint8_t channel)
+Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
+		uint8_t channel)
 {
 	this->tft = tft;
+	this->x = x;
+	this->y = y;
 	this->channel = channel;
 
 	volt = new FndWidget(tft);
 	current = new FndWidget(tft);
 	watt = new FndWidget(tft);
+	volt->fnd_init(NUM_OF_FND, 2, true, x, Y_VOLT + y, FG_COLOR, BG_COLOR);
+	current->fnd_init(NUM_OF_FND, 2, true, x, Y_CURRENT + y, FG_COLOR, BG_COLOR);
+	watt->fnd_init(NUM_OF_FND, 2, true, x, Y_WATT + y, FG_COLOR, BG_COLOR);
 
 	stpd01 = new STPD01();
 	/*
@@ -29,8 +35,9 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint8_t channel)
 	stpd = new Component(tft, 38, 16, 2);
 
 	for (int i = 0; i < 8; i++) {
-		int_stat[i] = new Component(tft, 14, 22, 4);
-		int_latch[i] = new Component(tft, 14, 22, 4);
+		int_stat[i] = new Component(tft, 14, 22, 2);
+		int_latch[i] = new Component(tft, 14, 22, 2);
+		int_mask[i] = new Component(tft, 14, 22, 2);
 	}
 }
 
@@ -66,7 +73,7 @@ void Channel::monitorSTPD01()
 		sprintf(str, "%3.1f", stpd01->readCurrentLimit()/1000.0);
 #endif
 	}
-	monitorInterrupt();
+	//monitorInterrupt();
 }
 
 void Channel::initPower()
@@ -74,45 +81,54 @@ void Channel::initPower()
 	if (test() != 1)
 		delay(100);
 	off();
+	/*
 	stpd01->setVoltage(volt_set);
 	stpd01->setCurrentLimit(current_limit);
 	stpd01->initInterrupt();
+	*/
 }
 
-void Channel::initScreen(uint16_t x, uint16_t y)
+void Channel::deleteScreen()
 {
-	volt->fnd_init(NUM_OF_FND, 2, true, x, Y_VOLT + y, FG_COLOR, BG_COLOR);
-	current->fnd_init(NUM_OF_FND, 2, true, x, Y_CURRENT + y, FG_COLOR, BG_COLOR);
-	watt->fnd_init(NUM_OF_FND, 2, true, x, Y_WATT + y, FG_COLOR, BG_COLOR);
+}
 
+void Channel::initScreen()
+{
 	_volt->setCoordinate(x + 145, y + 5);
 	_volt->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
 	_volt->pushValue(volt_set);
 	_current->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
 	_current->setCoordinate(x + 145, y + 5 + Y_CURRENT);
 	_current->pushValue(current_limit);
+	Serial.println(volt_set);
+	Serial.println(current_limit);
 
-	tft->drawString("Status", x, y + 230, 4);
-	tft->drawString("Latch", x, y + 255, 4);
+	tft->drawString("Status", x, y + 220, 2);
+	tft->drawString("Latch", x, y + 235, 2);
+	tft->drawString("Mask", x, y + 250, 2);
 	for (int i = 0; i < 8; i++) {
 		int_stat[i]->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
-		int_stat[i]->setCoordinate(x + 90 + (i*15), y + 230);
+		int_stat[i]->setCoordinate(x + 90 + (i*15), y + 220);
 		int_stat[i]->draw(String("1"));
 		int_latch[i]->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
-		int_latch[i]->setCoordinate(x + 90 + (i*15), y + 255);
+		int_latch[i]->setCoordinate(x + 90 + (i*15), y + 235);
 		int_latch[i]->draw(String("1"));
+		int_mask[i]->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
+		int_mask[i]->setCoordinate(x + 90 + (i*15), y + 250);
+		int_mask[i]->draw(String("1"));
 	}
 
 	//FG_DISABLED, BG_DISABLED
 	//stpd->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
 	stpd->init(FG_ENABLED, BG_ENABLED, 1, TR_DATUM);
 	//stpd->init(FG_DISABLED, BG_DISABLED, 1, TR_DATUM);
-	stpd->setCoordinate(x + 180, y + 200);
+	stpd->setCoordinate(x + 180, y + 180);
 	stpd->draw(String("STPD"));
 
 	tft->drawString("V", x + W_SEG-4, y + 38, 4);
 	tft->drawString("A", x + W_SEG-4, y + 29 + H_SEG + OFFSET_SEG, 4);
-	tft->drawString("W", x + W_SEG-4, y + 20 + H_SEG*2 + OFFSET_SEG*2, 4);
+	tft->drawString("W", x + W_SEG-4, y + 10 + H_SEG*2 + OFFSET_SEG*2, 4);
+	drawChannel(true);
 }
 
 uint8_t Channel::getIntStatus(void)
@@ -128,6 +144,9 @@ uint8_t Channel::getIntMask(void)
 bool Channel::on(void)
 {
 	bool err;
+	stpd01->setVoltage(volt_set);
+	stpd01->setCurrentLimit(current_limit);
+	stpd01->initInterrupt();
 	err = stpd01->on();
 	volt->setTextColor(TFT_RED, TFT_BLACK);
 	current->setTextColor(TFT_RED, TFT_BLACK);
@@ -147,7 +166,7 @@ bool Channel::off(void)
 	volt->setTextColor(TFT_DARKGREY, TFT_BLACK);
 	current->setTextColor(TFT_DARKGREY, TFT_BLACK);
 	watt->setTextColor(TFT_DARKGREY, TFT_BLACK);
-	clearInterruptUI();
+	//clearInterruptUI();
 	return err;
 }
 
@@ -171,9 +190,10 @@ uint16_t Channel::getCurrentLimit(void)
 
 void Channel::setVolt(float volt_set, uint8_t mode)
 {
+	Serial.printf("setVolt %f, %d\n\r", volt_set, mode);
 	if (mode == 0) {
 		this->volt_set = this->volt_set + volt_set*100;
-		stpd01->setVoltage(min((uint16_t)20000, this->volt_set));
+		//stpd01->setVoltage(min((uint16_t)20000, this->volt_set));
 	} else if (mode == 1) {
 		this->volt_set = volt_set;
 		this->_volt_set = volt_set;
@@ -188,6 +208,7 @@ void Channel::editVolt(float volt_set)
 
 void Channel::setCurrentLimit(float val, uint8_t mode)
 {
+	Serial.printf("setCurrentLimit %f, %d\n\r", val, mode);
 	if (mode == 0) {
 		current_limit += val*100;
 		current_limit = min((uint16_t)3000, current_limit);
@@ -208,14 +229,14 @@ void Channel::editCurrentLimit(float val)
 	_current_limit = max((uint16_t)500, _current_limit);
 }
 
-void Channel::drawChannel(void)
+void Channel::drawChannel(bool forced)
 {
-	volt->fnd_update();
-	current->fnd_update();
-	watt->fnd_update();
+	volt->fnd_update(forced);
+	current->fnd_update(forced);
+	watt->fnd_update(forced);
 	//watt->draw();
-	_volt->draw();
-	_current->draw();
+	_volt->draw(forced);
+	_current->draw(forced);
 }
 
 void Channel::clearCompColor(void)
@@ -315,14 +336,17 @@ void Channel::clearInterruptUI(void)
 		int_stat[i]->draw(String("0"));
 		int_latch[i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
 		int_latch[i]->draw(String("0"));
+		int_mask[i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
+		int_mask[i]->draw(String("0"));
 	}
 }
 
 void Channel::checkInterrupt(void)
 {
-	uint8_t reg_stat, reg_latch;
-	reg_stat = stpd01->readIntStatus();
+	uint8_t reg_stat, reg_latch, reg_mask;
 	reg_latch = stpd01->readIntLatch();
+	reg_stat = stpd01->readIntStatus();
+	reg_mask = stpd01->readIntMask();
 	for (int i = 0; i < 8; i++) {
 		if (reg_stat & (1 << i)) {
 			int_stat[7-i]->setTextColor(TFT_YELLOW, TFT_BLACK);
@@ -337,6 +361,13 @@ void Channel::checkInterrupt(void)
 		} else {
 			int_latch[7-i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
 			int_latch[7-i]->draw(String("0"));
+		}
+		if (reg_mask & (1 << i)) {
+			int_mask[7-i]->setTextColor(TFT_YELLOW, TFT_BLACK);
+			int_mask[7-i]->draw(String("1"));
+		} else {
+			int_mask[7-i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
+			int_mask[7-i]->draw(String("0"));
 		}
 	}
 }

@@ -79,8 +79,7 @@ uint8_t STPD01::readIntLatch()
 
 uint8_t STPD01::readIntMask()
 {
-	Serial.println(reg_mask);
-	return reg_mask;
+	return read8(STPD01_REGISTER_4);
 }
 
 void STPD01::initInterrupt()

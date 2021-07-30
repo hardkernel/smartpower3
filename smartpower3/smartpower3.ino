@@ -1,5 +1,6 @@
-#include "smartpower3.h"
+#include <ArduinoTrace.h>
 #include <Wire.h>
+#include "smartpower3.h"
 
 uint32_t ctime1 = 0;
 
@@ -11,7 +12,10 @@ uint32_t ctime1 = 0;
 #define RESOLUTION	8
 
 void setup(void) {
+	delay(2000);
 	Serial.begin(115200);
+	ARDUINOTRACE_INIT(115200);
+	TRACE();
 	I2CA.begin(15, 4, 200000);
 	I2CB.begin(21, 22, 200000);
 	I2CA.setClock(200000UL);
@@ -41,7 +45,8 @@ void setup(void) {
 
 void isr_stp()
 {
-	Serial.println("Hello");
+	Serial.println("hello isr");
+	screen.flag_int = 1;
 }
 
 void initPAC1933(void)
@@ -97,6 +102,7 @@ void powerTask(void *parameter)
 		ampere = (uint16_t)(PAC.Current);
 		watt = (uint16_t)(PAC.Power*1000);
 		screen.pushPower(volt, ampere, watt, 1);
+
 		if ((millis() - ctime1) > 500) {
 			updatePowerSense1();
 			volt = (uint16_t)(PAC.Voltage);
@@ -106,7 +112,7 @@ void powerTask(void *parameter)
 			ctime1 = millis();
 		}
 
-		vTaskDelay(100);
+		vTaskDelay(10);
 	}
 }
 
@@ -124,6 +130,7 @@ void inputTask(void *parameter)
 		cur_time = millis();
 		for (int i = 0; i < 4; i++) {
 			if (button[i].checkPressed() == true) {
+				get_memory_info();
 				screen.getBtnPress(i, cur_time);
 			}
 		}
@@ -177,7 +184,6 @@ void testI2CA()
 
 int int_old = -1;
 void loop() {
-	//get_memory_info();
 	//get_i2c_slaves(&I2CB);
 	//get_i2c_slaves(&I2CA);
 	/*
@@ -186,14 +192,14 @@ void loop() {
 	ledcWrite(0, 50);
 	delay(500);
 	*/
-	delay(10);
+	delay(1000);
 }
 
 void get_memory_info(void)
 {
-	Serial.printf("Heap : %d, Free Heap : %d\n", ESP.getHeapSize(), ESP.getFreeHeap());
-	Serial.printf("Stack High Water Mark %d\n", uxTaskGetStackHighWaterMark(NULL));
-	Serial.printf("Psram : %d, Free Psram : %d\n", ESP.getPsramSize(), ESP.getFreePsram());
+	Serial.printf("Heap : %d, Free Heap : %d\n\r", ESP.getHeapSize(), ESP.getFreeHeap());
+	Serial.printf("Stack High Water Mark %d\n\r", uxTaskGetStackHighWaterMark(NULL));
+	Serial.printf("Psram : %d, Free Psram : %d\n\r", ESP.getPsramSize(), ESP.getFreePsram());
 }
 
 void get_i2c_slaves(TwoWire *theWire)

@@ -160,13 +160,18 @@ void FndWidget::fnd_dd_clear()
 	}
 }
 
-void FndWidget::fnd_update()
+void FndWidget::fnd_update(bool forced)
 {
 	uint16_t	i, pos;
 	bool		rbo = f->rbo;
 	uint16_t value = this->value;
 
-	if (f->refresh) {
+	if (forced) {
+		for (i = 0; i < f->cnt; i++) {
+			pos = f->cnt -i -1;
+			f->dd[pos].update = true;
+		}
+	} else if (f->refresh) {
 		f->refresh = false;
 	} else if (value == old_value) {
 		return;

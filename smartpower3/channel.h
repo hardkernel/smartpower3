@@ -2,7 +2,7 @@
 #include "fndwidget.h"
 #include <STPD01.h>
 
-#define OFFSET_FND 10
+#define OFFSET_FND 5
 #define Y_VOLT FONT_HEIGHT*0 + OFFSET_FND*0
 #define Y_CURRENT FONT_HEIGHT*1 + OFFSET_FND*1
 #define Y_WATT FONT_HEIGHT*2 + OFFSET_FND*2
@@ -19,12 +19,14 @@ enum comp_t {
 class Channel
 {
 public:
-	Channel(TFT_eSPI *tft, TwoWire *theWire = &Wire, uint8_t channel = 0);
+	Channel(TFT_eSPI *tft, TwoWire *theWire=&Wire, uint16_t x=0, uint16_t y=0,
+			uint8_t channel=0);
 	~Channel(void);
-	void drawChannel(void);
+	void deleteScreen(void);
+	void drawChannel(bool forced=0);
 	void pushPower(uint16_t volt, uint16_t current, uint16_t watt);
 	void pushPowerEdit(uint16_t volt, uint16_t current, uint16_t watt);
-	void initScreen(uint16_t width, uint16_t height);
+	void initScreen();
 	void initPower(void);
 	bool on(void);
 	bool off(void);
@@ -54,17 +56,19 @@ private:
 	TFT_eSPI *tft;
 	uint16_t volt_set = 5000;
 	uint16_t _volt_set = 5000;
-	uint16_t current_limit = 3000;
-	uint16_t _current_limit = 3000;
+	uint16_t current_limit = 500;
+	uint16_t _current_limit = 500;
 	FndWidget *volt;
 	Component *_volt;
 	Component *_current;
 	Component *int_stat[8];
 	Component *int_latch[8];
+	Component *int_mask[8];
 	Component *stpd;
 	FndWidget *current;
 	FndWidget *watt;
 	//Component *watt;
 	STPD01 *stpd01;
 	uint8_t channel;
+	uint16_t x, y;
 };

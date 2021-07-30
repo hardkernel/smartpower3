@@ -84,7 +84,6 @@ void Component::draw(bool force_update)
 {
 	if ((value == value_old) && !force_update)
 		return;
-	Serial.printf("value_old : %d, value : %d\n\r", value_old, value);
 	if ((value_old >= 10000) && (value < 10000))
 		clear();
 	value_old = value;

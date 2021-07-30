@@ -2,6 +2,8 @@
 
 bool Screen::_int = false;
 
+//char *ver = "20210728";
+
 Screen::Screen()
 {
 	tft.init();
@@ -12,67 +14,42 @@ Screen::Screen()
 	/*pinMode(TFT_BL, OUTPUT);
 	digitalWrite(TFT_BL, HIGH);
 	*/
-	for (int i = 0; i < 3; i++) {
-		tft.drawLine(0, 33 + i, 480, 33 + i, TFT_WHITE);
-		tft.drawLine(0, 270 + i, 480, 270 + i, TFT_WHITE);
-	}
-	for (int i = 0; i < 4; i++)
-		tft.drawLine(238 + i, 35, 238 + i, 320, TFT_WHITE);
+	//tft.drawString(ver, 130, 5, 4);
+	
+	// 
+	pinMode(STPD01_CH0, OUTPUT);
+	pinMode(STPD01_CH1, OUTPUT);
+	digitalWrite(27, HIGH);
+	digitalWrite(14, HIGH);
 }
-
-/*
-static void isr_stp(void)
-{
-	Serial.println("hello isr");
-}
-*/
 
 void Screen::begin(TwoWire *theWire)
 {
 	_wire = theWire;
 	header = new Header(&tft);
-	header->init(3, 3);
+	channel[0] = new Channel(&tft, _wire, 10, 40, 0);
+	channel[1] = new Channel(&tft, _wire, 255, 40, 1);
 
-	pinMode(25, INPUT_PULLUP);
-
-	channel[0] = new Channel(&tft, _wire, 0);
-	channel[1] = new Channel(&tft, _wire, 1);
-
-	SPIFFS.begin(false);
-	fs = &SPIFFS;
-	File f = fs->open("/setting.txt", "r");
-	if (!f || f.isDirectory()) {
-		Serial.println("- failed to open file for reading");
-		return;
-	}
-
-	f.seek(0, SeekSet);
-	f.findUntil("voltage0", "\n\r");
-	f.seek(1, SeekCur);
-	channel[0]->setVolt(f.readStringUntil('\n').toFloat()*1000, 1);
-	f.findUntil("voltage1", "\n\r");
-	f.seek(1, SeekCur);
-	channel[1]->setVolt(f.readStringUntil('\n').toFloat()*1000, 1);
-	f.findUntil("current_limit0", "\n\r");
-	f.seek(1, SeekCur);
-	channel[0]->setCurrentLimit(f.readStringUntil('\n').toFloat()*1000, 1);
-	f.findUntil("current_limit1", "\n\r");
-	f.seek(1, SeekCur);
-	channel[1]->setCurrentLimit(f.readStringUntil('\n').toFloat()*1000, 1);
-	f.close();
-	readFile("/setting.txt");
-
-	channel[0]->initScreen(10, 45);
-	channel[1]->initScreen(255, 45);
-	
 	fsInit();
 	if (!bme.begin(0x76, _wire)) {
 		Serial.println("Could not find BME280");
 	}
 	bme_temp->printSensorDetails();
 	bme_humidity->printSensorDetails();
-	pinMode(0, INPUT);
-	pinMode(2, OUTPUT);
+}
+
+void Screen::initScreen(void)
+{
+	for (int i = 0; i < 3; i++) {
+		tft.drawLine(0, 33 + i, 480, 33 + i, TFT_WHITE);
+		tft.drawLine(0, 250 + i, 480, 250 + i, TFT_WHITE);
+	}
+	for (int i = 0; i < 4; i++)
+		tft.drawLine(238 + i, 35, 238 + i, 320, TFT_WHITE);
+
+	header->init(3, 3);
+	channel[0]->initScreen();
+	channel[1]->initScreen();
 }
 
 void Screen::readFile(const char * path){
@@ -137,7 +114,6 @@ void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch
 			channel[ch]->pushPower(volt, ampere, watt);
 		} else {
 			channel[ch]->pushPower(0, 0, 0);
-			//channel[ch]->pushPower(volt, ampere, watt);
 		}
 	}
 }
@@ -155,6 +131,7 @@ void Screen::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 	}
 
 	if (header->getInputVoltage()/1000 != volt/1000) {
+		Serial.println("push");
 		header->pushPower(volt, ampere, watt);
 	}
 }
@@ -202,6 +179,7 @@ void Screen::drawBaseMove()
 			channel[1]->setCompColor(CURRENT);
 			current_limit = channel[1]->getCurrentLimit();
 		} else if (activated == STATE_HEADER) {
+			mode = SETTING;
 			/*
 			if (header->isEnabledSave()) {
 				header->diableSave();
@@ -219,6 +197,13 @@ void Screen::drawBaseMove()
 
 void Screen::fsInit(void)
 {
+	if (!SPIFFS.begin(false)) {
+		Serial.println("SPIFFS mount error");
+		return;
+	}
+
+	fs = &SPIFFS;
+
 	if (isFirstBoot()) {
 		Serial.println("First boot!!!");
 		File f = fs->open("/setting.txt", "w");
@@ -229,9 +214,23 @@ void Screen::fsInit(void)
 		f.println("current_limit1=03.0 ");
 		f.println("firstboot=0");
 		f.flush();
-		f.close();
 	} else {
-		Serial.println("It's not the first boot");
+		File f = fs->open("/setting.txt", "r");
+		f.seek(0, SeekSet);
+		f.findUntil("voltage0", "\n\r");
+		f.seek(1, SeekCur);
+		channel[0]->setVolt(f.readStringUntil('\n').toFloat()*1000, 1);
+		f.findUntil("voltage1", "\n\r");
+		f.seek(1, SeekCur);
+		channel[1]->setVolt(f.readStringUntil('\n').toFloat()*1000, 1);
+		f.findUntil("current_limit0", "\n\r");
+		f.seek(1, SeekCur);
+		channel[0]->setCurrentLimit(f.readStringUntil('\n').toFloat()*1000, 1);
+		f.findUntil("current_limit1", "\n\r");
+		f.seek(1, SeekCur);
+		channel[1]->setCurrentLimit(f.readStringUntil('\n').toFloat()*1000, 1);
+		f.close();
+		readFile("/setting.txt");
 	}
 }
 
@@ -389,18 +388,12 @@ void Screen::checkOnOff()
 {
 	if (state_power == 1) {
 		state_power = 2;
-		pinMode(STPD01_CH0, INPUT);
-		pinMode(STPD01_CH1, INPUT);
 		channel[0]->off();
 		channel[1]->off();
 		onoff[0] = 2;
 		onoff[1] = 2;
 	} else if (state_power == 3) {
 		state_power = 4;
-		pinMode(STPD01_CH0, OUTPUT);
-		pinMode(STPD01_CH1, OUTPUT);
-		digitalWrite(27, HIGH);
-		digitalWrite(14, HIGH);
 		channel[0]->initPower();
 		channel[1]->initPower();
 	} else if (state_power == 4) {
@@ -418,7 +411,6 @@ void Screen::checkOnOff()
 				channel[i]->off();
 				onoff[i] = 0;
 			}
-			channel[i]->checkInterrupt();
 		}
 
 	}
@@ -426,6 +418,14 @@ void Screen::checkOnOff()
 	if (state_power != old_state_power) {
 		old_state_power = state_power;
 		Serial.printf("[ power state ] : %d\n\r", state_power);
+	}
+}
+
+void Screen::isrSTPD01()
+{
+	for (int i = 0; i < 2; i++) {
+		//channel[i]->monitorSTPD01();
+		channel[i]->checkInterrupt();
 	}
 }
 
@@ -438,28 +438,37 @@ void Screen::run()
 	 */
 	if ((cur_time - task_time) > 1000) {
 		task_time = cur_time;
-		channel[0]->monitorSTPD01();
-		channel[1]->monitorSTPD01();
+		//isrSTPD01();
+	}
+
+	if (btn_pressed[1]) {
+		btn_pressed[1] = false;
+		initScreen();
 	}
 	if (btn_pressed[2]) {
 		btn_pressed[2] = false;
-		channel[0]->write(4, 0xff);
-		channel[1]->write(4, 0xff);
+		tft.setRotation(3);
+		tft.fillScreen(TFT_BLACK);
+		//channel[0]->checkInterrupt();
+		//channel[1]->checkInterrupt();
+		//channel[1]->write(4, 0xff);
 	}
 	if (btn_pressed[3]) {
 		btn_pressed[3] = false;
-		channel[0]->write(4, 0x00);
-		channel[1]->write(4, 0x00);
+		//channel[0]->write(4, 0x00);
+		//channel[0]->write(4, 0xff);
+		//channel[1]->write(4, 0x00);
 	}
 
 	sensors_event_t temp_event, humidity_event;
 	bme_temp->getEvent(&temp_event);
 	bme_humidity->getEvent(&humidity_event);
 
-	if (digitalRead(25))
+	if (digitalRead(25)) {
 		header->highIntPin();
-	else
+	} else {
 		header->lowIntPin();
+	}
 }
 
 void Screen::deActivate()

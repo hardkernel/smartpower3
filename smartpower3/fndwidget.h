@@ -36,7 +36,7 @@ public:
 	void fnd_dot_write(void);
 	void fnd_num_write(uint16_t f_pos);
 	void fnd_clear_all(void);
-	void fnd_update();
+	void fnd_update(bool forced=0);
 	void fnd_fb_write(int8_t f_pos, int8_t f_value, int16_t color);
 	void fnd_dd_clear(void);
 	uint16_t getValue(void);
