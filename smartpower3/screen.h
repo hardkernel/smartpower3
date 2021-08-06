@@ -12,7 +12,7 @@
 #define STPD01_CH1 14
 
 enum screen_mode_t {
-	BASE,
+	BASE = 0,
 	BASE_MOVE,
 	BASE_EDIT,
 	SETTING,
