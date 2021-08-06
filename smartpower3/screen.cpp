@@ -579,6 +579,8 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 	switch (idx) {
 	case 0: /* Channel0 ON/OFF */
 	case 1: /* Channel1 ON/OFF */
+		if (mode > BASE_EDIT)
+			break;
 		if (onoff[idx] == 1)
 			onoff[idx] = 2;
 		else if (onoff[idx] == 0)
@@ -589,7 +591,6 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 		break;
 	case 3: /* Set value */
 		dial_time = cur_time;
-		Serial.printf("dial_cnt : %d, dial_cnt_old : %d\n\r", dial_cnt, dial_cnt_old);
 		break;
 	}
 }
