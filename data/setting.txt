@@ -4,4 +4,5 @@ voltage1=05.0
 current_limit0=03.0
 current_limit1=03.0
 backlight_level=2
+fan_level=0
 firstboot=0

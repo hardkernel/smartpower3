@@ -17,6 +17,7 @@ enum screen_mode_t {
 	BASE_EDIT,
 	SETTING,
 	SETTING_BL,
+	SETTING_FAN,
 };
 
 enum state {
@@ -25,6 +26,13 @@ enum state {
 	STATE_CURRENT1,
 	STATE_CURRENT0,
 	STATE_VOLT0
+};
+
+enum state_setting {
+	STATE_FAN = 0,
+	STATE_BL,	
+	STATE_SETTING,
+	STATE_NONE
 };
 
 class Screen
@@ -79,6 +87,7 @@ private:
 	void drawBaseMove(void);
 	void drawSetting(void);
 	void drawSettingBL(void);
+	void drawSettingFAN(void);
 	static bool _int;
 	uint8_t state_power = 0;
 	uint8_t old_state_power = 0;

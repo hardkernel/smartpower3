@@ -144,9 +144,9 @@ void Screen::deActivate()
 
 void Screen::deActivateSetting()
 {
-	activated = 1;
 	header->deActivate();
 	setting->deActivateBLLevel();
+	setting->deActivateFanLevel();
 }
 
 void Screen::activate()
@@ -185,21 +185,22 @@ void Screen::activate_setting()
 	if (dial_cnt == dial_cnt_old)
 		return;
 	dial_cnt_old = dial_cnt;
-	if (dial_cnt > 1)
-		dial_cnt = 0;
+	if (dial_cnt > 2)
+		dial_cnt = 2;
 	else if (dial_cnt < 0)
-		dial_cnt = 1;
+		dial_cnt = 0;
 
 	deActivateSetting();
 	activated = dial_cnt;
 	switch (dial_cnt) {
-		case STATE_HEADER:
+		case STATE_SETTING:
 			header->activate();
 			break;
-		case 1:
-			//setting->activate();
+		case STATE_BL:
 			setting->activateBLLevel();
-			//channel[0]->activate(VOLT);
+			break;
+		case STATE_FAN:
+			setting->activateFanLevel();
 			break;
 	}
 }
@@ -229,6 +230,7 @@ void Screen::drawBaseMove()
 		dial_cnt_old = 0;
 	}
 	if (btn_pressed[3] == true) {
+		btn_pressed[3] = false;
 		if (activated == STATE_VOLT0) {
 			mode = BASE_EDIT;
 			channel[0]->setCompColor(VOLT);
@@ -252,11 +254,12 @@ void Screen::drawBaseMove()
 			tft.fillRect(0, 35, 480, 285, TFT_BLACK);
 			header->activate();
 			setting->init(10, 100);
+			activated = dial_cnt = dial_cnt_old = STATE_SETTING;
+			return;
 		}
 		dial_state = dial_cnt;
 		dial_cnt = 0;
 		dial_cnt_old = 0;
-		btn_pressed[3] = false;
 	}
 }
 
@@ -295,6 +298,8 @@ void Screen::drawBaseEdit()
 
 void Screen::drawSetting()
 {
+	Serial.printf("draw setting : dial_cnt : %d, dial_cnt_old : %d\n\r", dial_cnt, dial_cnt_old);
+	Serial.println(activated);
 	activate_setting();
 	if ((cur_time - dial_time) > 10000) {
 		dial_cnt = 0;
@@ -303,22 +308,35 @@ void Screen::drawSetting()
 	}
 	if (btn_pressed[2] == true) {
 		btn_pressed[2] = false;
-		dial_cnt = 0;
-		dial_cnt_old = 0;
-		deActivateSetting();
-	}
-	if (btn_pressed[3] == true) {
-		btn_pressed[3] = false;
-		if (activated == STATE_HEADER) {
+		if (activated == STATE_NONE) {
 			channel[0]->clearHide();
 			channel[1]->clearHide();
 			initScreen();
 			mode = BASE_MOVE;
 			header->activate();
-		} else if (activated == 1) {
+			activated = dial_cnt = 0;
+		} else {
+			deActivateSetting();
+			activated = dial_cnt =  STATE_NONE;
+		}
+	}
+	if (btn_pressed[3] == true) {
+		btn_pressed[3] = false;
+		if (activated == STATE_SETTING) {
+			channel[0]->clearHide();
+			channel[1]->clearHide();
+			initScreen();
+			mode = BASE_MOVE;
+			header->activate();
+			activated = dial_cnt = 0;
+		} else if (activated == STATE_BL) {
 			mode = SETTING_BL;
 			dial_cnt = setting->getBacklightLevel();
 			setting->activateBLLevel(TFT_GREEN);
+		} else if (activated == STATE_FAN) {
+			mode = SETTING_FAN;
+			dial_cnt = setting->getFanLevel();
+			setting->activateFanLevel(TFT_GREEN);
 		}
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -331,26 +349,26 @@ void Screen::drawSettingBL()
 	if ((cur_time - dial_time) > 10000) {
 		mode = SETTING;
 		deActivateSetting();
-		activated = dial_cnt = 0;
-		dial_cnt_old = 0;
+		activated = dial_cnt = STATE_NONE;
+		dial_cnt_old = STATE_NONE;
 		setting->changeBacklight();
 		setting->deActivateBLLevel();
 	}
 	if (btn_pressed[2] == true) {
 		btn_pressed[2] = false;
 		mode = SETTING;
-		activated = dial_cnt = 1;
-		dial_cnt_old = 1;
+		activated = dial_cnt = dial_cnt_old = STATE_BL;
 		deActivateSetting();
 		setting->changeBacklight();
 		setting->activateBLLevel();
+		return;
 	}
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
 		mode = SETTING;
 		setSysParam("backlight_level", String(setting->setBacklightLevel()));
 		setting->activateBLLevel();
-		activated = dial_cnt = dial_cnt_old = 1;
+		activated = dial_cnt = STATE_BL;
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -360,6 +378,43 @@ void Screen::drawSettingBL()
 			dial_cnt = 6;
 		dial_cnt_old = dial_cnt;
 		setting->changeBacklight(dial_cnt);
+	}
+}
+
+void Screen::drawSettingFAN()
+{
+	if ((cur_time - dial_time) > 10000) {
+		mode = SETTING;
+		deActivateSetting();
+		activated = dial_cnt = dial_cnt_old = STATE_NONE;
+		dial_cnt_old = STATE_NONE;
+		setting->changeFan();
+		setting->deActivateFanLevel();
+	}
+	if (btn_pressed[2] == true) {
+		btn_pressed[2] = false;
+		mode = SETTING;
+		activated = dial_cnt = dial_cnt_old = STATE_FAN;
+		deActivateSetting();
+		setting->changeFan();
+		setting->activateFanLevel();
+		return;
+	}
+	if (btn_pressed[3] == true) {
+		btn_pressed[3] = false;
+		mode = SETTING;
+		setSysParam("fan_level", String(setting->setFanLevel()));
+		setting->activateFanLevel();
+		activated = dial_cnt = dial_cnt_old = STATE_FAN;
+		return;
+	}
+	if (dial_cnt != dial_cnt_old) {
+		if (dial_cnt < 0)
+			dial_cnt = 0;
+		else if (dial_cnt > 6)
+			dial_cnt = 6;
+		dial_cnt_old = dial_cnt;
+		setting->changeFan(dial_cnt);
 	}
 }
 
@@ -386,6 +441,10 @@ void Screen::drawScreen()
 	case SETTING_BL:
 		header->drawMode("EDIT_BL");
 		drawSettingBL();
+		break;
+	case SETTING_FAN:
+		header->drawMode("EDIT_FAN");
+		drawSettingFAN();
 		break;
 	}
 	if (mode != SETTING) {
@@ -530,6 +589,7 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 		break;
 	case 3: /* Set value */
 		dial_time = cur_time;
+		Serial.printf("dial_cnt : %d, dial_cnt_old : %d\n\r", dial_cnt, dial_cnt_old);
 		break;
 	}
 }
@@ -594,6 +654,7 @@ void Screen::fsInit(void)
 	float volt_set0, volt_set1;
 	float current_limit0, current_limit1;
 	uint8_t backlight_level = 0;
+	uint8_t fan_level = 0;
 
 	if (!SPIFFS.begin(false)) {
 		Serial.println("SPIFFS mount error");
@@ -612,6 +673,7 @@ void Screen::fsInit(void)
 		f.print("current_limit0=03.0\n\r");
 		f.print("current_limit1=03.0\n\r");
 		f.print("blacklight_level=3\n\r");
+		f.print("fan_level=0\n\r");
 		f.print("firstboot=0");
 		f.flush();
 		current_limit0 = 3.0;
@@ -619,6 +681,7 @@ void Screen::fsInit(void)
 		volt_set0 = 5.0;
 		volt_set1 = 5.0;
 		backlight_level = 3;
+		fan_level = 0;
 
 	} else {
 		File f = fs->open("/setting.txt", "r");
@@ -640,6 +703,9 @@ void Screen::fsInit(void)
 		f.findUntil("backlight_level", "\n\r");
 		f.seek(1, SeekCur);
 		backlight_level = f.readStringUntil('\n').toInt();
+		f.findUntil("fan_level", "\n\r");
+		f.seek(1, SeekCur);
+		fan_level = f.readStringUntil('\n').toInt();
 		f.close();
 	}
 	channel[0]->setVolt(volt_set0, 1);
@@ -647,6 +713,7 @@ void Screen::fsInit(void)
 	channel[1]->setVolt(volt_set1, 1);
 	channel[1]->setCurrentLimit(current_limit1, 1);
 	setting->setBacklightLevel(backlight_level);
+	setting->setFanLevel(fan_level);
 	readFile("/setting.txt");
 }
 

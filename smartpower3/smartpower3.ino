@@ -13,6 +13,8 @@ uint16_t wmin3 = 99999;
 #define LED2	13
 #define LED1	2
 
+#define FAN		12
+
 #define FREQ	5000
 #define RESOLUTION	8
 
@@ -25,13 +27,12 @@ void setup(void) {
 	I2CA.setClock(200000UL);
 	I2CB.setClock(200000UL);
 	PAC.begin(&I2CB);
-	//PAC2.begin(&I2CA);
 	screen.begin(&I2CA);
 
 	initEncoder(&dial);
 
 	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
-	xTaskCreate(screenTask, "Draw Screen", 3000, NULL, 1, NULL);
+	xTaskCreate(screenTask, "Draw Screen", 4000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
 	pinMode(25, INPUT_PULLUP);
 	attachInterrupt(25, isr_stp, FALLING);
@@ -40,10 +41,9 @@ void setup(void) {
 	ledcSetup(1, FREQ, RESOLUTION);
 	ledcAttachPin(LED2, 0);
 	ledcAttachPin(LED1, 1);
+
 	ledcWrite(0, 50);
 	ledcWrite(1, 50);
-	pinMode(12, OUTPUT);
-	digitalWrite(12, HIGH);
 }
 
 void isr_stp()
@@ -223,6 +223,7 @@ void loop() {
 	delay(500);
 	*/
 	delay(1000);
+	//get_memory_info();
 }
 
 void get_memory_info(void)
