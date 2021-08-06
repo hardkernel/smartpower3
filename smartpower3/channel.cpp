@@ -57,23 +57,16 @@ Channel::~Channel(void)
 #endif
 }
 
-void Channel::monitorSTPD01()
+bool Channel::isAvailableSTPD01()
 {
 	if (test() == 0xff) {
 		stpd->setTextColor(FG_DISABLED, BG_DISABLED);
 		stpd->draw("STPD");
-	} else {
-		stpd->setTextColor(FG_ENABLED, BG_ENABLED);
-		stpd->draw("STPD");
-#if 0
-		char str[5];
-		sprintf(str, "%4.1f", stpd01->readVoltage()/1000.0);
-		//Serial.println(stpd01->readVoltage(), HEX);
-		//sprintf(str, "%x", stpd01->readVoltage());
-		sprintf(str, "%3.1f", stpd01->readCurrentLimit()/1000.0);
-#endif
+		return 0;
 	}
-	//monitorInterrupt();
+	stpd->setTextColor(FG_ENABLED, BG_ENABLED);
+	stpd->draw("STPD");
+	return 1;
 }
 
 void Channel::initPower()
@@ -100,8 +93,6 @@ void Channel::initScreen()
 	_current->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
 	_current->setCoordinate(x + 145, y + 5 + Y_CURRENT);
 	_current->pushValue(current_limit);
-	Serial.println(volt_set);
-	Serial.println(current_limit);
 
 	tft->drawString("Status", x, y + 220, 2);
 	tft->drawString("Latch", x, y + 235, 2);
@@ -166,8 +157,17 @@ bool Channel::off(void)
 	volt->setTextColor(TFT_DARKGREY, TFT_BLACK);
 	current->setTextColor(TFT_DARKGREY, TFT_BLACK);
 	watt->setTextColor(TFT_DARKGREY, TFT_BLACK);
-	//clearInterruptUI();
 	return err;
+}
+
+void Channel::setHide()
+{
+	hide = 1;
+}
+
+void Channel::clearHide()
+{
+	hide = 0;
 }
 
 void Channel::write(uint8_t addr, uint8_t reg)
@@ -178,22 +178,19 @@ void Channel::write(uint8_t addr, uint8_t reg)
 uint16_t Channel::getVolt(void)
 {
 	//return volt_set;
-	Serial.println(volt_set);
 	return volt_set;
 }
 
 uint16_t Channel::getCurrentLimit(void)
 {
-	Serial.printf("getCurrentLimit %d\n\r", current_limit);
 	return current_limit/100;
 }
 
 void Channel::setVolt(float volt_set, uint8_t mode)
 {
-	Serial.printf("setVolt %f, %d\n\r", volt_set, mode);
 	if (mode == 0) {
 		this->volt_set = this->volt_set + volt_set*100;
-		//stpd01->setVoltage(min((uint16_t)20000, this->volt_set));
+		stpd01->setVoltage(min((uint16_t)20000, this->volt_set));
 	} else if (mode == 1) {
 		this->volt_set = volt_set;
 		this->_volt_set = volt_set;
@@ -208,7 +205,6 @@ void Channel::editVolt(float volt_set)
 
 void Channel::setCurrentLimit(float val, uint8_t mode)
 {
-	Serial.printf("setCurrentLimit %f, %d\n\r", val, mode);
 	if (mode == 0) {
 		current_limit += val*100;
 		current_limit = min((uint16_t)3000, current_limit);
@@ -231,12 +227,14 @@ void Channel::editCurrentLimit(float val)
 
 void Channel::drawChannel(bool forced)
 {
-	volt->fnd_update(forced);
-	current->fnd_update(forced);
-	watt->fnd_update(forced);
-	//watt->draw();
-	_volt->draw(forced);
-	_current->draw(forced);
+	if (!hide) {
+		volt->fnd_update(forced);
+		current->fnd_update(forced);
+		watt->fnd_update(forced);
+		//watt->draw();
+		_volt->draw(forced);
+		_current->draw(forced);
+	}
 }
 
 void Channel::clearCompColor(void)
@@ -270,7 +268,6 @@ uint16_t Channel::getValueVolt()
 
 uint16_t Channel::getValueCurrent()
 {
-	Serial.printf("getValueCurrent %d\n\r", this->current->getValue());
 	return this->current->getValue();
 }
 
@@ -341,7 +338,7 @@ void Channel::clearInterruptUI(void)
 	}
 }
 
-void Channel::checkInterrupt(void)
+uint8_t Channel::checkInterrupt(void)
 {
 	uint8_t reg_stat, reg_latch, reg_mask;
 	reg_latch = stpd01->readIntLatch();
@@ -370,4 +367,6 @@ void Channel::checkInterrupt(void)
 			int_mask[7-i]->draw(String("0"));
 		}
 	}
+	
+	return reg_latch;
 }

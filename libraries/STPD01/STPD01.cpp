@@ -1,4 +1,5 @@
 #include "STPD01.h"
+#include <ArduinoTrace.h>
 
 STPD01::STPD01()
 {
@@ -85,6 +86,7 @@ uint8_t STPD01::readIntMask()
 void STPD01::initInterrupt()
 {
 	write8(STPD01_REGISTER_4, 0x00);
+	write8(STPD01_REGISTER_5, 0x00);
 }
 
 void STPD01::monitorInterrupt(uint8_t ch)
@@ -112,6 +114,7 @@ uint8_t STPD01::setCurrentLimit(uint16_t milliampere)
 		return 1;
 	}
 	val = milliampere/100 -1;
+	DUMP(val);
 	write8(STPD01_REGISTER_1, val);
 	tmp = read8(STPD01_REGISTER_1);
 	if (tmp != val) {
@@ -199,6 +202,7 @@ uint8_t STPD01::setVoltage(uint16_t volt)
 	} else if (volt >= 20000) {
 		val = 0xf1;
 	}
+	DUMP(val);
 	write8(STPD01_REGISTER_0, val);
 	tmp = read8(STPD01_REGISTER_0);
 	if (tmp != val) {

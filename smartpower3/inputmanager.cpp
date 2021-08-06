@@ -5,12 +5,12 @@ ESP32Encoder encoder;
 Button::Button(uint8_t pin) : PIN(pin)
 {
 	pinMode(pin, INPUT_PULLUP);
-	attachInterrupt(pin, std::bind(&Button::isr, this), RISING);
+	attachInterrupt(pin, std::bind(&Button::isr, this), FALLING);
 }
 
 void Button::isr(void) {
 	if (millis() - debounceTimer >= DEBOUNCE_TIME) {
-		if (digitalRead(PIN) == 1) {
+		if (digitalRead(PIN) == 0) {
 			debounceTimer = millis();
 			numberKeyPresses += 1;
 			pressed = true;
@@ -41,13 +41,13 @@ void countEncoder(void *dial)
   int8_t cnt;
   for (;;) {
 	cnt = encoder.getCount();
-    //if (cnt > 1) {
-    if (cnt > 0) {
+    if (cnt > 1) {
+    //if (cnt > 0) {
       encoder.setCount(0);
 	  tmp->cnt += 1;
 	  tmp->direct = true;
-    } else if (cnt < 0) {
-    //} else if (cnt < -1) {
+    //} else if (cnt < 0) {
+    } else if (cnt < -1) {
       encoder.setCount(0);
 	  tmp->cnt -= 1;
 	  tmp->direct = false;

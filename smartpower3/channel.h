@@ -41,16 +41,18 @@ public:
 	uint16_t getVolt(void);
 	uint16_t getCurrentLimit(void);
 	void monitorInterrupt();
-	void checkInterrupt(void);
+	uint8_t checkInterrupt(void);
 	void clearInterruptUI(void);
 	uint8_t test(void);
-	void monitorSTPD01();
+	bool isAvailableSTPD01();
 	uint8_t getIntStatus(void);
 	uint8_t getIntMask(void);
 	uint16_t getValueVolt();
 	uint16_t getValueCurrent();
 	uint16_t getValueWatt();
 	void write(uint8_t addr, uint8_t reg);
+	void setHide();
+	void clearHide();
 private:
 	bool activated;
 	TFT_eSPI *tft;
@@ -71,4 +73,5 @@ private:
 	STPD01 *stpd01;
 	uint8_t channel;
 	uint16_t x, y;
+	uint8_t hide = 0;
 };

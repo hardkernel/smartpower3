@@ -4,7 +4,7 @@
 
 #include "component.h"
 
-class Header
+class Header : public Component
 {
 public:
 	Header(TFT_eSPI *tft);
@@ -31,7 +31,8 @@ private:
 	uint8_t intPin = -1;
 	Component *input;
 	Component *int0;
-	Component *setting;
+	Component *mode;
+	Component *display_mode;
 };
 
 #endif

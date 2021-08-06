@@ -1,11 +1,12 @@
 #include "header.h"
 
-Header::Header(TFT_eSPI *tft)
+Header::Header(TFT_eSPI *tft) : Component(tft)
 {
 	this->tft = tft;
 	input = new Component(tft, 104, 30, 4);
 	int0 = new Component(tft, 64, 22, 4);
-	setting = new Component(tft, 100, 24, 4);
+	mode = new Component(tft, 76, 22, 4);
+	display_mode = new Component(tft, 110, 22, 4);
 }
 
 void Header::init(uint16_t x, uint16_t y)
@@ -20,9 +21,13 @@ void Header::init(uint16_t x, uint16_t y)
 	int0->setCoordinate(480 - 70, y);
 	int0->draw("INT");
 
-	setting->init(TFT_YELLOW, TFT_BLACK, 1, TL_DATUM);
-	setting->setCoordinate(x + 150, y);
-	setting->draw("SETTING");
+	display_mode->init(TFT_BLACK, TFT_YELLOW, 1, TL_DATUM);
+	display_mode->setCoordinate(x + 250, y);
+	display_mode->draw("POWER");
+
+	mode->init(TFT_YELLOW, TFT_BLACK, 1, TL_DATUM);
+	mode->setCoordinate(x + 150, y);
+	mode->draw("MODE");
 }
 
 void Header::lowIntPin(void)
@@ -45,16 +50,18 @@ void Header::highIntPin(void)
 
 void Header::activate(void)
 {
-	setting->activate();
+	mode->activate();
 }
 
 void Header::deActivate(void)
 {
-	setting->deActivate();
+	mode->deActivate();
 }
 
 void Header::drawMode(String str)
 {
+	display_mode->clear();
+	display_mode->draw(str);
 }
 
 void Header::setLowInput(bool low_input)

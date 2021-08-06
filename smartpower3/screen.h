@@ -4,6 +4,7 @@
 #include <TFT_eSPI.h>
 #include "channel.h"
 #include "header.h"
+#include "setting.h"
 #include <STPD01.h>
 #include <Adafruit_BME280.h>
 
@@ -14,7 +15,8 @@ enum screen_mode_t {
 	BASE,
 	BASE_MOVE,
 	BASE_EDIT,
-	SETTING
+	SETTING,
+	SETTING_BL,
 };
 
 enum state {
@@ -22,7 +24,7 @@ enum state {
 	STATE_VOLT1,
 	STATE_CURRENT1,
 	STATE_CURRENT0,
-	STATE_VOLT0,
+	STATE_VOLT0
 };
 
 class Screen
@@ -35,8 +37,10 @@ public:
 	void run(void);
 	void drawScreen(void);
 	void activate();
+	void activate_setting();
 	void countDial(int8_t mode_count, bool direct, uint32_t milisec);
 	void deActivate();
+	void deActivateSetting();
 	void getBtnPress(uint8_t idx, uint32_t cur_time);
 	void setTime(uint32_t milisec);
 	void clearBtnEvent(void);
@@ -57,6 +61,7 @@ private:
 	screen_mode_t mode = BASE;
 	Channel *channel[2];
 	Header *header;
+	Setting *setting;
 	TwoWire *_wire;
 	uint8_t activated = 0;
 	uint32_t dial_time = 0;
@@ -72,6 +77,8 @@ private:
 	void drawBase(void);
 	void drawBaseEdit(void);
 	void drawBaseMove(void);
+	void drawSetting(void);
+	void drawSettingBL(void);
 	static bool _int;
 	uint8_t state_power = 0;
 	uint8_t old_state_power = 0;
@@ -86,4 +93,5 @@ private:
 	Adafruit_Sensor *bme_temp = bme.getTemperatureSensor();
 	Adafruit_Sensor *bme_humidity = bme.getHumiditySensor();
 	uint32_t cnt[2] = {0, 0};
+	uint16_t volt, _volt, volt_diff;
 };

@@ -3,8 +3,13 @@
 #include "smartpower3.h"
 
 uint32_t ctime1 = 0;
+uint32_t ctime3 = 0;
 
-#define BL_LCD	17
+uint16_t vmax3, amax3, wmax3;
+uint16_t vmin3 = 99999;
+uint16_t amin3 = 99999;
+uint16_t wmin3 = 99999;
+
 #define LED2	13
 #define LED1	2
 
@@ -12,7 +17,6 @@ uint32_t ctime1 = 0;
 #define RESOLUTION	8
 
 void setup(void) {
-	delay(2000);
 	Serial.begin(115200);
 	ARDUINOTRACE_INIT(115200);
 	TRACE();
@@ -30,22 +34,21 @@ void setup(void) {
 	xTaskCreate(screenTask, "Draw Screen", 3000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
 	pinMode(25, INPUT_PULLUP);
-	//attachInterrupt(25, isr_stp, FALLING);
+	attachInterrupt(25, isr_stp, FALLING);
 
 	ledcSetup(0, FREQ, RESOLUTION);
 	ledcSetup(1, FREQ, RESOLUTION);
-	ledcSetup(2, FREQ, RESOLUTION);
 	ledcAttachPin(LED2, 0);
 	ledcAttachPin(LED1, 1);
-	ledcAttachPin(BL_LCD, 2);
 	ledcWrite(0, 50);
 	ledcWrite(1, 50);
-	ledcWrite(2, 50);
+	pinMode(12, OUTPUT);
+	digitalWrite(12, HIGH);
 }
 
 void isr_stp()
 {
-	Serial.println("hello isr");
+	//Serial.println("hello isr");
 	screen.flag_int = 1;
 }
 
@@ -97,6 +100,25 @@ void powerTask(void *parameter)
 		watt = (uint16_t)(PAC.Power*1000);
 		screen.pushPower(volt, ampere, watt, 0);
 
+		if (volt > vmax3)
+			vmax3 = volt;
+		if (ampere > amax3)
+			amax3 = ampere;
+		if (volt < vmin3)
+			vmin3 = volt;
+		if (ampere < amin3)
+			amin3 = ampere;
+
+		/*
+		if ((millis() - ctime3) > 3000) {
+			Serial.printf("================== CH0_PAC2 =============\n\r");
+			Serial.printf("vmax : [[ %d ]], vmin : [[ %d ]], vcur : [[ %d ]], vdiff : [[ %d ]] \n\r", vmax3, vmin3, volt, vmax3 - vmin3);
+			Serial.printf("amax : [[ %d ]], amin : [[ %d ]], acur : [[ %d ]], adiff : [[[[ %d ]]]] \n\r", amax3, amin3, ampere, amax3 - amin3);
+			Serial.printf("===============================\n\r");
+			ctime3 = millis();
+		}
+		*/
+
 		updatePowerSense3();
 		volt = (uint16_t)(PAC.Voltage);
 		ampere = (uint16_t)(PAC.Current);
@@ -130,8 +152,16 @@ void inputTask(void *parameter)
 		cur_time = millis();
 		for (int i = 0; i < 4; i++) {
 			if (button[i].checkPressed() == true) {
-				get_memory_info();
+				//get_memory_info();
 				screen.getBtnPress(i, cur_time);
+				if (i == 2) {
+					vmax3 = 0;
+					amax3 = 0;
+					wmax3 = 0;
+					vmin3 = 99999;
+					amin3 = 99999;
+					wmin3 = 99999;
+				}
 			}
 		}
 		if (dial.cnt != 0) {
