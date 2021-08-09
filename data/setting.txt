@@ -6,3 +6,4 @@ current_limit1=03.0
 backlight_level=2
 fan_level=0
 firstboot=0
+ble_board_unique_uuid=0

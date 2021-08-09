@@ -29,11 +29,15 @@ void setup(void) {
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
 
+	ble = BleManager().instance();
+	ble.init();
+
 	initEncoder(&dial);
 
 	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
 	xTaskCreate(screenTask, "Draw Screen", 4000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
+	xTaskCreate(bleTask, "BLE Task", configMINIMAL_STACK_SIZE * 4, NULL, 1, NULL);
 	pinMode(25, INPUT_PULLUP);
 	attachInterrupt(25, isr_stp, FALLING);
 
@@ -99,6 +103,9 @@ void powerTask(void *parameter)
 		ampere = (uint16_t)(PAC.Current);
 		watt = (uint16_t)(PAC.Power*1000);
 		screen.pushPower(volt, ampere, watt, 0);
+		ble.setCurrentPowerInfo((BleDevicePowerInfo) {
+			CHANNEL_0, volt, ampere, watt
+		});
 
 		if (volt > vmax3)
 			vmax3 = volt;
@@ -124,6 +131,9 @@ void powerTask(void *parameter)
 		ampere = (uint16_t)(PAC.Current);
 		watt = (uint16_t)(PAC.Power*1000);
 		screen.pushPower(volt, ampere, watt, 1);
+		ble.setCurrentPowerInfo((BleDevicePowerInfo) {
+			CHANNEL_1, volt, ampere, watt
+		});
 
 		if ((millis() - ctime1) > 500) {
 			updatePowerSense1();
@@ -170,6 +180,24 @@ void inputTask(void *parameter)
 		}
 		screen.setTime(cur_time);
 		vTaskDelay(10);
+	}
+}
+
+void bleTask(void *parameter)
+{
+	uint16_t chIndex;
+
+	for (;;) {
+		if (ble.getBleServiceState() == BLE_SERVICE_ON) {
+			for (chIndex = 0; chIndex < MAX_CHANNEL_NUM; chIndex++) {
+				ble.notify(chIndex);
+			}
+
+			// Should not type a number less than 10
+			vTaskDelay(10);
+		} else {
+			vTaskDelay(1000);
+		}
 	}
 }
 

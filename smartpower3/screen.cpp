@@ -539,7 +539,7 @@ void Screen::checkOnOff()
 			}
 		}
 	}
-	
+
 	if (state_power != old_state_power) {
 		old_state_power = state_power;
 		Serial.printf("[ power state ] : %d\n\r", state_power);
@@ -675,7 +675,8 @@ void Screen::fsInit(void)
 		f.print("current_limit1=03.0\n\r");
 		f.print("blacklight_level=3\n\r");
 		f.print("fan_level=0\n\r");
-		f.print("firstboot=0");
+		f.print("firstboot=0\n\r");
+		f.print("ble_board_unique_uuid=0\n\r");
 		f.flush();
 		current_limit0 = 3.0;
 		current_limit1 = 3.0;
