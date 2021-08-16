@@ -30,7 +30,5 @@ void BleCharCallback::onWrite(BLECharacteristic *rxCharacteristic) {
 		for (int i = 0; i < rxValue.length(); i++) {
 			ble.serialLogLine("received value: " + std::to_string(rxValue[i]));
 		}
-
-		ble.serialLogLine("");
 	}
 }

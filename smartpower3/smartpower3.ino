@@ -32,12 +32,35 @@ void setup(void) {
 	ble = BleManager().instance();
 	ble.init();
 
+	// TODO: Do not start the BLE advertizing by default
+	ble.start();
+
 	initEncoder(&dial);
 
-	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
-	xTaskCreate(screenTask, "Draw Screen", 4000, NULL, 1, NULL);
-	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
-	xTaskCreate(bleTask, "BLE Task", configMINIMAL_STACK_SIZE * 4, NULL, 1, NULL);
+	// - If the total allocated stack size is over 9000,
+	// an error occurs when the BLE is about to be connected
+	// - Error occurs without pinning each task to a specific CPU
+	xTaskCreatePinnedToCore(
+		powerTask, "Read Power",
+		2000, // Error occurs if the number is less than 2000
+		NULL, 1, NULL,
+		APP_CPU_NUM); // Error occurs if it allocated to PRO_CPU
+	xTaskCreatePinnedToCore(
+		screenTask, "Draw Screen",
+		3000, // Error occurs if the number is less than 3000
+		NULL, 1, NULL,
+		PRO_CPU_NUM);
+	xTaskCreatePinnedToCore(
+		inputTask, "Input Task",
+		1000, // Error occurs if the number is less than 1000
+		NULL, 1, NULL,
+		PRO_CPU_NUM);
+	xTaskCreatePinnedToCore(
+		bleTask, "BLE Advertise",
+		3000, // Error occurs if the number is less than 3000
+		NULL, 1, NULL,
+		APP_CPU_NUM);
+
 	pinMode(25, INPUT_PULLUP);
 	attachInterrupt(25, isr_stp, FALLING);
 
@@ -97,6 +120,9 @@ void powerTask(void *parameter)
 {
 	uint16_t volt, ampere, watt;
 
+	// Error occurs without this delay
+	vTaskDelay(3000);
+
 	for (;;) {
 		updatePowerSense2();
 		volt = (uint16_t)(PAC.Voltage);
@@ -150,6 +176,9 @@ void powerTask(void *parameter)
 
 void screenTask(void *parameter)
 {
+	// Error occurs without this delay
+	vTaskDelay(3000);
+
 	for (;;) {
 		screen.run();
 		vTaskDelay(10);
@@ -158,6 +187,9 @@ void screenTask(void *parameter)
 
 void inputTask(void *parameter)
 {
+	// Error occurs without this delay
+	vTaskDelay(3000);
+
 	for (;;) {
 		cur_time = millis();
 		for (int i = 0; i < 4; i++) {
@@ -187,8 +219,13 @@ void bleTask(void *parameter)
 {
 	uint16_t chIndex;
 
+	// Error occurs without this delay
+	vTaskDelay(3000);
+	ble.serialLogLine("The notifying task started");
+
 	for (;;) {
-		if (ble.getBleServiceState() == BLE_SERVICE_ON) {
+		if (ble.getBleServiceState() == BLE_SERVICE_ON &&
+		    ble.getConnectionState() == BLE_DEVICE_CONNECTED) {
 			for (chIndex = 0; chIndex < MAX_CHANNEL_NUM; chIndex++) {
 				ble.notify(chIndex);
 			}

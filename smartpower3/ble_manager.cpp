@@ -36,6 +36,9 @@ BleManager::BleManager() {
 
 void BleManager::init() {
 	uint8_t chIndex;
+	char serviceUuid[BLE_UUID_LENGTH],
+		txCharUuid[BLE_UUID_LENGTH],
+		rxCharUuid[BLE_UUID_LENGTH];
 
 	serialLogLine("Initializing...");
 
@@ -55,29 +58,18 @@ void BleManager::init() {
 
 	// TODO: Set the name from the setting.txt file or append last 4 chars of UUID
 	sprintf(blePreference.name, "%s", PROJECT_NAME);
-	serialLogLine("Set the default name" + (std::string) PROJECT_NAME);
+	serialLogLine("Set the default name: " + (std::string) PROJECT_NAME);
+
+	BLEDevice::init(blePreference.name);
 
 	// Initialize the blePowerInfo structures
 	for (chIndex = 0; chIndex < MAX_CHANNEL_NUM; chIndex++) {
 		blePowerInfo[chIndex].channel = chIndex;
 	}
 
-	serialLogLine("Initialized");
-
-	// TODO: Do not turn on the BLE service by default
-	start();
-}
-
-void BleManager::start() {
-	char serviceUuid[BLE_UUID_LENGTH],
-		txCharUuid[BLE_UUID_LENGTH],
-		rxCharUuid[BLE_UUID_LENGTH];
-
 	getUuid(serviceUuid, BLE_UUID_BOARD);
 	getUuid(txCharUuid, BLE_UUID_TX_CHAR);
 	getUuid(rxCharUuid, BLE_UUID_RX_CHAR);
-
-	BLEDevice::init(blePreference.name);
 
 	bleServer = BLEDevice::createServer();
 	bleServer->setCallbacks(new BleServerCallback());
@@ -103,6 +95,10 @@ void BleManager::start() {
 	bleTxCharacteristic->addDescriptor(new BLE2902());
 	bleRxCharacteristic->setCallbacks(new BleCharCallback());
 
+	serialLogLine("Initialized");
+}
+
+void BleManager::start() {
 	bleService->start();
 	bleServer->getAdvertising()->start();
 
@@ -123,13 +119,13 @@ void BleManager::notify(uint16_t channel) {
 
 	// Max data length is 64
 	std::string advData =
-		HK_SP3_ADV_FILT_CHANNEL + delimiter +
+		std::string(HK_SP3_ADV_FILT_CHANNEL) + delimiter +
 		std::to_string(blePowerInfo[channel].channel) + // To see where the data is from
-		HK_SP3_ADV_FILT_VOLTAGE + delimiter +
+		std::string(HK_SP3_ADV_FILT_VOLTAGE) + delimiter +
 		std::to_string(blePowerInfo[channel].voltage) +
-		HK_SP3_ADV_FILT_AMPERE + delimiter +
+		std::string(HK_SP3_ADV_FILT_AMPERE) + delimiter +
 		std::to_string(blePowerInfo[channel].ampere) +
-		HK_SP3_ADV_FILT_WATT + delimiter +
+		std::string(HK_SP3_ADV_FILT_WATT) + delimiter +
 		std::to_string(blePowerInfo[channel].watt);
 
 	bleTxCharacteristic->setValue(advData);
@@ -158,8 +154,6 @@ void BleManager::getUuid(char *uuid, BleUuid what) {
 	ch = strtok(boardUniqueUuidTemp, "-");
 	ch = strtok(NULL, "-"); // uuidPart2
 	while (ch != NULL) {
-		serialLogLine(ch);
-
 		switch (tokenIdx) {
 			case 0:
 				strncpy(uuidPart3, ch, 5);
@@ -180,7 +174,7 @@ void BleManager::getUuid(char *uuid, BleUuid what) {
 		case BLE_UUID_BOARD:
 			sprintf(uuid, "%s%s",
 				HK_SP3_UUID_PREFIX,
-				strlen(boardUniqueUuid) > 0 ? boardUniqueUuid : ""
+				boardUniqueUuid
 			);
 		break;
 		case BLE_UUID_RX_CHAR:

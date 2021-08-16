@@ -22,8 +22,10 @@
 
 void BleServerCallback::onConnect(BLEServer *bleServer) {
 	ble.setConnectionState(BLE_DEVICE_CONNECTED);
+	ble.serialLogLine("A BLE device connected");
 }
 
 void BleServerCallback::onDisconnect(BLEServer *bleServer) {
 	ble.setConnectionState(BLE_DEVICE_DISCONNECTED);
+	ble.serialLogLine("A BLE device disconnected");
 }
