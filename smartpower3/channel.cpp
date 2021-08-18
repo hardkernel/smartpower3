@@ -33,12 +33,14 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 	_volt = new Component(tft, 48, 22, 4);
 	_current = new Component(tft, 48, 22, 4);
 	stpd = new Component(tft, 38, 16, 2);
+	/*
 
 	for (int i = 0; i < 8; i++) {
 		int_stat[i] = new Component(tft, 14, 22, 2);
 		int_latch[i] = new Component(tft, 14, 22, 2);
 		int_mask[i] = new Component(tft, 14, 22, 2);
 	}
+	*/
 }
 
 Channel::~Channel(void)
@@ -94,6 +96,7 @@ void Channel::initScreen()
 	_current->setCoordinate(x + 145, y + 5 + Y_CURRENT);
 	_current->pushValue(current_limit);
 
+	/*
 	tft->drawString("Status", x, y + 220, 2);
 	tft->drawString("Latch", x, y + 235, 2);
 	tft->drawString("Mask", x, y + 250, 2);
@@ -108,6 +111,7 @@ void Channel::initScreen()
 		int_mask[i]->setCoordinate(x + 90 + (i*15), y + 250);
 		int_mask[i]->draw(String("1"));
 	}
+	*/
 
 	//FG_DISABLED, BG_DISABLED
 	//stpd->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
@@ -120,6 +124,16 @@ void Channel::initScreen()
 	tft->drawString("A", x + W_SEG-4, y + 29 + H_SEG + OFFSET_SEG, 4);
 	tft->drawString("W", x + W_SEG-4, y + 10 + H_SEG*2 + OFFSET_SEG*2, 4);
 	drawChannel(true);
+
+	tft->fillRoundRect(x, y + 240, 60, 40, 10, TFT_WHITE);
+	for (int i=0; i < 10; i++)
+		tft->drawLine(x + 15, y + 255 + i, x + 45, y + 255 + i, TFT_RED);
+	for (int i=0; i < 10; i++)
+		tft->drawLine(x + 25 + i, y + 245, x + 25 + i, y + 275, TFT_RED);
+	tft->fillRoundRect(x + 135, y + 240, 60, 40, 10, TFT_WHITE);
+	//tft->fillCircle(x + 165, y + 255, 20, TFT_WHITE);
+	for (int i=0; i < 10; i++)
+		tft->drawLine(x + 150, y + 255 + i, x + 180, y + 255 + i, TFT_BLACK);
 }
 
 uint8_t Channel::getIntStatus(void)
@@ -344,6 +358,7 @@ uint8_t Channel::checkInterrupt(void)
 	reg_latch = stpd01->readIntLatch();
 	reg_stat = stpd01->readIntStatus();
 	reg_mask = stpd01->readIntMask();
+	/*
 	for (int i = 0; i < 8; i++) {
 		if (reg_stat & (1 << i)) {
 			int_stat[7-i]->setTextColor(TFT_YELLOW, TFT_BLACK);
@@ -367,6 +382,7 @@ uint8_t Channel::checkInterrupt(void)
 			int_mask[7-i]->draw(String("0"));
 		}
 	}
+	*/
 	
 	return reg_latch;
 }

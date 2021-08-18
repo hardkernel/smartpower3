@@ -24,7 +24,7 @@ void Screen::begin(TwoWire *theWire)
 	_wire = theWire;
 	header = new Header(&tft);
 	channel[0] = new Channel(&tft, _wire, 10, 40, 0);
-	channel[1] = new Channel(&tft, _wire, 255, 40, 1);
+	channel[1] = new Channel(&tft, _wire, 260, 40, 1);
 
 	setting = new Setting(&tft);
 	fsInit();
@@ -46,9 +46,38 @@ void Screen::run()
 	/*
 	 * for test STPD01
 	 */
-	if ((cur_time - task_time) > 500) {
+#if 1
+	//if ((cur_time - task_time) > 10000) {
+	if ((cur_time - task_time) > 1000) {
 		task_time = cur_time;
+		flag_on += 1;
 	}
+	Serial.printf("%d %d\n\r", cur_time, flag_on);
+
+	if (flag_on == 1) {
+		if (flag_off == 1) {
+			for (int i = 0; i < 2; i++) {
+				channel[i]->on();
+				onoff[i] = 1;
+			}
+			flag_off = 0;
+			Serial.printf("%d on\n\r", cur_time);
+		}
+	}
+
+	//if (flag_on > 3) {
+	if (flag_on > 1) {
+		if (flag_off == 0) {
+			for (int i = 0; i < 2; i++) {
+				channel[i]->off();
+				onoff[i] = 0;
+			}
+			flag_off = 1;
+			flag_on = 0;
+			Serial.printf("%d off\n\r", cur_time);
+		}
+	}
+#endif
 
 	if (btn_pressed[1]) {
 		btn_pressed[1] = false;

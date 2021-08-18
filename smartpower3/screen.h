@@ -103,4 +103,8 @@ private:
 	Adafruit_Sensor *bme_humidity = bme.getHumiditySensor();
 	uint32_t cnt[2] = {0, 0};
 	uint16_t volt, _volt, volt_diff;
+	uint8_t flag_on = 0;
+	uint8_t flag_off = 1;
+	uint16_t time_on = 0;
+	uint16_t time_off = 0;
 };
