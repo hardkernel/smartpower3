@@ -17,9 +17,13 @@ void Header::init(uint16_t x, uint16_t y)
 	input->setCoordinate(x, y);
 	input->draw("IN:0.0V");
 
+
+	/*
 	int0->init(FG_DISABLED, BG_DISABLED, 1, TL_DATUM);
 	int0->setCoordinate(480 - 70, y);
 	int0->draw("INT");
+	*/
+	tft->drawString("F/w v1.1", 380, y, 4);
 
 	display_mode->init(TFT_BLACK, TFT_YELLOW, 1, TL_DATUM);
 	display_mode->setCoordinate(x + 250, y);
