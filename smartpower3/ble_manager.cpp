@@ -113,7 +113,7 @@ void BleManager::stop() {
 	bleServiceState = BLE_SERVICE_OFF;
 }
 
-void BleManager::notify(uint16_t channel) {
+void BleManager::notify(uint16_t channel, bool channelActive) {
 	// To shorten the code, and to convert the type to a string
 	std::string delimiter = std::string(HK_SP3_ADV_DELIMITER);
 
@@ -121,6 +121,8 @@ void BleManager::notify(uint16_t channel) {
 	std::string advData =
 		std::string(HK_SP3_ADV_FILT_CHANNEL) + delimiter +
 		std::to_string(blePowerInfo[channel].channel) + delimiter + // To see where the data is from
+		std::string(HK_SP3_ADV_FILT_ACTIVE) + delimiter +
+		(channelActive ? "1" : "0") + delimiter +
 		std::string(HK_SP3_ADV_FILT_VOLTAGE) + delimiter +
 		std::to_string(blePowerInfo[channel].voltage) + delimiter +
 		std::string(HK_SP3_ADV_FILT_AMPERE) + delimiter +

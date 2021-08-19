@@ -227,7 +227,7 @@ void bleTask(void *parameter)
 		if (ble.getBleServiceState() == BLE_SERVICE_ON &&
 		    ble.getConnectionState() == BLE_DEVICE_CONNECTED) {
 			for (chIndex = 0; chIndex < MAX_CHANNEL_NUM; chIndex++) {
-				ble.notify(chIndex);
+				ble.notify(chIndex, screen.getOnOff(chIndex));
 			}
 
 			// Should not type a number less than 10
