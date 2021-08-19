@@ -120,11 +120,11 @@ void BleManager::notify(uint16_t channel) {
 	// Max data length is 64
 	std::string advData =
 		std::string(HK_SP3_ADV_FILT_CHANNEL) + delimiter +
-		std::to_string(blePowerInfo[channel].channel) + // To see where the data is from
+		std::to_string(blePowerInfo[channel].channel) + delimiter + // To see where the data is from
 		std::string(HK_SP3_ADV_FILT_VOLTAGE) + delimiter +
-		std::to_string(blePowerInfo[channel].voltage) +
+		std::to_string(blePowerInfo[channel].voltage) + delimiter +
 		std::string(HK_SP3_ADV_FILT_AMPERE) + delimiter +
-		std::to_string(blePowerInfo[channel].ampere) +
+		std::to_string(blePowerInfo[channel].ampere) + delimiter +
 		std::string(HK_SP3_ADV_FILT_WATT) + delimiter +
 		std::to_string(blePowerInfo[channel].watt);
 
