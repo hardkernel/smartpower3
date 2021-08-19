@@ -33,9 +33,9 @@
 #define HK_SP3_ADV_DELIMITER ","
 // - The keyword to filter among the data
 #define HK_SP3_ADV_FILT_CHANNEL "ch"
-#define HK_SP3_ADV_FILT_VOLTAGE "volt"
-#define HK_SP3_ADV_FILT_AMPERE "ampe"
-#define HK_SP3_ADV_FILT_WATT "watt"
+#define HK_SP3_ADV_FILT_VOLTAGE "v"
+#define HK_SP3_ADV_FILT_AMPERE "a"
+#define HK_SP3_ADV_FILT_WATT "w"
 
 // Tag for logging
 #define BLE_LOGTAG "BLE"
