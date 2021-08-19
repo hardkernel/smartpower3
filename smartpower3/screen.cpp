@@ -580,6 +580,10 @@ void Screen::checkOnOff()
 	}
 }
 
+bool Screen::getOnOff(int8_t channel_num) {
+	return onoff[channel_num];
+}
+
 void Screen::isrSTPD01()
 {
 	for (int i = 0; i < 2; i++) {

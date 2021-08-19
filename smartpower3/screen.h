@@ -30,7 +30,7 @@ enum state {
 
 enum state_setting {
 	STATE_FAN = 0,
-	STATE_BL,	
+	STATE_BL,
 	STATE_SETTING,
 	STATE_NONE
 };
@@ -53,6 +53,7 @@ public:
 	void setTime(uint32_t milisec);
 	void clearBtnEvent(void);
 	void checkOnOff();
+	bool getOnOff(int8_t channel_num);
 	static void isr_stp(void);
 	void listDir(const char * dirname, uint8_t levels);
 	void readFile(const char * path);
