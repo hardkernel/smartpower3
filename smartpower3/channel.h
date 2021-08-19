@@ -24,6 +24,7 @@ public:
 	~Channel(void);
 	void deleteScreen(void);
 	void drawChannel(bool forced=0);
+	void drawVoltSet(bool forced=0);
 	void pushPower(uint16_t volt, uint16_t current, uint16_t watt);
 	void pushPowerEdit(uint16_t volt, uint16_t current, uint16_t watt);
 	void initScreen();

@@ -171,6 +171,8 @@ void FndWidget::fnd_update(bool forced)
 			pos = f->cnt -i -1;
 			f->dd[pos].update = true;
 		}
+		f->dot_en = true;
+		f->dot_on = false;
 	} else if (f->refresh) {
 		f->refresh = false;
 	} else if (value == old_value) {

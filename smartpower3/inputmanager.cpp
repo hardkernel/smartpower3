@@ -9,19 +9,18 @@ Button::Button(uint8_t pin) : PIN(pin)
 }
 
 void Button::isr(void) {
-	if (millis() - debounceTimer >= DEBOUNCE_TIME) {
-		if (digitalRead(PIN) == 0) {
-			debounceTimer = millis();
-			numberKeyPresses += 1;
-			pressed = true;
-		}
-	}
+	debounceTimer = millis();
+	pressed = true;
 }
 
 bool Button::checkPressed(void) {
 	if (pressed) {
-		pressed = false;
-		return true;
+		if (millis() - debounceTimer >= DEBOUNCE_TIME) {
+			if (digitalRead(PIN) == 0) {
+				pressed = false;
+				return true;
+			}
+		}
 	}
 	return false;
 }
