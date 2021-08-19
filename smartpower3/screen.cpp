@@ -46,7 +46,7 @@ void Screen::run()
 	/*
 	 * for test STPD01
 	 */
-#if 1
+#if 0
 	//if ((cur_time - task_time) > 10000) {
 	if ((cur_time - task_time) > 1000) {
 		task_time = cur_time;
@@ -97,10 +97,10 @@ void Screen::run()
 
 	if (!low_input) {
 		if (digitalRead(25)) {
-			header->highIntPin();
+			//header->highIntPin();
 		} else if (flag_int || !digitalRead(25)) {
 			flag_int = 0;
-			header->lowIntPin();
+			//header->lowIntPin();
 			for (int i = 0; i < 2; i++) {
 				if (channel[i]->checkInterrupt() & 0x4) {
 					channel[i]->on();
@@ -477,8 +477,13 @@ void Screen::drawScreen()
 		break;
 	}
 	if (mode != SETTING) {
-		channel[0]->drawChannel();
-		channel[1]->drawChannel();
+		if ((cur_time - fnd_time) > 300) {
+			fnd_time = cur_time;
+			channel[0]->drawChannel();
+			channel[1]->drawChannel();
+		}
+		channel[0]->drawVoltSet();
+		channel[1]->drawVoltSet();
 	}
 	header->draw();
 }

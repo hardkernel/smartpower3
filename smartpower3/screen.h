@@ -107,4 +107,5 @@ private:
 	uint8_t flag_off = 1;
 	uint16_t time_on = 0;
 	uint16_t time_off = 0;
+	uint32_t fnd_time = 0;
 };

@@ -124,6 +124,7 @@ void Channel::initScreen()
 	tft->drawString("A", x + W_SEG-4, y + 29 + H_SEG + OFFSET_SEG, 4);
 	tft->drawString("W", x + W_SEG-4, y + 10 + H_SEG*2 + OFFSET_SEG*2, 4);
 	drawChannel(true);
+	drawVoltSet(true);
 
 	tft->fillRoundRect(x, y + 240, 60, 40, 10, TFT_WHITE);
 	for (int i=0; i < 10; i++)
@@ -239,15 +240,20 @@ void Channel::editCurrentLimit(float val)
 	_current_limit = max((uint16_t)500, _current_limit);
 }
 
+void Channel::drawVoltSet(bool forced)
+{
+	if (!hide) {
+		_volt->draw(forced);
+		_current->draw(forced);
+	}
+}
+
 void Channel::drawChannel(bool forced)
 {
 	if (!hide) {
 		volt->fnd_update(forced);
 		current->fnd_update(forced);
 		watt->fnd_update(forced);
-		//watt->draw();
-		_volt->draw(forced);
-		_current->draw(forced);
 	}
 }
 
