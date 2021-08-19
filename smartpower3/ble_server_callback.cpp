@@ -28,4 +28,7 @@ void BleServerCallback::onConnect(BLEServer *bleServer) {
 void BleServerCallback::onDisconnect(BLEServer *bleServer) {
 	ble.setConnectionState(BLE_DEVICE_DISCONNECTED);
 	ble.serialLogLine("A BLE device disconnected");
+
+	// Restart advertising to get a new connection
+	bleServer->startAdvertising();
 }
