@@ -231,7 +231,7 @@ void bleTask(void *parameter)
 			}
 
 			// Should not type a number less than 10
-			vTaskDelay(10);
+			vTaskDelay(100);
 		} else {
 			vTaskDelay(1000);
 		}
