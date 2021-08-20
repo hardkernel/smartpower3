@@ -118,16 +118,13 @@ void BleManager::notify(uint16_t channel, bool channelActive) {
 	std::string delimiter = std::string(HK_SP3_ADV_DELIMITER);
 
 	// Max data length is 64
+	// Notifying:
+	// [ channel,channelActive,voltage,ampere,watt ]
 	std::string advData =
-		std::string(HK_SP3_ADV_FILT_CHANNEL) + delimiter +
 		std::to_string(blePowerInfo[channel].channel) + delimiter + // To see where the data is from
-		std::string(HK_SP3_ADV_FILT_ACTIVE) + delimiter +
 		(channelActive ? "1" : "0") + delimiter +
-		std::string(HK_SP3_ADV_FILT_VOLTAGE) + delimiter +
 		std::to_string(blePowerInfo[channel].voltage) + delimiter +
-		std::string(HK_SP3_ADV_FILT_AMPERE) + delimiter +
 		std::to_string(blePowerInfo[channel].ampere) + delimiter +
-		std::string(HK_SP3_ADV_FILT_WATT) + delimiter +
 		std::to_string(blePowerInfo[channel].watt);
 
 	bleTxCharacteristic->setValue(advData);

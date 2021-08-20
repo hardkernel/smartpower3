@@ -31,12 +31,6 @@
 #define HK_SP3_UUID_TX_FIX "E2B3"
 // - The delimiter to filter the values in one advertised data
 #define HK_SP3_ADV_DELIMITER ","
-// - The keyword to filter among the data
-#define HK_SP3_ADV_FILT_CHANNEL "ch"
-#define HK_SP3_ADV_FILT_ACTIVE "ac"
-#define HK_SP3_ADV_FILT_VOLTAGE "v"
-#define HK_SP3_ADV_FILT_AMPERE "a"
-#define HK_SP3_ADV_FILT_WATT "w"
 
 // Tag for logging
 #define BLE_LOGTAG "BLE"
