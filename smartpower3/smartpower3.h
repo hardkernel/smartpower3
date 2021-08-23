@@ -1,6 +1,7 @@
 #include <Microchip_PAC193x.h>
 #include "screen.h"
 #include "inputmanager.h"
+#include "wifi_manager.h"
 
 #define BUTTON_MENU 36
 #define BUTTON_CH0 39
@@ -15,6 +16,7 @@ Button button[4] = {
 };
 
 Screen screen;
+WifiManager wifiManager;
 //Microchip_PAC193x PAC = Microchip_PAC193x(4000);
 Microchip_PAC193x PAC = Microchip_PAC193x(15000);
 //Microchip_PAC193x PAC2 = Microchip_PAC193x(4000);

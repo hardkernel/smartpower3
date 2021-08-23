@@ -1,6 +1,7 @@
 #include <ArduinoTrace.h>
 #include <Wire.h>
 #include "smartpower3.h"
+#include "wifi_manager.h"
 
 uint32_t ctime1 = 0;
 uint32_t ctime3 = 0;
@@ -29,11 +30,14 @@ void setup(void) {
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
 
+	wifiManager = WifiManager().instance();
+
 	initEncoder(&dial);
 
 	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
 	xTaskCreate(screenTask, "Draw Screen", 4000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
+	xTaskCreate(wifiTask, "WiFi Connection Task", 2000, NULL, 1, NULL);
 	pinMode(25, INPUT_PULLUP);
 	attachInterrupt(25, isr_stp, FALLING);
 
@@ -173,6 +177,15 @@ void inputTask(void *parameter)
 	}
 }
 
+void wifiTask(void *parameter)
+{
+	// Run the WiFi service as a task in the background
+	wifiManager.init();
+
+	// Should not be terminated
+	for (;;) {}
+}
+
 void updatePowerSense1_PAC2(void)
 {
 	/*
@@ -223,7 +236,7 @@ void loop() {
 	delay(500);
 	*/
 	delay(1000);
-	//get_memory_info();
+	// get_memory_info();
 }
 
 void get_memory_info(void)
