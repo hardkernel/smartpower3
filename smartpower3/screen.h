@@ -42,6 +42,7 @@ public:
 	void begin(TwoWire *theWire = &Wire);
 	void pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch);
 	void pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt);
+	int8_t* getOnOff(void);
 	void run(void);
 	void drawScreen(void);
 	void activate();

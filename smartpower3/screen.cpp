@@ -38,6 +38,11 @@ void Screen::begin(TwoWire *theWire)
 	header->init(3, 3);
 }
 
+int8_t* Screen::getOnOff()
+{
+	return onoff;
+}
+
 void Screen::run()
 {
 	checkOnOff();
@@ -156,7 +161,6 @@ void Screen::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 	}
 
 	if (header->getInputVoltage()/1000 != volt/1000) {
-		Serial.println("push");
 		header->pushPower(volt, ampere, watt);
 	}
 }
