@@ -133,18 +133,10 @@ void Screen::initScreen(void)
 
 void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch)
 {
-	if (mode == BASE_EDIT) {
-		if (onoff[ch] == 1) {
-			channel[ch]->pushPowerEdit(volt, ampere, watt);
-		} else {
-			channel[ch]->pushPowerEdit(0, 0, 0);
-		}
+	if (onoff[ch] == 1) {
+		channel[ch]->pushPower(volt, ampere, watt);
 	} else {
-		if (onoff[ch] == 1) {
-			channel[ch]->pushPower(volt, ampere, watt);
-		} else {
-			channel[ch]->pushPower(0, 0, 0);
-		}
+		channel[ch]->pushPower(0, 0, 0);
 	}
 }
 
@@ -326,6 +318,8 @@ void Screen::drawBaseEdit()
 	if (dial_cnt != dial_cnt_old) {
 		dial_cnt_old = dial_cnt;
 		changeVolt(mode);
+		channel[0]->pushPowerEdit();
+		channel[1]->pushPowerEdit();
 	}
 }
 

@@ -303,12 +303,8 @@ void Channel::pushPower(uint16_t volt, uint16_t current, uint16_t watt)
 	this->watt->pushValue(watt);
 }
 
-void Channel::pushPowerEdit(uint16_t volt, uint16_t current, uint16_t watt)
+void Channel::pushPowerEdit()
 {
-	this->volt->pushValue(volt);
-	this->current->pushValue(current);
-	this->watt->pushValue(watt);
-
 	this->_volt->pushValue(_volt_set);
 	this->_current->pushValue(_current_limit);
 }
