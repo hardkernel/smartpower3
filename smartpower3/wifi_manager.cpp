@@ -30,8 +30,18 @@ WifiManager::WifiManager() {
 void WifiManager::init() {
 	webServer = new AsyncWebServer(WIFI_SERVER_PORT);
 
-	WiFi.mode(WIFI_STA);
+	// Run in the AP and STA mode simutaneously
+	WiFi.mode(WIFI_MODE_APSTA);
 
+	// For the AP mode
+	WiFi.softAP(
+		WIFI_SOFT_AP_SSID,
+		WIFI_SOFT_AP_PASSWORD
+	);
+
+	serialLogLine("AP: Soft AP with IP: " + WiFi.softAPIP().toString());
+
+	// For the STA mode
 	WiFi.begin(
 		WIFI_DEBUG_CONNECT_AP_SSID,
 		WIFI_DEBUG_CONNECT_AP_PASSWORD
@@ -44,7 +54,7 @@ void WifiManager::init() {
 		delay(1000);
 	}
 	Serial.print('\n');
-	serialLogLine("Connected with IP: " + WiFi.localIP().toString());
+	serialLogLine("STA: Connected to the AP with IP: " + WiFi.localIP().toString());
 	apConnected = WIFI_AP_CONNECTED;
 
 	// Start WiFi service automatically

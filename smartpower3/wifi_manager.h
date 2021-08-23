@@ -23,7 +23,11 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 
-// WiFi configuration
+// Soft AP mode configuration
+#define WIFI_SOFT_AP_SSID "SmartPower 3"
+#define WIFI_SOFT_AP_PASSWORD "12345678"
+
+// Web server configuration
 #define WIFI_SERVER_PORT 80
 
 // Tag for logging
