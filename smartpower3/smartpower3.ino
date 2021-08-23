@@ -15,13 +15,12 @@ uint32_t ctime1 = 0;
 uint32_t fps_ch0;
 
 void setup(void) {
-	Serial.begin(115200);
+	//Serial.begin(115200);
 	ARDUINOTRACE_INIT(115200);
+	Serial.begin(500000);
 	TRACE();
-	I2CA.begin(15, 4, 200000);
-	I2CB.begin(21, 22, 200000);
-	I2CA.setClock(200000UL);
-	I2CB.setClock(200000UL);
+	I2CA.begin(15, 4, 300000);
+	I2CB.begin(21, 22, 700000);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
 
@@ -99,7 +98,18 @@ void powerTask(void *parameter)
 			volt = (uint16_t)(PAC.Voltage);
 			ampere = (uint16_t)(PAC.Current);
 			watt = (uint16_t)(PAC.Power*100);
+			if (volt < 15000) {
+				screen.debug();
+				Serial.printf("[low INPUT!!!!] %d,%d,%d,%d\n\r", millis(), volt, ampere, watt);
+				for (int i = 0; i < 3; i++) {
+					PAC.update(0);
+					volt = (uint16_t)(PAC.Voltage);
+					if ((uint16_t)(PAC.Voltage) > 6000)
+						break;
+				}
+			}
 			screen.pushInputPower(volt, ampere, watt);
+			//Serial.printf("%d,%d,%d,%d\n\r", millis()-ctime1, volt, ampere, watt);
 			ctime1 = millis();
 		}
 	}

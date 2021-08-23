@@ -591,6 +591,7 @@ void Screen::countDial(int8_t dial_cnt, bool direct, uint32_t milisec)
 	this->dial_cnt += dial_cnt;
 	this->dial_time = milisec;
 	this->dial_direct = direct;
+	//Serial.printf("%d, %d\n\r", this->dial_cnt, this->dial_time);
 }
 
 void Screen::setTime(uint32_t milisec)
@@ -791,3 +792,7 @@ void Screen::setSysParam(char *key, String value)
 	f.close();
 }
 
+void Screen::debug()
+{
+	header->setDebug();
+}

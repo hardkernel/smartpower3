@@ -65,6 +65,7 @@ public:
 	bool flag_int = 0;
 	void isrSTPD01();
 	void initScreen();
+	void debug();
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
