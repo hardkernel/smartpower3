@@ -64,10 +64,10 @@ void WifiManager::init() {
 void WifiManager::start() {
 	// Web Server Root URL
 	webServer->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-		request->send(SPIFFS, "/index.html", "text/html");
+		request->send(SPIFFS, "/website/index.html", "text/html");
 	});
 
-	webServer->serveStatic("/", SPIFFS, "/");
+	webServer->serveStatic("/", SPIFFS, "/website");
 
 	// Start server
 	webServer->begin();
