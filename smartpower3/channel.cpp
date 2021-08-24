@@ -11,6 +11,7 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 	volt = new FndWidget(tft);
 	current = new FndWidget(tft);
 	watt = new FndWidget(tft);
+
 	volt->fnd_init(NUM_OF_FND, 2, true, x, Y_VOLT + y, FG_COLOR, BG_COLOR);
 	current->fnd_init(NUM_OF_FND, 2, true, x, Y_CURRENT + y, FG_COLOR, BG_COLOR);
 	watt->fnd_init(NUM_OF_FND, 2, true, x, Y_WATT + y, FG_COLOR, BG_COLOR);
@@ -298,6 +299,22 @@ uint16_t Channel::getValueWatt()
 
 void Channel::pushPower(uint16_t volt, uint16_t current, uint16_t watt)
 {
+	moving_avg[(cnt_mavg++)%5] = current;
+	if (cnt_mavg > 4) {
+		current = 0;
+		for (int i = 0; i < 5; i++) {
+			current += moving_avg[i];
+		}
+		current = current/5;
+	} else {
+		this->volt->pushValue(volt);
+		return;
+	}
+
+	if (current < 5) {
+		current = 0;
+		watt = 0;
+	}
 	this->volt->pushValue(volt);
 	this->current->pushValue(current);
 	this->watt->pushValue(watt);

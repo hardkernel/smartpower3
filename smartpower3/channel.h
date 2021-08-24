@@ -70,9 +70,10 @@ private:
 	Component *stpd;
 	FndWidget *current;
 	FndWidget *watt;
-	//Component *watt;
 	STPD01 *stpd01;
 	uint8_t channel;
 	uint16_t x, y;
 	uint8_t hide = 0;
+	uint16_t moving_avg[5] = {0,};
+	uint8_t cnt_mavg= 0;
 };
