@@ -17,12 +17,14 @@
 
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
 #include "SPIFFS.h"
 
 #include "wifi_manager.h"
 
 WifiManager::WifiManager() {
 	// Set the properties using the default value
+	discoveredApCount = -1;
 	apConnected = WIFI_AP_DISCONNECTED;
 	wifiServiceState = WIFI_SERVICE_OFF;
 }
@@ -33,29 +35,23 @@ void WifiManager::init() {
 	// Run in the AP and STA mode simutaneously
 	WiFi.mode(WIFI_MODE_APSTA);
 
+	// Discover the APs before starting the server
+	discoveredApCount = WiFi.scanNetworks(false, false, false, 500U, 0U);
+	serialLogLine("Discovered networks count: " + String(discoveredApCount));
+	for (int i = 0; i < discoveredApCount; i++) {
+		Serial.printf("%s, %s, %d, %s\n",
+			WiFi.SSID(i).c_str(),
+			WiFi.BSSIDstr(i).c_str(),
+			WiFi.RSSI(i),
+			(WiFi.encryptionType(i) != WIFI_AUTH_OPEN) ? "true" : "false");
+	}
+
 	// For the AP mode
 	WiFi.softAP(
 		WIFI_SOFT_AP_SSID,
 		WIFI_SOFT_AP_PASSWORD
 	);
-
 	serialLogLine("AP: Soft AP with IP: " + WiFi.softAPIP().toString());
-
-	// For the STA mode
-	WiFi.begin(
-		WIFI_DEBUG_CONNECT_AP_SSID,
-		WIFI_DEBUG_CONNECT_AP_PASSWORD
-	);
-
-	serialLogLine("Connecting to WiFi AP: " + String(WIFI_DEBUG_CONNECT_AP_SSID));
-	serialLog("...");
-	while (WiFi.status() != WL_CONNECTED) {
-		Serial.print('.');
-		delay(1000);
-	}
-	Serial.print('\n');
-	serialLogLine("STA: Connected to the AP with IP: " + WiFi.localIP().toString());
-	apConnected = WIFI_AP_CONNECTED;
 
 	// Start WiFi service automatically
 	start();
@@ -63,8 +59,55 @@ void WifiManager::init() {
 
 void WifiManager::start() {
 	// Web Server Root URL
-	webServer->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+	webServer->on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
 		request->send(SPIFFS, "/website/index.html", "text/html");
+	});
+
+	// Return the discovered AP list
+	webServer->on("/api/get_ap_list", HTTP_GET, [&](AsyncWebServerRequest *request) {
+		int actualJsonSize = 0;
+		std::string apListJson;
+
+		// Have to edit the parameter for JSON_OBJECT_SIZE
+		// if the members of the WifiDiscoveredAp structure is changed
+		actualJsonSize =
+			JSON_ARRAY_SIZE(discoveredApCount) +
+			(discoveredApCount * JSON_OBJECT_SIZE(4)) +
+			WIFI_EXTRA_CAPACITY_FOR_JSON * discoveredApCount;
+
+		// At least 1024 is recommended for heap allocation
+		DynamicJsonDocument jsonDoc(actualJsonSize < 1024 ? 1024 : actualJsonSize);
+
+		/*
+		[
+			{
+				"ssid": "ssid1",
+				"macaddr": "ab:cd:...",
+				"rssi": -50,
+				"encryption": true
+			},
+			{
+				"ssid": "ssid2",
+				"macaddr": "ab:cd:...",
+				"rssi": -50,
+				"encryption": false
+			}
+		]
+		 */
+		for (int i = 0; i < discoveredApCount; i++) {
+			JsonObject jsonObj = jsonDoc.createNestedObject();
+
+			jsonObj["ssid"] = WiFi.SSID(i);
+			jsonObj["macaddr"] = WiFi.BSSIDstr(i);
+			jsonObj["rssi"] = WiFi.RSSI(i);
+			jsonObj["encrypted"] = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
+		}
+		Serial.println("WiFi: Send the networks in JSON format:");
+		serializeJson(jsonDoc, Serial);
+		Serial.println();
+
+		serializeJson(jsonDoc, apListJson);
+		request->send_P(200, "text/html", apListJson.c_str());
 	});
 
 	webServer->serveStatic("/", SPIFFS, "/website");

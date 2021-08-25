@@ -25,17 +25,19 @@
 
 // Soft AP mode configuration
 #define WIFI_SOFT_AP_SSID "SmartPower 3"
-#define WIFI_SOFT_AP_PASSWORD "12345678"
+#define WIFI_SOFT_AP_PASSWORD "1234567890"
 
 // Web server configuration
 #define WIFI_SERVER_PORT 80
 
-// Tag for logging
-#define WIFI_LOGTAG "WIFI"
+// ArduinoJson
+// This size is calculatated by the ArduinoJson assistant
+// This mumber is mulitplied by the number of bytes of the JSON array
+// and summed with the number from the macros
+#define WIFI_EXTRA_CAPACITY_FOR_JSON 84
 
-// TODO: For debugging, have to implement the connection process for an AP
-#define WIFI_DEBUG_CONNECT_AP_SSID "HK_JOSHUA"
-#define WIFI_DEBUG_CONNECT_AP_PASSWORD "hard4624"
+// Tag for logging
+#define WIFI_LOGTAG "WiFi"
 
 // TODO: These should not be here
 #define PROJECT_NAME "SmartPower 3"
@@ -74,6 +76,7 @@ public:
 
 private:
 	AsyncWebServer *webServer;
+	int discoveredApCount;
 
 	bool apConnected;
 	bool wifiServiceState;
