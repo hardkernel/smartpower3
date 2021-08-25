@@ -182,8 +182,10 @@ void wifiTask(void *parameter)
 	// Run the WiFi service as a task in the background
 	wifiManager.init();
 
-	// Should not be terminated
-	for (;;) {}
+	// Must not be terminated
+	for (;;) {
+		vTaskDelay(10000 / portTICK_PERIOD_MS);
+	}
 }
 
 void updatePowerSense1_PAC2(void)
