@@ -3,10 +3,10 @@ $(document).ready(() => {
 
   // In AP mode, the URL address will contain the fixed string
   if (currentUrl.includes('192.168.4')) {
-    console.log("Loading ap-mode.html as the main contents");
-    $('#sp3-contents').load('pages/ap-mode.html');
+    console.log("Loading ap-contents.html as the main contents");
+    $('#sp3-contents').load('pages/ap-contents.html');
   } else {
-    console.log("Loading sta-mode.html as the main contents");
-    $('#sp3-contents').load('pages/sta-mode.html');
+    console.log("Loading sta-contents.html as the main contents");
+    $('#sp3-contents').load('pages/sta-contents.html');
   }
 });
