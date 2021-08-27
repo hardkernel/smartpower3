@@ -59,11 +59,6 @@ void WifiManager::init() {
 }
 
 void WifiManager::start() {
-	// Web Server Root URL
-	webServer->on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-		request->send(SPIFFS, "/website/index.html", "text/html");
-	});
-
 	// Return the discovered AP list
 	webServer->on("/api/get_ap_list", HTTP_GET, [&](AsyncWebServerRequest *request) {
 		int actualJsonSize = 0;
@@ -220,6 +215,8 @@ void WifiManager::start() {
 		jsonDoc.clear();
 	});
 
+	webServer->rewrite("/", "/index.html");
+	webServer->rewrite("/index.html", "/index-ap.html").setFilter(ON_AP_FILTER);
 	webServer->serveStatic("/", SPIFFS, "/website");
 
 	// Start server
