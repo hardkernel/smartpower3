@@ -26,7 +26,7 @@ void setup(void) {
 	I2CA.begin(15, 4, 200000);
 	I2CB.begin(21, 22, 200000);
 	I2CA.setClock(200000UL);
-	I2CB.setClock(200000UL);
+	I2CB.setClock(10000UL);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
 
@@ -37,7 +37,7 @@ void setup(void) {
 	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
 	xTaskCreate(screenTask, "Draw Screen", 4000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
-	xTaskCreate(wifiTask, "WiFi Connection Task", 2000, NULL, 1, NULL);
+	xTaskCreate(wifiTask, "WiFi Connection Task", 4000, NULL, 1, NULL);
 	pinMode(25, INPUT_PULLUP);
 	attachInterrupt(25, isr_stp, FALLING);
 
@@ -237,7 +237,7 @@ void loop() {
 	ledcWrite(0, 50);
 	delay(500);
 	*/
-	delay(1000);
+	delay(500);
 	// get_memory_info();
 }
 

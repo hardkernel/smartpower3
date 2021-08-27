@@ -25,7 +25,7 @@
 
 // Soft AP mode configuration
 #define WIFI_SOFT_AP_SSID "SmartPower 3"
-#define WIFI_SOFT_AP_PASSWORD "1234567890"
+#define WIFI_SOFT_AP_PASSWORD "12345678"
 
 // Web server configuration
 #define WIFI_SERVER_PORT 80
@@ -33,7 +33,7 @@
 // ArduinoJson
 // This size is calculatated by the ArduinoJson assistant
 // This mumber is mulitplied by the number of bytes of the JSON array
-// and summed with the number from the macros
+// and summed with the number from the size calculating macros
 #define WIFI_EXTRA_CAPACITY_FOR_JSON 84
 
 // Tag for logging
