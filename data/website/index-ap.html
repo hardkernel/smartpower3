@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html class="h-100">
+
+<head>
+  <title>SmartPower 3</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="image/favicon.png">
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+
+<body class="d-flex flex-column h-100">
+
+  <header>
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">SmartPower 3</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Begin page content -->
+  <main class="flex-shrink-0">
+    <div id="sp3-contents" class="container">
+      <h1 class="mt-5">SmartPower 3</h1>
+
+      <div id="sp3-ap-list" class="mb-5">
+        <p class="lead">Select AP to connect to.</p>
+      </div>
+
+      <div id="sp3-ap-connecting" class="mb-5 hide">
+        <p class="lead">Connecting to AP...</p>
+        <p>Please wait for a minute.</br>Do not interrupt the progress.</p>
+      </div>
+
+      <div id="sp3-ap-connected" class="mb-5 hide">
+        <p class="lead">Connected!</p>
+      </div>
+
+      <div id="sp3-ap-error" class="mb-5 hide">
+        <p class="lead">Error connecting to AP.</p>
+        <p>Something goes wrong.</p>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer mt-auto py-3 bg-light">
+    <div class="container">
+      <span class="text-muted">SmartPower 3</span><br />
+      <span class="text-muted">Copyright 2021 Hardkernel Co., Ltd. </span>
+    </div>
+  </footer>
+
+  <script src="js/jquery-3.6.0.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/connect-to-ap.js"></script>
+</body>
+
+</html>
