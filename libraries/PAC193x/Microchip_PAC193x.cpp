@@ -182,7 +182,7 @@ void Microchip_PAC193x::update(uint8_t sense)
 {
 	uint8_t reg;
 	Refresh();
-	delay(1);
+	delay(2);
 
 	// voltage
 	reg = PAC1934_VBUS1_ADDR + sense;
@@ -194,8 +194,10 @@ void Microchip_PAC193x::update(uint8_t sense)
 	reg = PAC1934_VPOWER1_ADDR + sense;
 	updatePower(reg);
 
+	/*
 	reg = PAC1934_VPOWER1_ACC_ADDR + sense;
 	updatePowerAcc(reg);
+	*/
 }
 
 int16_t Microchip_PAC193x::UpdateVoltageSense1(void)

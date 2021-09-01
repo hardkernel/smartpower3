@@ -20,7 +20,7 @@ void setup(void) {
 	Serial.begin(500000);
 	TRACE();
 	I2CA.begin(15, 4, 300000);
-	I2CB.begin(21, 22, 700000);
+	I2CB.begin(21, 22, 400000);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
 
@@ -98,7 +98,7 @@ void powerTask(void *parameter)
 			volt = (uint16_t)(PAC.Voltage);
 			ampere = (uint16_t)(PAC.Current);
 			watt = (uint16_t)(PAC.Power*100);
-			if (volt < 15000) {
+			if (volt < 8000) {
 				screen.debug();
 				Serial.printf("[low INPUT!!!!] %d,%d,%d,%d\n\r", millis(), volt, ampere, watt);
 				for (int i = 0; i < 3; i++) {
