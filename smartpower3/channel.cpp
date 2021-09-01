@@ -77,11 +77,6 @@ void Channel::initPower()
 	if (test() != 1)
 		delay(100);
 	off();
-	/*
-	stpd01->setVoltage(volt_set);
-	stpd01->setCurrentLimit(current_limit);
-	stpd01->initInterrupt();
-	*/
 }
 
 void Channel::deleteScreen()
@@ -173,6 +168,9 @@ bool Channel::off(void)
 	volt->setTextColor(TFT_DARKGREY, TFT_BLACK);
 	current->setTextColor(TFT_DARKGREY, TFT_BLACK);
 	watt->setTextColor(TFT_DARKGREY, TFT_BLACK);
+	this->volt->pushValue(0);
+	this->current->pushValue(0);
+	this->watt->pushValue(0);
 	return err;
 }
 

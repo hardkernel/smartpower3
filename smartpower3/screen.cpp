@@ -3,8 +3,6 @@
 
 bool Screen::_int = false;
 
-//char *ver = "20210728";
-
 Screen::Screen()
 {
 	tft.init();
@@ -567,6 +565,7 @@ void Screen::checkOnOff()
 				onoff[i] = 1;
 			} else if (onoff[i] == 2) {
 				channel[i]->off();
+				channel[i]->drawChannel(true);
 				onoff[i] = 0;
 			}
 		}
