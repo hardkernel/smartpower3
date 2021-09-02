@@ -26,7 +26,7 @@ public:
 	void drawChannel(bool forced=0);
 	void drawVoltSet(bool forced=0);
 	void pushPower(uint16_t volt, uint16_t current, uint16_t watt);
-	void pushPowerEdit(uint16_t volt, uint16_t current, uint16_t watt);
+	void pushPowerEdit(void);
 	void initScreen();
 	void initPower(void);
 	bool on(void);
@@ -70,9 +70,10 @@ private:
 	Component *stpd;
 	FndWidget *current;
 	FndWidget *watt;
-	//Component *watt;
 	STPD01 *stpd01;
 	uint8_t channel;
 	uint16_t x, y;
 	uint8_t hide = 0;
+	uint16_t moving_avg[5] = {0,};
+	uint8_t cnt_mavg= 0;
 };

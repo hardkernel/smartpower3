@@ -20,6 +20,7 @@ public:
 	uint16_t getInputVoltage(void);
 	void lowIntPin();
 	void highIntPin();
+	void setDebug(void);
 
 private:
 	TFT_eSPI *tft;
@@ -33,6 +34,7 @@ private:
 	Component *int0;
 	Component *mode;
 	Component *display_mode;
+	uint16_t debug = 0;
 };
 
 #endif

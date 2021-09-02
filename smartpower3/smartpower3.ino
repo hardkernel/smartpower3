@@ -4,12 +4,6 @@
 #include "wifi_manager.h"
 
 uint32_t ctime1 = 0;
-uint32_t ctime3 = 0;
-
-uint16_t vmax3, amax3, wmax3;
-uint16_t vmin3 = 99999;
-uint16_t amin3 = 99999;
-uint16_t wmin3 = 99999;
 
 #define LED2	13
 #define LED1	2
@@ -19,14 +13,15 @@ uint16_t wmin3 = 99999;
 #define FREQ	5000
 #define RESOLUTION	8
 
+uint32_t fps_ch0;
+
 void setup(void) {
-	Serial.begin(115200);
+	//Serial.begin(115200);
 	ARDUINOTRACE_INIT(115200);
+	Serial.begin(500000);
 	TRACE();
-	I2CA.begin(15, 4, 200000);
-	I2CB.begin(21, 22, 200000);
-	I2CA.setClock(200000UL);
-	I2CB.setClock(10000UL);
+	I2CA.begin(15, 4, 300000);
+	I2CB.begin(21, 22, 400000);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
 
@@ -52,7 +47,6 @@ void setup(void) {
 
 void isr_stp()
 {
-	//Serial.println("hello isr");
 	screen.flag_int = 1;
 }
 
@@ -65,80 +59,63 @@ void initPAC1933(void)
 
 void updatePowerSense3(void)
 {
-	PAC.UpdateVoltageSense3();
-	PAC.UpdateCurrentSense3();
-	PAC.UpdatePowerSense3();
-	/*
-	PAC.UpdatePowerAcc();
-	*/
+	PAC.update(2);
 }
 
 void updatePowerSense2(void)
 {
-	PAC.UpdateVoltageSense2();
-	PAC.UpdateCurrentSense2();
-	PAC.UpdatePowerSense2();
-	/*
-	PAC.UpdatePowerAcc();
-	*/
+	PAC.update(1);
 }
 
 void updatePowerSense1(void)
 {
-	PAC.UpdateVoltageSense1();
-	PAC.UpdateCurrentSense1();
-	PAC.UpdatePowerSense1();
-	/*
-	PAC.UpdatePowerAcc();
-	*/
+	PAC.update(0);
 }
 
 void powerTask(void *parameter)
 {
 	uint16_t volt, ampere, watt;
+	int8_t *onoff;
 
 	for (;;) {
-		updatePowerSense2();
-		volt = (uint16_t)(PAC.Voltage);
-		ampere = (uint16_t)(PAC.Current);
-		watt = (uint16_t)(PAC.Power*1000);
-		screen.pushPower(volt, ampere, watt, 0);
-
-		if (volt > vmax3)
-			vmax3 = volt;
-		if (ampere > amax3)
-			amax3 = ampere;
-		if (volt < vmin3)
-			vmin3 = volt;
-		if (ampere < amin3)
-			amin3 = ampere;
-
-		/*
-		if ((millis() - ctime3) > 3000) {
-			Serial.printf("================== CH0_PAC2 =============\n\r");
-			Serial.printf("vmax : [[ %d ]], vmin : [[ %d ]], vcur : [[ %d ]], vdiff : [[ %d ]] \n\r", vmax3, vmin3, volt, vmax3 - vmin3);
-			Serial.printf("amax : [[ %d ]], amin : [[ %d ]], acur : [[ %d ]], adiff : [[[[ %d ]]]] \n\r", amax3, amin3, ampere, amax3 - amin3);
-			Serial.printf("===============================\n\r");
-			ctime3 = millis();
+		onoff = screen.getOnOff();
+		if (onoff[0]) {
+			updatePowerSense2();
+			volt = (uint16_t)(PAC.Voltage);
+			ampere = (uint16_t)(PAC.Current);
+			watt = (uint16_t)(PAC.Power*1000);
+			//Serial.printf("%d,%d,%d,%d\n\r", millis(), volt, ampere, watt);
+			screen.pushPower(volt, ampere, watt, 0);
 		}
-		*/
 
-		updatePowerSense3();
-		volt = (uint16_t)(PAC.Voltage);
-		ampere = (uint16_t)(PAC.Current);
-		watt = (uint16_t)(PAC.Power*1000);
-		screen.pushPower(volt, ampere, watt, 1);
+		if (onoff[1]) {
+			updatePowerSense3();
+			volt = (uint16_t)(PAC.Voltage);
+			ampere = (uint16_t)(PAC.Current);
+			watt = (uint16_t)(PAC.Power*1000);
+			screen.pushPower(volt, ampere, watt, 1);
+			//Serial.printf("%d,%d,%d,%d\n\r", millis(), volt, ampere, watt);
+		}
 
 		if ((millis() - ctime1) > 500) {
-			updatePowerSense1();
+			PAC.update(0);
 			volt = (uint16_t)(PAC.Voltage);
 			ampere = (uint16_t)(PAC.Current);
 			watt = (uint16_t)(PAC.Power*100);
+			if (volt < 8000) {
+				screen.debug();
+				Serial.printf("[low INPUT!!!!] %d,%d,%d,%d\n\r", millis(), volt, ampere, watt);
+				for (int i = 0; i < 3; i++) {
+					PAC.update(0);
+					volt = (uint16_t)(PAC.Voltage);
+					if ((uint16_t)(PAC.Voltage) > 6000)
+						break;
+				}
+			}
 			screen.pushInputPower(volt, ampere, watt);
+			//Serial.printf("%d,%d,%d,%d\n\r", millis()-ctime1, volt, ampere, watt);
 			ctime1 = millis();
 		}
-
-		vTaskDelay(10);
 	}
 }
 
@@ -158,14 +135,6 @@ void inputTask(void *parameter)
 			if (button[i].checkPressed() == true) {
 				//get_memory_info();
 				screen.getBtnPress(i, cur_time);
-				if (i == 2) {
-					vmax3 = 0;
-					amax3 = 0;
-					wmax3 = 0;
-					vmin3 = 99999;
-					amin3 = 99999;
-					wmin3 = 99999;
-				}
 			}
 		}
 		if (dial.cnt != 0) {
@@ -188,57 +157,9 @@ void wifiTask(void *parameter)
 	}
 }
 
-void updatePowerSense1_PAC2(void)
-{
-	/*
-	PAC2.UpdateVoltageSense1();
-	PAC2.UpdateCurrentSense1();
-	PAC2.UpdatePowerSense1();
-	*/
-}
-
-
-void testI2CA()
-{
-	screen.run();
-#if 0
-	uint16_t volt, ampere, watt;
-	updatePowerSense1_PAC2();
-	volt = (uint16_t)(PAC2.Voltage);
-	ampere = (uint16_t)(PAC2.Current);
-	watt = (uint16_t)(PAC2.Power*100);
-
-	if (volt > vmax3)
-		vmax3 = volt;
-	if (ampere > amax3)
-		amax3 = ampere;
-	if (volt < vmin3)
-		vmin3 = volt;
-	if (ampere < amin3)
-		amin3 = ampere;
-
-	if ((millis() - ctime3) > 3000) {
-		Serial.printf("================== CH0_PAC2 =============\n\r");
-		Serial.printf("vmax : [[ %d ]], vmin : [[ %d ]], vcur : [[ %d ]], vdiff : [[ %d ]] \n\r", vmax3, vmin3, volt, vmax3 - vmin3);
-		Serial.printf("amax : [[ %d ]], amin : [[ %d ]], acur : [[ %d ]], adiff : [[[[ %d ]]]] \n\r", amax3, amin3, ampere, amax3 - amin3);
-		Serial.printf("===============================\n\r");
-		ctime3 = millis();
-	}
-#endif
-}
-
-int int_old = -1;
 void loop() {
-	//get_i2c_slaves(&I2CB);
-	//get_i2c_slaves(&I2CA);
-	/*
-	ledcWrite(0, 0);
 	delay(500);
-	ledcWrite(0, 50);
-	delay(500);
-	*/
-	delay(500);
-	// get_memory_info();
+	//get_memory_info();
 }
 
 void get_memory_info(void)

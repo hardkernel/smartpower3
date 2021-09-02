@@ -42,6 +42,7 @@ public:
 	void begin(TwoWire *theWire = &Wire);
 	void pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch);
 	void pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt);
+	int8_t* getOnOff(void);
 	void run(void);
 	void drawScreen(void);
 	void activate();
@@ -64,6 +65,7 @@ public:
 	bool flag_int = 0;
 	void isrSTPD01();
 	void initScreen();
+	void debug();
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;

@@ -38,6 +38,11 @@ void Screen::begin(TwoWire *theWire)
 	header->init(3, 3);
 }
 
+int8_t* Screen::getOnOff()
+{
+	return onoff;
+}
+
 void Screen::run()
 {
 	checkOnOff();
@@ -128,18 +133,10 @@ void Screen::initScreen(void)
 
 void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch)
 {
-	if (mode == BASE_EDIT) {
-		if (onoff[ch] == 1) {
-			channel[ch]->pushPowerEdit(volt, ampere, watt);
-		} else {
-			channel[ch]->pushPowerEdit(0, 0, 0);
-		}
+	if (onoff[ch] == 1) {
+		channel[ch]->pushPower(volt, ampere, watt);
 	} else {
-		if (onoff[ch] == 1) {
-			channel[ch]->pushPower(volt, ampere, watt);
-		} else {
-			channel[ch]->pushPower(0, 0, 0);
-		}
+		channel[ch]->pushPower(0, 0, 0);
 	}
 }
 
@@ -156,7 +153,6 @@ void Screen::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 	}
 
 	if (header->getInputVoltage()/1000 != volt/1000) {
-		Serial.println("push");
 		header->pushPower(volt, ampere, watt);
 	}
 }
@@ -322,6 +318,8 @@ void Screen::drawBaseEdit()
 	if (dial_cnt != dial_cnt_old) {
 		dial_cnt_old = dial_cnt;
 		changeVolt(mode);
+		channel[0]->pushPowerEdit();
+		channel[1]->pushPowerEdit();
 	}
 }
 
@@ -593,6 +591,7 @@ void Screen::countDial(int8_t dial_cnt, bool direct, uint32_t milisec)
 	this->dial_cnt += dial_cnt;
 	this->dial_time = milisec;
 	this->dial_direct = direct;
+	//Serial.printf("%d, %d\n\r", this->dial_cnt, this->dial_time);
 }
 
 void Screen::setTime(uint32_t milisec)
@@ -793,3 +792,7 @@ void Screen::setSysParam(char *key, String value)
 	f.close();
 }
 
+void Screen::debug()
+{
+	header->setDebug();
+}

@@ -17,6 +17,10 @@ void Setting::init(uint16_t x, uint16_t y)
 	this->x = x;
 	this->y = y;
 
+	tft->drawString("Build date : ", x + 230, y + 200, 2);
+	tft->drawString(String(__DATE__), x + 310, y + 200, 2);
+	tft->drawString(String(__TIME__), x + 400, y + 200, 2);
+
 	tft->drawString("Backlight Level", x, y, 4);
 	tft->drawString("Fan Level", x, y + 50, 4);
 

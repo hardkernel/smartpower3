@@ -17,13 +17,14 @@ void Header::init(uint16_t x, uint16_t y)
 	input->setCoordinate(x, y);
 	input->draw("IN:0.0V");
 
+	tft->drawString(String(debug), 105, 10, 2);
 
 	/*
 	int0->init(FG_DISABLED, BG_DISABLED, 1, TL_DATUM);
 	int0->setCoordinate(480 - 70, y);
 	int0->draw("INT");
 	*/
-	tft->drawString("F/w v1.1", 380, y, 4);
+	tft->drawString("v1.1", 420, y, 4);
 
 	display_mode->init(TFT_BLACK, TFT_YELLOW, 1, TL_DATUM);
 	display_mode->setCoordinate(x + 250, y);
@@ -101,10 +102,16 @@ void Header::draw(void)
 		input->clear();
 		input->draw("IN:" + String(v_input/1000.0, 1) + "V");
 	}
+	tft->drawString(String(debug), 105, 10, 2);
 }
 
 void Header::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 {
 	v_input = volt;
 	v_update = true;
+}
+
+void Header::setDebug()
+{
+	debug++;
 }

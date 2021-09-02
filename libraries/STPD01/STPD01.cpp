@@ -114,7 +114,6 @@ uint8_t STPD01::setCurrentLimit(uint16_t milliampere)
 		return 1;
 	}
 	val = milliampere/100 -1;
-	DUMP(val);
 	write8(STPD01_REGISTER_1, val);
 	tmp = read8(STPD01_REGISTER_1);
 	if (tmp != val) {
@@ -202,7 +201,6 @@ uint8_t STPD01::setVoltage(uint16_t volt)
 	} else if (volt >= 20000) {
 		val = 0xf1;
 	}
-	DUMP(val);
 	write8(STPD01_REGISTER_0, val);
 	tmp = read8(STPD01_REGISTER_0);
 	if (tmp != val) {

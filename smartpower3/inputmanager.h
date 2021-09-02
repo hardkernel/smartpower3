@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <FunctionalInterrupt.h>
 
-#define DEBOUNCE_TIME 120
+#define DEBOUNCE_TIME 100
 
 void countEncoder(void *val);
 void initEncoder(void *param);

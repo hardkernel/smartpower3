@@ -78,6 +78,7 @@ class Microchip_PAC193x {
 		None.
 */	
 			void Refresh();
+			void update(uint8_t sense);
 
 
 /*
@@ -112,6 +113,7 @@ class Microchip_PAC193x {
     Returns
 		In case of execution error, the returned value is an error code.
 */
+			void updateVoltage(uint8_t reg);
 			int16_t UpdateVoltage(uint8_t reg);
 
 		int16_t UpdateVoltageSense1(void);
@@ -151,9 +153,12 @@ class Microchip_PAC193x {
 		In case of execution error, the returned value is an error code.
 */
 			int16_t UpdateVsense(uint8_t reg);
+			void updateVsense(uint8_t reg);
 			int16_t UpdateCurrentSense1(void);
 			int16_t UpdateCurrentSense2(void);
 			int16_t UpdateCurrentSense3(void);
+
+			void updateCurrent(uint8_t reg);
 
 
 /*
@@ -207,6 +212,7 @@ class Microchip_PAC193x {
 		In case of execution error, the returned value is an error code.
 */
 			int16_t UpdatePower(uint8_t reg);
+			void updatePower(uint8_t reg);
 			int16_t UpdatePowerSense1();
 			int16_t UpdatePowerSense2();
 			int16_t UpdatePowerSense3();
@@ -227,6 +233,7 @@ class Microchip_PAC193x {
 		In case of execution error, the returned value is an error code.
 */
 			int16_t UpdatePowerAccRaw();
+			void updatePowerAcc(uint8_t reg);
 
 
 /*
