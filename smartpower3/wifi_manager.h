@@ -30,6 +30,9 @@
 // Web server configuration
 #define WIFI_SERVER_PORT 80
 
+// Web socket configuration
+#define WIFI_SOCKET_URL "/socket"
+
 // ArduinoJson
 // This size is calculatated by the ArduinoJson assistant
 // This mumber is mulitplied by the number of bytes of the JSON array
@@ -76,10 +79,13 @@ public:
 
 private:
 	AsyncWebServer *webServer;
+	AsyncWebSocket *webSocket;
 	int discoveredApCount;
 
 	bool apConnected;
 	bool wifiServiceState;
+
+	static void onWebSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
 };
 
 #endif
