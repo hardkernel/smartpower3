@@ -70,47 +70,45 @@ void updatePowerSense1(void)
 
 void powerTask(void *parameter)
 {
-	uint16_t volt, ampere, watt;
-	int8_t *onoff;
-
 	for (;;) {
+		PAC.Refresh();
 		onoff = screen.getOnOff();
 		if (onoff[0]) {
-			updatePowerSense2();
-			volt = (uint16_t)(PAC.Voltage);
-			ampere = (uint16_t)(PAC.Current);
-			watt = (uint16_t)(PAC.Power*1000);
-			//Serial.printf("%d,%d,%d,%d\n\r", millis(), volt, ampere, watt);
-			screen.pushPower(volt, ampere, watt, 0);
+			PAC.update(1);
+			volt[1] = (uint16_t)(PAC.Voltage);
+			amp[1] = (uint16_t)(PAC.Current);
+			watt[1] = (uint16_t)(PAC.Power*1000);
+			screen.pushPower(volt[1], amp[1], watt[1], 0);
 		}
 
 		if (onoff[1]) {
-			updatePowerSense3();
-			volt = (uint16_t)(PAC.Voltage);
-			ampere = (uint16_t)(PAC.Current);
-			watt = (uint16_t)(PAC.Power*1000);
-			screen.pushPower(volt, ampere, watt, 1);
-			//Serial.printf("%d,%d,%d,%d\n\r", millis(), volt, ampere, watt);
+			PAC.update(2);
+			volt[2] = (uint16_t)(PAC.Voltage);
+			amp[2] = (uint16_t)(PAC.Current);
+			watt[2] = (uint16_t)(PAC.Power*1000);
+			screen.pushPower(volt[2], amp[2], watt[2], 1);
 		}
 
 		if ((millis() - ctime1) > 500) {
-			PAC.update(0);
-			volt = (uint16_t)(PAC.Voltage);
-			ampere = (uint16_t)(PAC.Current);
-			watt = (uint16_t)(PAC.Power*100);
-			if (volt < 8000) {
-				screen.debug();
-				Serial.printf("[low INPUT!!!!] %d,%d,%d,%d\n\r", millis(), volt, ampere, watt);
-				for (int i = 0; i < 3; i++) {
-					PAC.update(0);
-					volt = (uint16_t)(PAC.Voltage);
-					if ((uint16_t)(PAC.Voltage) > 6000)
-						break;
-				}
-			}
-			screen.pushInputPower(volt, ampere, watt);
-			//Serial.printf("%d,%d,%d,%d\n\r", millis()-ctime1, volt, ampere, watt);
 			ctime1 = millis();
+			PAC.update(0);
+			volt[0] = (uint16_t)(PAC.Voltage);
+			amp[0] = (uint16_t)(PAC.Current);
+			watt[0] = (uint16_t)(PAC.Power*100);
+			if (volt[0] < 6000) {
+				screen.debug();
+				PAC.update(0);
+				volt[0] = (uint16_t)(PAC.Voltage);
+				for (int i = 0; i < 3; i++) {
+					if (volt[0] > 6000) {
+						break;
+					}
+					low_input = true;
+				}
+			} else {
+				low_input = false;
+			}
+			screen.pushInputPower(volt[0], amp[0], watt[0]);
 		}
 	}
 }
@@ -124,7 +122,12 @@ void screenTask(void *parameter)
 }
 
 void inputTask(void *parameter)
+
 {
+	char buffer_input[30];
+	char buffer_ch0[26];
+	char buffer_ch1[26];
+
 	for (;;) {
 		cur_time = millis();
 		for (int i = 0; i < 4; i++) {
@@ -138,7 +141,13 @@ void inputTask(void *parameter)
 			dial.cnt = 0;
 		}
 		screen.setTime(cur_time);
-		vTaskDelay(10);
+		vTaskDelay(5);
+		sprintf(buffer_input, "%010d,%05d,%04d,%05d,%1d,", cur_time, volt[0], amp[0], watt[0], low_input);
+		sprintf(buffer_ch0, "%05d,%04d,%05d,%d,%x,", volt[1], amp[1], watt[1], onoff[0], 0xff);
+		sprintf(buffer_ch1, "%05d,%04d,%05d,%d,%x\n\r", volt[2], amp[2], watt[2], onoff[1], 0xff);
+		Serial.printf(buffer_input);
+		Serial.printf(buffer_ch0);
+		Serial.printf(buffer_ch1);
 	}
 }
 
