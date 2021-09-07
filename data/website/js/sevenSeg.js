@@ -137,7 +137,7 @@
   */
   displayValue: function(value, bDecimalPoint) {
       var self = this;
-      if(!c_aNumberSegments.hasOwnProperty(value)) return;
+    //   if(!c_aNumberSegments.hasOwnProperty(value)) return;
       self.options.value = value;
       var segments = self._getSegments(value);
       self.jqSegments.children().each(function(index, element) {
