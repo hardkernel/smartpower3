@@ -22,6 +22,8 @@
 
 #include "wifi_manager.h"
 
+WifiCurrentPower WifiManager::currentPower[MAX_CHANNEL_NUM] = { 0 };
+
 WifiManager::WifiManager() {
 	// Set the properties using the default value
 	discoveredApCount = -1;
@@ -37,7 +39,7 @@ void WifiManager::init() {
 	WiFi.mode(WIFI_MODE_APSTA);
 
 	// Discover the APs before starting the server
-	// TODO: Is there a way to do this in the WebServer callback for Ajax? Without dying?
+	// TODO: Have to change this to as a callback function from request by a client
 	discoveredApCount = WiFi.scanNetworks(false, false, false, 500U, 0U);
 	serialLogLine("Discovered networks count: " + String(discoveredApCount));
 	for (int i = 0; i < discoveredApCount; i++) {
@@ -253,6 +255,10 @@ int WifiManager::getConnectionState() {
 	}
 }
 
+void WifiManager::setCurrentPower(uint8_t channel, WifiCurrentPower currentPower) {
+	WifiManager::currentPower[channel] = currentPower;
+}
+
 void WifiManager::serialLog(String message) {
 	Serial.print(WIFI_LOGTAG);
 	Serial.print(": ");
@@ -280,53 +286,97 @@ void WifiManager::onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient 
 		//pong message was received (in response to a ping request maybe)
 		Serial.printf("WiFi: ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
 	} else if(type == WS_EVT_DATA){
-		//data packet
-		AwsFrameInfo * info = (AwsFrameInfo*)arg;
-		if(info->final && info->index == 0 && info->len == len){
-			//the whole message is in a single frame and we got all of it's data
-			Serial.printf("WiFi: ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
-			if(info->opcode == WS_TEXT){
-				data[len] = 0;
-				Serial.printf("WiFi: %s\n", (char*)data);
-			} else {
-				for(size_t i=0; i < info->len; i++){
-					Serial.printf("WiFi: %02x ", data[i]);
-				}
-				Serial.printf("WiFi: \n");
-			}
-			if(info->opcode == WS_TEXT)
-				client->text("I got your text message");
-			else
-				client->binary("I got your binary message");
-		} else {
-			//message is comprised of multiple frames or the frame is split into multiple packets
-			if(info->index == 0){
-				if(info->num == 0)
-					Serial.printf("WiFi: ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
-				Serial.printf("WiFi: ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
-			}
+		int actualJsonSize = 0;
+		std::string resultJson;
 
-			Serial.printf("WiFi: ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
-			if(info->message_opcode == WS_TEXT){
-				data[len] = 0;
-				Serial.printf("WiFi: %s\n", (char*)data);
-			} else {
-				for(size_t i=0; i < len; i++){
-					Serial.printf("WiFi: %02x ", data[i]);
-				}
-				Serial.printf("WiFi: \n");
-			}
+		// Parse the JSON data from client
+		// The minimal memory allocation for DynamicJsonDocument is 1024 bytes
+		DynamicJsonDocument receivedJsonDoc(1024);
+		deserializeJson(receivedJsonDoc, (char *) data);
 
-			if((info->index + len) == info->len){
-				Serial.printf("WiFi: ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
-				if(info->final){
-					Serial.printf("WiFi: ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
-					if(info->message_opcode == WS_TEXT)
-						client->text("I got your text message");
-					else
-						client->binary("I got your binary message");
-				}
-			}
+		// The received JSON object would be like this:
+		/*
+		{
+			"command": 1
 		}
+		*/
+		switch (static_cast<SocketCommand>((int) receivedJsonDoc["command"])) {
+			case SOCKET_COMMAND_GET_CURRENT_POWER: {
+				actualJsonSize = JSON_ARRAY_SIZE(MAX_CHANNEL_NUM) + JSON_OBJECT_SIZE(2) + MAX_CHANNEL_NUM * JSON_OBJECT_SIZE(5) + MAX_CHANNEL_NUM * WIFI_EXTRA_CAPACITY_FOR_JSON;
+
+				// At least 1024 is recommended for heap allocation
+				DynamicJsonDocument jsonDoc(actualJsonSize < 1024 ? 1024 : actualJsonSize);
+
+				/*
+				{
+					"type": "power",
+					"data": [
+						{
+							"channel": 0,
+							"active": true,
+							"voltage": "12.0",
+							"ampere": "3.0",
+							"watt": "36.0"
+						},
+						{
+							"channel": 1,
+							"active": false,
+							"voltage": "5.0",
+							"ampere": "0.0",
+							"watt": "0.0"
+						}
+					]
+				}
+				*/
+				jsonDoc["type"] = "power";
+				JsonArray jsonArr = jsonDoc.createNestedArray("data");
+				for (int i = 0; i < MAX_CHANNEL_NUM; i++) {
+					JsonObject jsonObj = jsonArr.createNestedObject();
+					jsonObj["channel"] = i;
+					jsonObj["active"] = currentPower[i].isActive;
+					jsonObj["voltage"] = currentPower[i].voltage;
+					jsonObj["ampere"] = currentPower[i].ampere;
+					jsonObj["watt"] = currentPower[i].watt;
+				}
+
+				serializeJson(jsonDoc, resultJson);
+
+				// Delete the JSON document
+				jsonDoc.clear();
+				break;
+			}
+			case SOCKET_COMMAND_NONE:
+				// Do nothing, just explicit the case
+			default:
+				// Return the error code
+				actualJsonSize = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(1) + 70;
+
+				// At least 1024 is recommended for heap allocation
+				DynamicJsonDocument jsonDoc(actualJsonSize < 1024 ? 1024 : actualJsonSize);
+
+				/*
+				{
+					"type": "log",
+					"data": [
+						{
+							"message": 0,
+						}
+					]
+				}
+				*/
+				jsonDoc["type"] = "log";
+				JsonArray jsonArr = jsonDoc.createNestedArray("data");
+				JsonObject jsonObj = jsonArr.createNestedObject();
+				jsonObj["message"] = "Unknown command - Error occurs";
+
+				serializeJson(jsonDoc, resultJson);
+
+				// Delete the JSON document
+				jsonDoc.clear();
+				break;
+		}
+
+		// Send to client the JSON data as string
+		client->text(resultJson.c_str());
 	}
 }

@@ -58,6 +58,19 @@ enum WifiConnectionState {
 	WIFI_AP_DISCONNECTED
 };
 
+enum SocketCommand {
+	SOCKET_COMMAND_NONE = 0,
+	SOCKET_COMMAND_GET_CURRENT_POWER
+};
+
+struct WifiCurrentPower {
+	uint8_t channel;
+	bool isActive;
+	uint16_t voltage;
+	uint16_t ampere;
+	uint16_t watt;
+};
+
 class WifiManager {
 public:
 	static WifiManager &instance() {
@@ -67,12 +80,16 @@ public:
 
 	WifiManager();
 
+	static WifiCurrentPower currentPower[2];
+
 	void init();
 	void start();
 	void stop();
 
 	bool getWifiServiceState();
 	int getConnectionState();
+
+	void setCurrentPower(uint8_t channel, WifiCurrentPower currentPower);
 
 	void serialLog(String message);
 	void serialLogLine(String meesage);
