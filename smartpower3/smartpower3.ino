@@ -16,12 +16,12 @@ uint32_t ctime1 = 0;
 uint32_t fps_ch0;
 
 void setup(void) {
-	//Serial.begin(115200);
+	Serial.begin(115200);
 	ARDUINOTRACE_INIT(115200);
-	Serial.begin(500000);
+	// Serial.begin(500000);
 	TRACE();
 	I2CA.begin(15, 4, 300000);
-	I2CB.begin(21, 22, 400000);
+	I2CB.begin(21, 22, 100000);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
 
@@ -86,6 +86,13 @@ void powerTask(void *parameter)
 			watt = (uint16_t)(PAC.Power*1000);
 			//Serial.printf("%d,%d,%d,%d\n\r", millis(), volt, ampere, watt);
 			screen.pushPower(volt, ampere, watt, 0);
+			wifiManager.setCurrentPower(
+				CHANNEL_0,
+				(WifiCurrentPower) {CHANNEL_0, true, volt, ampere, watt});
+		} else {
+			wifiManager.setCurrentPower(
+				CHANNEL_0,
+				(WifiCurrentPower) {CHANNEL_0, false, volt, ampere, watt});
 		}
 
 		if (onoff[1]) {
@@ -94,7 +101,14 @@ void powerTask(void *parameter)
 			ampere = (uint16_t)(PAC.Current);
 			watt = (uint16_t)(PAC.Power*1000);
 			screen.pushPower(volt, ampere, watt, 1);
+			wifiManager.setCurrentPower(
+				CHANNEL_1,
+				(WifiCurrentPower) {CHANNEL_1, true, volt, ampere, watt});
 			//Serial.printf("%d,%d,%d,%d\n\r", millis(), volt, ampere, watt);
+		} else {
+			wifiManager.setCurrentPower(
+				CHANNEL_1,
+				(WifiCurrentPower) {CHANNEL_1, false, volt, ampere, watt});
 		}
 
 		if ((millis() - ctime1) > 500) {
