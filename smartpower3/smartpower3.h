@@ -29,6 +29,12 @@ uint8_t _addr = 0x5;
 struct dial_t dial;
 unsigned long cur_time;
 
+uint16_t volt[3];
+uint16_t amp[3];
+uint16_t watt[3];
+int8_t *onoff;
+bool low_input;
+
 uint8_t read8(TwoWire *theWire, uint8_t reg) {
 	theWire->beginTransmission(_addr);
 	theWire->write(reg);
