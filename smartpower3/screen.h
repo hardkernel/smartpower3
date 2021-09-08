@@ -8,9 +8,6 @@
 #include <STPD01.h>
 #include <Adafruit_BME280.h>
 
-#define STPD01_CH0 27
-#define STPD01_CH1 14
-
 enum screen_mode_t {
 	BASE = 0,
 	BASE_MOVE,
@@ -62,10 +59,12 @@ public:
 	void setSysParam(char *key, String value);
 	void setSysParam(char *key, float value);
 	bool isFirstBoot();
-	bool flag_int = 0;
+	bool flag_int[2] = {0,};
 	void isrSTPD01();
 	void initScreen();
 	void debug();
+	void disablePower();
+	void setIntFlag(uint8_t channel);
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
@@ -93,16 +92,13 @@ private:
 	static bool _int;
 	uint8_t state_power = 0;
 	uint8_t old_state_power = 0;
-	bool low_input = true;
+	bool low_input = false;
 	fs::FS *fs;
 	uint16_t current_limit = 3;
 	uint16_t volt_set = 5;
 	uint16_t volt_limit = 20;
 	bool saved = false;
 	bool changed[5] = {false,};
-	Adafruit_BME280 bme;
-	Adafruit_Sensor *bme_temp = bme.getTemperatureSensor();
-	Adafruit_Sensor *bme_humidity = bme.getHumiditySensor();
 	uint32_t cnt[2] = {0, 0};
 	uint16_t volt, _volt, volt_diff;
 	uint8_t flag_on = 0;
@@ -110,4 +106,5 @@ private:
 	uint16_t time_on = 0;
 	uint16_t time_off = 0;
 	uint32_t fnd_time = 0;
+	bool enabled_stpd01[2] = {0,};
 };

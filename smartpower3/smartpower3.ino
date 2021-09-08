@@ -15,11 +15,10 @@ uint32_t ctime1 = 0;
 uint32_t fps_ch0;
 
 void setup(void) {
-	//Serial.begin(115200);
-	ARDUINOTRACE_INIT(115200);
+	ARDUINOTRACE_INIT(500000);
 	Serial.begin(500000);
 	TRACE();
-	I2CA.begin(15, 4, 300000);
+	I2CA.begin(15, 4, 100000);
 	I2CB.begin(21, 22, 400000);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
@@ -30,7 +29,9 @@ void setup(void) {
 	xTaskCreate(screenTask, "Draw Screen", 4000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
 	pinMode(25, INPUT_PULLUP);
-	attachInterrupt(25, isr_stp, FALLING);
+	pinMode(26, INPUT_PULLUP);
+	attachInterrupt(digitalPinToInterrupt(25), isr_stpd01_ch0, FALLING);
+	attachInterrupt(digitalPinToInterrupt(26), isr_stpd01_ch1, FALLING);
 
 	ledcSetup(0, FREQ, RESOLUTION);
 	ledcSetup(1, FREQ, RESOLUTION);
@@ -41,9 +42,14 @@ void setup(void) {
 	ledcWrite(1, 50);
 }
 
-void isr_stp()
+void isr_stpd01_ch0()
 {
-	screen.flag_int = 1;
+	screen.setIntFlag(0);
+}
+
+void isr_stpd01_ch1()
+{
+	screen.setIntFlag(1);
 }
 
 void initPAC1933(void)
@@ -51,21 +57,6 @@ void initPAC1933(void)
 	PAC.UpdateProductID();
 	PAC.UpdateManufacturerID();
 	PAC.UpdateRevisionID();
-}
-
-void updatePowerSense3(void)
-{
-	PAC.update(2);
-}
-
-void updatePowerSense2(void)
-{
-	PAC.update(1);
-}
-
-void updatePowerSense1(void)
-{
-	PAC.update(0);
 }
 
 void powerTask(void *parameter)
@@ -142,12 +133,14 @@ void inputTask(void *parameter)
 		}
 		screen.setTime(cur_time);
 		vTaskDelay(5);
+		/*
 		sprintf(buffer_input, "%010d,%05d,%04d,%05d,%1d,", cur_time, volt[0], amp[0], watt[0], low_input);
 		sprintf(buffer_ch0, "%05d,%04d,%05d,%d,%x,", volt[1], amp[1], watt[1], onoff[0], 0xff);
 		sprintf(buffer_ch1, "%05d,%04d,%05d,%d,%x\n\r", volt[2], amp[2], watt[2], onoff[1], 0xff);
 		Serial.printf(buffer_input);
 		Serial.printf(buffer_ch0);
 		Serial.printf(buffer_ch1);
+		*/
 	}
 }
 

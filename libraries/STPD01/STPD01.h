@@ -60,7 +60,7 @@ private:
 	uint8_t reg_mask;
 	uint8_t reg_latch;
 public:
-	STPD01();
+	STPD01(uint8_t addr, TwoWire *theWire);
 	~STPD01();
 	void begin(uint8_t addr = STPD01_ADDRESS, TwoWire *theWire = &Wire);
 	uint8_t read8(uint8_t reg);
@@ -81,6 +81,7 @@ public:
 	uint8_t readIntStatus();
 	uint8_t readIntLatch();
 	void initInterrupt();
+	bool available(void);
 };
 
 #endif

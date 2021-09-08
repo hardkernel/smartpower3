@@ -15,10 +15,7 @@ Button button[4] = {
 };
 
 Screen screen;
-//Microchip_PAC193x PAC = Microchip_PAC193x(4000);
 Microchip_PAC193x PAC = Microchip_PAC193x(15000);
-//Microchip_PAC193x PAC2 = Microchip_PAC193x(4000);
-//Microchip_PAC193x PAC2 = Microchip_PAC193x(15000);
 
 TwoWire I2CA = TwoWire(0);
 TwoWire I2CB = TwoWire(1);
