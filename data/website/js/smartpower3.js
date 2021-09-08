@@ -165,9 +165,9 @@ $(document).ready(() => {
         for (let i = 0; i < POWER_CHANNEL_NUM; i++) {
           const ch = data[i]['channel'];
           const isActive = data[i]['active'];
-          const vol = isActive ? Number(data[i]['voltage']) / 1000 : null;
-          const amp = isActive ? Number(data[i]['ampere']) / 1000 : null;
-          const watt = isActive ? Number(data[i]['watt']) / 1000 : null;
+          const vol = isActive ? Number(data[i]['voltage']) / 1000 || "0" : null;
+          const amp = isActive ? Number(data[i]['ampere']) / 1000 || "0" : null;
+          const watt = isActive ? Number(data[i]['watt']) / 1000 || "0" : null;
 
           // Update the seven segment widgets
           powerChannelDiv[ch].find(".sp3-sevenseg-voltage").sevenSeg({ value: vol });
