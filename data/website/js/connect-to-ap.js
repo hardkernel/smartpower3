@@ -102,7 +102,7 @@ $(document).ready(() => {
                         clearInterval(checkingStaConnInterval);
                       },
                     });
-                  }, 1000);
+                  }, 2000);
                 } else {
                   showApErrorPage("Requesting STA connection failed with unknown reason");
                 }
