@@ -137,6 +137,10 @@ $(document).ready(() => {
     apConnectedDiv.hide();
     apErrorDiv.hide();
 
+    apConnectingDiv.empty();
+    apConnectingDiv.append(
+      '<p class="lead">Connecting to AP...</p>' +
+      '<p>Please wait for a minute.</br>Do not inerrupt the progress.</p>');
     apConnectingDiv.show();
   };
 
@@ -145,7 +149,9 @@ $(document).ready(() => {
     apConnectingDiv.hide();
     apErrorDiv.hide();
 
+    apConnectedDiv.empty();
     apConnectedDiv.append(
+      '<p class="lead">Connected!</p>' +
       '<p>Connected to <strong>' + apInfo.ssid + '</strong>' +
       '<p>Now turn off this window and connect to your AP, ' +
       'and enter this IP address to the web browser: <strong>' + ipAddress + '</strong></p>');
@@ -157,6 +163,9 @@ $(document).ready(() => {
     apConnectingDiv.hide();
     apConnectedDiv.hide();
 
+    apErrorDiv.empty();
+    apErrorDiv.append('<p class="lead">Error connecting to AP.</p>' +
+      '<p>Something goes wrong</p>');
     if (typeof errorMessage != "undefined") {
       apErrorDiv.append('<p>Error meesage: ' + errorMessage + '</p>');
     }
