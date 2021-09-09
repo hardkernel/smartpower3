@@ -25,9 +25,10 @@ void setup(void) {
 
 	initEncoder(&dial);
 
-	xTaskCreate(powerTask, "Read Power", 2000, NULL, 1, NULL);
-	xTaskCreate(screenTask, "Draw Screen", 4000, NULL, 1, NULL);
-	xTaskCreate(inputTask, "Input Task", 2000, NULL, 1, NULL);
+	xTaskCreate(powerTask, "Read Power", 1800, NULL, 1, NULL);
+	xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
+	xTaskCreate(inputTask, "Input Task", 1500, NULL, 10, NULL);
+	xTaskCreate(logTask, "Log Task", 2000, NULL, 1, NULL);
 	pinMode(25, INPUT_PULLUP);
 	pinMode(26, INPUT_PULLUP);
 	attachInterrupt(digitalPinToInterrupt(25), isr_stpd01_ch0, FALLING);
@@ -103,6 +104,26 @@ void powerTask(void *parameter)
 		}
 	}
 }
+void logTask(void *parameter)
+{
+	char buffer_input[30];
+	char buffer_ch0[26];
+	char buffer_ch1[26];
+	uint16_t log_interval;
+	for (;;) {
+		vTaskDelay(5);
+		log_interval = screen.getLogInterval();
+		if (log_interval > 0) {
+			vTaskDelay(log_interval-5);
+			sprintf(buffer_input, "%010d,%05d,%04d,%05d,%1d,", cur_time, volt[0], amp[0], watt[0], low_input);
+			sprintf(buffer_ch0, "%05d,%04d,%05d,%d,%x,", volt[1], amp[1], watt[1], onoff[0], 0xff);
+			sprintf(buffer_ch1, "%05d,%04d,%05d,%d,%x\n\r", volt[2], amp[2], watt[2], onoff[1], 0xff);
+			Serial.printf(buffer_input);
+			Serial.printf(buffer_ch0);
+			Serial.printf(buffer_ch1);
+		}
+	}
+}
 
 void screenTask(void *parameter)
 {
@@ -113,12 +134,7 @@ void screenTask(void *parameter)
 }
 
 void inputTask(void *parameter)
-
 {
-	char buffer_input[30];
-	char buffer_ch0[26];
-	char buffer_ch1[26];
-
 	for (;;) {
 		cur_time = millis();
 		for (int i = 0; i < 4; i++) {
@@ -132,21 +148,13 @@ void inputTask(void *parameter)
 			dial.cnt = 0;
 		}
 		screen.setTime(cur_time);
-		vTaskDelay(5);
-		/*
-		sprintf(buffer_input, "%010d,%05d,%04d,%05d,%1d,", cur_time, volt[0], amp[0], watt[0], low_input);
-		sprintf(buffer_ch0, "%05d,%04d,%05d,%d,%x,", volt[1], amp[1], watt[1], onoff[0], 0xff);
-		sprintf(buffer_ch1, "%05d,%04d,%05d,%d,%x\n\r", volt[2], amp[2], watt[2], onoff[1], 0xff);
-		Serial.printf(buffer_input);
-		Serial.printf(buffer_ch0);
-		Serial.printf(buffer_ch1);
-		*/
+		vTaskDelay(10);
 	}
 }
 
 void loop() {
 	delay(500);
-	//get_memory_info();
+	//Serial.println(uxTaskPriorityGet(NULL));
 }
 
 void get_memory_info(void)

@@ -402,9 +402,6 @@ void Channel::isr(void)
 		if (stpd01->available()) {
 			latch = checkInterrupt();
 			DUMP(latch);
-			for (int i = 7; i >= 0; i--)
-				Serial.print(bitRead(latch, i));
-			Serial.println("");
 			if (latch & 0x4) {
 				on();
 				Serial.printf("ch%d, flag_int %d Retry set voltage for short circuit protection\n\r", channel, flag_int);

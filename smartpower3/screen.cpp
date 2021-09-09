@@ -36,6 +36,7 @@ void Screen::run()
 	checkOnOff();
 	drawScreen();
 
+	/*
 	if (btn_pressed[1]) {
 		btn_pressed[1] = false;
 	}
@@ -44,7 +45,7 @@ void Screen::run()
 	}
 	if (btn_pressed[3]) {
 		btn_pressed[3] = false;
-	}
+	}*/
 
 	if (!header->getLowInput()) {
 		for (int i = 0; i < 2; i++) {
@@ -53,7 +54,6 @@ void Screen::run()
 			channel[i]->isr();
 		}
 	}
-	isrSTPD01();
 }
 
 void Screen::setIntFlag(uint8_t ch)
@@ -173,6 +173,7 @@ void Screen::deActivateSetting()
 	header->deActivate();
 	setting->deActivateBLLevel();
 	setting->deActivateFanLevel();
+	setting->deActivateLogInterval();
 }
 
 void Screen::activate()
@@ -211,8 +212,8 @@ void Screen::activate_setting()
 	if (dial_cnt == dial_cnt_old)
 		return;
 	dial_cnt_old = dial_cnt;
-	if (dial_cnt > 2)
-		dial_cnt = 2;
+	if (dial_cnt > 3)
+		dial_cnt = 3;
 	else if (dial_cnt < 0)
 		dial_cnt = 0;
 
@@ -227,6 +228,9 @@ void Screen::activate_setting()
 			break;
 		case STATE_FAN:
 			setting->activateFanLevel();
+			break;
+		case STATE_LOG:
+			setting->activateLogInterval();
 			break;
 	}
 }
@@ -326,8 +330,6 @@ void Screen::drawBaseEdit()
 
 void Screen::drawSetting()
 {
-	Serial.printf("draw setting : dial_cnt : %d, dial_cnt_old : %d\n\r", dial_cnt, dial_cnt_old);
-	Serial.println(activated);
 	activate_setting();
 	if ((cur_time - dial_time) > 10000) {
 		dial_cnt = 0;
@@ -365,6 +367,10 @@ void Screen::drawSetting()
 			mode = SETTING_FAN;
 			dial_cnt = setting->getFanLevel();
 			setting->activateFanLevel(TFT_GREEN);
+		} else if (activated == STATE_LOG) {
+			mode = SETTING_LOG;
+			dial_cnt = setting->getLogInterval();
+			setting->activateLogInterval(TFT_GREEN);
 		}
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -446,6 +452,48 @@ void Screen::drawSettingFAN()
 	}
 }
 
+void Screen::drawSettingLOG()
+{
+	if ((cur_time - dial_time) > 10000) {
+		mode = SETTING;
+		deActivateSetting();
+		activated = dial_cnt = dial_cnt_old = STATE_NONE;
+		dial_cnt_old = STATE_NONE;
+		setting->changeLogInterval();
+		setting->deActivateLogInterval();
+	}
+	if (btn_pressed[2] == true) {
+		btn_pressed[2] = false;
+		mode = SETTING;
+		activated = dial_cnt = dial_cnt_old = STATE_LOG;
+		deActivateSetting();
+		setting->changeLogInterval();
+		setting->activateLogInterval();
+		return;
+	}
+	if (btn_pressed[3] == true) {
+		btn_pressed[3] = false;
+		mode = SETTING;
+		setting->setLogInterval();
+		setting->activateLogInterval();
+		activated = dial_cnt = dial_cnt_old = STATE_LOG;
+		return;
+	}
+	if (dial_cnt != dial_cnt_old) {
+		if (dial_cnt < 0)
+			dial_cnt = 0;
+		else if (dial_cnt > 6)
+			dial_cnt = 6;
+		dial_cnt_old = dial_cnt;
+		setting->changeLogInterval(dial_cnt);
+	}
+}
+
+uint16_t Screen::getLogInterval(void)
+{
+	return setting->getLogIntervalValue();
+}
+
 void Screen::drawScreen()
 {
 	switch (mode) {
@@ -473,8 +521,12 @@ void Screen::drawScreen()
 		header->drawMode("EDIT_FAN");
 		drawSettingFAN();
 		break;
+	case SETTING_LOG:
+		header->drawMode("EDIT_LOG");
+		drawSettingLOG();
+		break;
 	}
-	if (mode != SETTING) {
+	if (mode < SETTING) {
 		if ((cur_time - fnd_time) > 300) {
 			fnd_time = cur_time;
 			channel[0]->drawChannel();
@@ -482,6 +534,7 @@ void Screen::drawScreen()
 		}
 		channel[0]->drawVoltSet();
 		channel[1]->drawVoltSet();
+		isrSTPD01();
 	}
 	header->draw();
 }

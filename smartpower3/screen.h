@@ -15,6 +15,7 @@ enum screen_mode_t {
 	SETTING,
 	SETTING_BL,
 	SETTING_FAN,
+	SETTING_LOG,
 };
 
 enum state {
@@ -26,7 +27,8 @@ enum state {
 };
 
 enum state_setting {
-	STATE_FAN = 0,
+	STATE_LOG = 0,
+	STATE_FAN,
 	STATE_BL,	
 	STATE_SETTING,
 	STATE_NONE
@@ -65,6 +67,7 @@ public:
 	void debug();
 	void disablePower();
 	void setIntFlag(uint8_t channel);
+	uint16_t getLogInterval(void);
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
@@ -89,6 +92,7 @@ private:
 	void drawSetting(void);
 	void drawSettingBL(void);
 	void drawSettingFAN(void);
+	void drawSettingLOG(void);
 	static bool _int;
 	uint8_t state_power = 0;
 	uint8_t old_state_power = 0;
