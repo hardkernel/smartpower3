@@ -3,7 +3,7 @@
 Header::Header(TFT_eSPI *tft) : Component(tft)
 {
 	this->tft = tft;
-	input = new Component(tft, 104, 30, 4);
+	input = new Component(tft, 120, 30, 4);
 	int0 = new Component(tft, 64, 22, 4);
 	mode = new Component(tft, 76, 22, 4);
 	display_mode = new Component(tft, 110, 22, 4);
@@ -15,9 +15,9 @@ void Header::init(uint16_t x, uint16_t y)
 	this->y = y;
 	input->init(TFT_BLACK, TFT_RED, 1, TL_DATUM);
 	input->setCoordinate(x, y);
-	input->draw("IN:0.0V");
+	input->draw("0.0V");
 
-	tft->drawString(String(debug), 105, 10, 2);
+	tft->drawString(String(debug), 130, 10, 2);
 
 	/*
 	int0->init(FG_DISABLED, BG_DISABLED, 1, TL_DATUM);
@@ -79,36 +79,32 @@ bool Header::getLowInput(void)
 	return low_input;
 }
 
-bool Header::checkInput(void)
-{
-	if (v_input > 10)
-		return true;
-	return false;
-}
-
 uint16_t Header::getInputVoltage(void)
 {
-	return v_input;
+	return in_volt;
 }
 
 void Header::draw(void)
 {
-	if (v_update) {
-		v_update = false;
+	if (updated) {
+		updated = false;
 		if (low_input)
 			input->setTextColor(TFT_BLACK, TFT_RED);
 		else
 			input->setTextColor(TFT_BLACK, TFT_GREEN);
 		input->clear();
-		input->draw("IN:" + String(v_input/1000.0, 1) + "V");
+		String tmp_v = String(in_volt/1000.0, 1);
+		String tmp_a = String(in_ampere/1000.0, 1);
+		input->draw(tmp_v + "V " + tmp_a + "A");
 	}
-	tft->drawString(String(debug), 105, 10, 2);
+	tft->drawString(String(debug), 130, 10, 2);
 }
 
 void Header::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 {
-	v_input = volt;
-	v_update = true;
+	in_volt = volt;
+	in_ampere = ampere;
+	updated = true;
 }
 
 void Header::setDebug()

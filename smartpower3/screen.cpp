@@ -98,9 +98,7 @@ void Screen::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 		state_power = 3;
 	}
 
-	if (header->getInputVoltage()/1000 != volt/1000) {
-		header->pushPower(volt, ampere, watt);
-	}
+	header->pushPower(volt, ampere, watt);
 }
 
 void Screen::checkOnOff()
