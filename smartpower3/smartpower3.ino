@@ -20,7 +20,7 @@ void setup(void) {
 	Serial.begin(115200);
 	TRACE();
 	I2CA.begin(15, 4, 100000);
-	I2CB.begin(21, 22, 400000);
+	I2CB.begin(21, 22, 100000);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
 
