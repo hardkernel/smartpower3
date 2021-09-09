@@ -10,11 +10,6 @@ Screen::Screen()
 	tft.fillScreen(TFT_BLACK);
 	tft.fillScreen(TFT_BLACK);
 	tft.setSwapBytes(true);
-
-	pinMode(STPD01_CH0, OUTPUT);
-	pinMode(STPD01_CH1, OUTPUT);
-	digitalWrite(27, HIGH);
-	digitalWrite(14, HIGH);
 }
 
 void Screen::begin(TwoWire *theWire)
@@ -27,11 +22,6 @@ void Screen::begin(TwoWire *theWire)
 	setting = new Setting(&tft);
 	fsInit();
 
-	if (!bme.begin(0x76, _wire)) {
-		Serial.println("Could not find BME280");
-	}
-	bme_temp->printSensorDetails();
-	bme_humidity->printSensorDetails();
 	initScreen();
 	header->init(3, 3);
 }
@@ -47,71 +37,28 @@ void Screen::run()
 	drawScreen();
 
 	/*
-	 * for test STPD01
-	 */
-#if 0
-	//if ((cur_time - task_time) > 10000) {
-	if ((cur_time - task_time) > 1000) {
-		task_time = cur_time;
-		flag_on += 1;
-	}
-	Serial.printf("%d %d\n\r", cur_time, flag_on);
-
-	if (flag_on == 1) {
-		if (flag_off == 1) {
-			for (int i = 0; i < 2; i++) {
-				channel[i]->on();
-				onoff[i] = 1;
-			}
-			flag_off = 0;
-			Serial.printf("%d on\n\r", cur_time);
-		}
-	}
-
-	//if (flag_on > 3) {
-	if (flag_on > 1) {
-		if (flag_off == 0) {
-			for (int i = 0; i < 2; i++) {
-				channel[i]->off();
-				onoff[i] = 0;
-			}
-			flag_off = 1;
-			flag_on = 0;
-			Serial.printf("%d off\n\r", cur_time);
-		}
-	}
-#endif
-
 	if (btn_pressed[1]) {
 		btn_pressed[1] = false;
 	}
 	if (btn_pressed[2]) {
 		btn_pressed[2] = false;
-		channel[0]->checkInterrupt();
 	}
 	if (btn_pressed[3]) {
 		btn_pressed[3] = false;
-		channel[1]->checkInterrupt();
-	}
+	}*/
 
-	sensors_event_t temp_event, humidity_event;
-	bme_temp->getEvent(&temp_event);
-	bme_humidity->getEvent(&humidity_event);
-
-	if (!low_input) {
-		if (digitalRead(25)) {
-			//header->highIntPin();
-		} else if (flag_int || !digitalRead(25)) {
-			flag_int = 0;
-			//header->lowIntPin();
-			for (int i = 0; i < 2; i++) {
-				if (channel[i]->checkInterrupt() & 0x4) {
-					channel[i]->on();
-					Serial.printf("On Retry!!!!!!!!!! Channel %d\n\r", i);
-				}
-			}
+	if (!header->getLowInput()) {
+		for (int i = 0; i < 2; i++) {
+			if (!enabled_stpd01[i])
+				continue;
+			channel[i]->isr();
 		}
 	}
+}
+
+void Screen::setIntFlag(uint8_t ch)
+{
+	channel[ch]->setIntFlag();
 }
 
 void Screen::initScreen(void)
@@ -141,18 +88,74 @@ void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch
 void Screen::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 {
 	if ((volt < 6000 || volt >= 26000) && !low_input) {
+		Serial.println("Hello low input");
 		low_input = true;
 		header->setLowInput(true);
 		state_power = 1;
-	} else if ((volt >= 6000 && volt <= 26000) && low_input) {
+	} else if ((volt >= 6000 && volt <= 26000) && header->getLowInput()) {
 		low_input = false;
 		header->setLowInput(false);
 		state_power = 3;
 	}
 
-	if (header->getInputVoltage()/1000 != volt/1000) {
-		header->pushPower(volt, ampere, watt);
+	header->pushPower(volt, ampere, watt);
+}
+
+void Screen::checkOnOff()
+{
+	if (state_power == 1) {
+		state_power = 2;
+#ifdef USE_SINGLE_IRQ_STPD01
+		channel[0]->off();
+		channel[1]->off();
+#else
+		disablePower();
+#endif
+		onoff[0] = 2;
+		onoff[1] = 2;
+	} else if (state_power == 3) {
+#ifdef USE_SINGLE_IRQ_STPD01
+		for (int i = 0; i < 2; i++) {
+			channel[i]->enable();
+			channel[i]->off();
+		}
+#endif
+		state_power = 4;
+	} else if (state_power == 4) {
+		Serial.println("check interrupt");
+		state_power = 5;
+	} else if (state_power == 5) {
+		Serial.println("check autostart");
+		state_power = 6;
+	} else if (state_power == 6) {
+		for (int i = 0; i < 2; i++) {
+			if (onoff[i] == 3) {
+				if (!enabled_stpd01[i]) {
+					enabled_stpd01[i] = true;
+					channel[i]->enable();
+				}
+				channel[i]->on();
+				onoff[i] = 1;
+			} else if (onoff[i] == 2) {
+				channel[i]->off();
+				channel[i]->drawChannel(true);
+				onoff[i] = 0;
+			}
+		}
 	}
+
+	if (state_power != old_state_power) {
+		old_state_power = state_power;
+		Serial.printf("[ power state ] : %d\n\r", state_power);
+	}
+}
+
+void Screen::disablePower()
+{
+	channel[0]->disabled();
+	channel[1]->disabled();
+	enabled_stpd01[0] = false;
+	enabled_stpd01[1] = false;
 }
 
 void Screen::deActivate()
@@ -170,6 +173,7 @@ void Screen::deActivateSetting()
 	header->deActivate();
 	setting->deActivateBLLevel();
 	setting->deActivateFanLevel();
+	setting->deActivateLogInterval();
 }
 
 void Screen::activate()
@@ -208,8 +212,8 @@ void Screen::activate_setting()
 	if (dial_cnt == dial_cnt_old)
 		return;
 	dial_cnt_old = dial_cnt;
-	if (dial_cnt > 2)
-		dial_cnt = 2;
+	if (dial_cnt > 3)
+		dial_cnt = 3;
 	else if (dial_cnt < 0)
 		dial_cnt = 0;
 
@@ -224,6 +228,9 @@ void Screen::activate_setting()
 			break;
 		case STATE_FAN:
 			setting->activateFanLevel();
+			break;
+		case STATE_LOG:
+			setting->activateLogInterval();
 			break;
 	}
 }
@@ -323,8 +330,6 @@ void Screen::drawBaseEdit()
 
 void Screen::drawSetting()
 {
-	Serial.printf("draw setting : dial_cnt : %d, dial_cnt_old : %d\n\r", dial_cnt, dial_cnt_old);
-	Serial.println(activated);
 	activate_setting();
 	if ((cur_time - dial_time) > 10000) {
 		dial_cnt = 0;
@@ -362,6 +367,10 @@ void Screen::drawSetting()
 			mode = SETTING_FAN;
 			dial_cnt = setting->getFanLevel();
 			setting->activateFanLevel(TFT_GREEN);
+		} else if (activated == STATE_LOG) {
+			mode = SETTING_LOG;
+			dial_cnt = setting->getLogInterval();
+			setting->activateLogInterval(TFT_GREEN);
 		}
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -443,6 +452,47 @@ void Screen::drawSettingFAN()
 	}
 }
 
+void Screen::drawSettingLOG()
+{
+	if ((cur_time - dial_time) > 10000) {
+		mode = SETTING;
+		deActivateSetting();
+		activated = dial_cnt = dial_cnt_old = STATE_NONE;
+		dial_cnt_old = STATE_NONE;
+		setting->changeLogInterval();
+		setting->deActivateLogInterval();
+	}
+	if (btn_pressed[2] == true) {
+		btn_pressed[2] = false;
+		mode = SETTING;
+		activated = dial_cnt = dial_cnt_old = STATE_LOG;
+		deActivateSetting();
+		setting->changeLogInterval();
+		setting->activateLogInterval();
+		return;
+	}
+	if (btn_pressed[3] == true) {
+		btn_pressed[3] = false;
+		mode = SETTING;
+		setting->setLogInterval();
+		setting->activateLogInterval();
+		activated = dial_cnt = dial_cnt_old = STATE_LOG;
+		return;
+	}
+	if (dial_cnt != dial_cnt_old) {
+		if (dial_cnt < 0)
+			dial_cnt = 0;
+		else if (dial_cnt > 6)
+			dial_cnt = 6;
+		dial_cnt_old = dial_cnt;
+		setting->changeLogInterval(dial_cnt);
+	}
+}
+
+uint16_t Screen::getLogInterval(void)
+{
+	return setting->getLogIntervalValue();
+}
 
 void Screen::drawScreen()
 {
@@ -471,8 +521,12 @@ void Screen::drawScreen()
 		header->drawMode("EDIT_FAN");
 		drawSettingFAN();
 		break;
+	case SETTING_LOG:
+		header->drawMode("EDIT_LOG");
+		drawSettingLOG();
+		break;
 	}
-	if (mode != SETTING) {
+	if (mode < SETTING) {
 		if ((cur_time - fnd_time) > 300) {
 			fnd_time = cur_time;
 			channel[0]->drawChannel();
@@ -480,6 +534,7 @@ void Screen::drawScreen()
 		}
 		channel[0]->drawVoltSet();
 		channel[1]->drawVoltSet();
+		isrSTPD01();
 	}
 	header->draw();
 }
@@ -540,48 +595,12 @@ void Screen::changeVolt(screen_mode_t mode)
 
 }
 
-void Screen::checkOnOff()
-{
-	if (state_power == 1) {
-		state_power = 2;
-		channel[0]->off();
-		channel[1]->off();
-		onoff[0] = 2;
-		onoff[1] = 2;
-	} else if (state_power == 3) {
-		state_power = 4;
-		channel[0]->initPower();
-		channel[1]->initPower();
-	} else if (state_power == 4) {
-		Serial.println("check interrupt");
-		state_power = 5;
-	} else if (state_power == 5) {
-		Serial.println("check autostart");
-		state_power = 6;
-	} else if (state_power == 6) {
-		for (int i = 0; i < 2; i++) {
-			if (onoff[i] == 3) {
-				channel[i]->on();
-				onoff[i] = 1;
-			} else if (onoff[i] == 2) {
-				channel[i]->off();
-				channel[i]->drawChannel(true);
-				onoff[i] = 0;
-			}
-		}
-	}
-	
-	if (state_power != old_state_power) {
-		old_state_power = state_power;
-		Serial.printf("[ power state ] : %d\n\r", state_power);
-	}
-}
 
 void Screen::isrSTPD01()
 {
 	for (int i = 0; i < 2; i++) {
 		channel[i]->isAvailableSTPD01();
-		channel[i]->checkInterrupt();
+		//channel[i]->checkInterrupt();
 	}
 }
 
@@ -680,7 +699,6 @@ void Screen::listDir(const char * dirname, uint8_t levels){
         file = root.openNextFile();
     }
 }
-
 
 void Screen::fsInit(void)
 {

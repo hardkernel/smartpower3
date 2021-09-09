@@ -9,6 +9,9 @@
 #define PIN_EN_STPD01_CH0 27
 #define PIN_EN_STPD01_CH1 14
 
+#define PIN_INT_CH0	25
+#define PIN_INT_CH1	26
+
 enum comp_t {
 	HEADER,
 	VOLT,
@@ -44,7 +47,6 @@ public:
 	void monitorInterrupt();
 	uint8_t checkInterrupt(void);
 	void clearInterruptUI(void);
-	uint8_t test(void);
 	bool isAvailableSTPD01();
 	uint8_t getIntStatus(void);
 	uint8_t getIntMask(void);
@@ -54,6 +56,11 @@ public:
 	void write(uint8_t addr, uint8_t reg);
 	void setHide();
 	void clearHide();
+	void initSTPD01();
+	void disabled();
+	void enable();
+	void isr(void);
+	void setIntFlag(void);
 private:
 	bool activated;
 	TFT_eSPI *tft;
@@ -76,4 +83,11 @@ private:
 	uint8_t hide = 0;
 	uint16_t moving_avg[5] = {0,};
 	uint8_t cnt_mavg= 0;
+	uint8_t en_stpd01[2] = {PIN_EN_STPD01_CH0, PIN_EN_STPD01_CH1};
+#ifdef USE_SINGLE_IRQ_STPD01
+	uint8_t int_stpd01[2] = {PIN_INT_CH0, PIN_INT_CH0};
+#else
+	uint8_t int_stpd01[2] = {PIN_INT_CH0, PIN_INT_CH1};
+#endif
+	bool flag_int = 0;
 };

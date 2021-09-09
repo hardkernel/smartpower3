@@ -9,7 +9,6 @@ Setting::Setting(TFT_eSPI *tft)
 
 	ledcSetup(3, FREQ, RESOLUTION);
 	ledcAttachPin(FAN, 3);
-
 }
 
 void Setting::init(uint16_t x, uint16_t y)
@@ -23,6 +22,7 @@ void Setting::init(uint16_t x, uint16_t y)
 
 	tft->drawString("Backlight Level", x, y, 4);
 	tft->drawString("Fan Level", x, y + 50, 4);
+	tft->drawString("Logging", x, y + 100, 4);
 
 	tft->fillRect(x + 200, y, 135, 26, TFT_BLACK);
 	tft->drawRect(x + 200, y-1, 135, 28, TFT_YELLOW);
@@ -31,6 +31,10 @@ void Setting::init(uint16_t x, uint16_t y)
 	tft->fillRect(x + 200, y + 50, 135, 26, TFT_BLACK);
 	tft->drawRect(x + 200, y-1 + 50, 135, 28, TFT_YELLOW);
 	changeFan(fan_level);
+
+	tft->fillRect(x + 200, y + 100, 135, 26, TFT_BLACK);
+	tft->drawRect(x + 200, y-1 + 100, 135, 28, TFT_YELLOW);
+	changeLogInterval(log_interval);
 }
 
 uint8_t Setting::setBacklightLevel(void)
@@ -53,6 +57,21 @@ uint8_t Setting::getFanLevel(void)
 	return fan_level;
 }
 
+uint16_t Setting::setLogInterval(void)
+{
+	return log_interval = log_interval_edit;
+}
+
+uint16_t Setting::getLogIntervalValue(void)
+{
+	return log_value[log_interval];
+}
+
+uint16_t Setting::getLogInterval(void)
+{
+	return log_interval;
+}
+
 void Setting::changeBacklight(uint8_t level)
 {
 	if (level == 255) {
@@ -71,6 +90,12 @@ void Setting::changeFan(uint8_t level)
 	drawFanLevel(level);
 	fan_level_edit = level;
 	ledcWrite(3, fan_value[level]);
+}
+
+void Setting::changeLogInterval(uint16_t log_interval)
+{
+	drawLogInterval(log_value[log_interval]);
+	log_interval_edit = log_interval;
 }
 
 void Setting::setBacklightLevel(uint8_t level)
@@ -117,6 +142,19 @@ void Setting::deActivateFanLevel(uint16_t color)
 		tft->drawRect(x + 200 -i, y-1-i + 50, 135+i*2, 28+i*2, color);
 }
 
+void Setting::activateLogInterval(uint16_t color)
+{
+	for (int i = 1; i < 4; i++)
+		tft->drawRect(x + 200 -i, y-1-i + 100, 135+i*2, 28+i*2, color);
+}
+
+void Setting::deActivateLogInterval(uint16_t color)
+{
+	for (int i = 1; i < 4; i++)
+		tft->drawRect(x + 200 -i, y-1-i + 100, 135+i*2, 28+i*2, color);
+}
+
+
 void Setting::drawBacklightLevel(uint8_t level)
 {
 	tft->fillRect(x + 202, y+1, 130, 24, TFT_BLACK);
@@ -131,4 +169,13 @@ void Setting::drawFanLevel(uint8_t level)
 	for (int i = 0; i < level; i++) {
 		tft->fillRect(x + 202 + (i*22), y + 1 + 50, 20, 24, TFT_YELLOW);
 	}
+}
+
+void Setting::drawLogInterval(uint16_t log_value)
+{
+	tft->fillRect(x + 202, y+1 + 100, 130, 24, TFT_BLACK);
+	if (log_value == 0)
+		tft->drawString("OFF", x + 200 + 5, y + 100, 4);
+	else
+		tft->drawString(String(log_value) + " ms", x + 200 + 5, y + 100, 4);
 }

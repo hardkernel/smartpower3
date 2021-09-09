@@ -1,4 +1,5 @@
 #include "channel.h"
+#include <ArduinoTrace.h>
 
 Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 		uint8_t channel)
@@ -16,7 +17,6 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 	current->fnd_init(NUM_OF_FND, 2, true, x, Y_CURRENT + y, FG_COLOR, BG_COLOR);
 	watt->fnd_init(NUM_OF_FND, 2, true, x, Y_WATT + y, FG_COLOR, BG_COLOR);
 
-	stpd01 = new STPD01();
 	/*
 	 * Rev0.4 sptd01 address
 	 * I2CA : 0x5
@@ -28,8 +28,7 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 	 * I2CB : 0x7
 	 * stpd01->begin(0x5 +(channel*2), theWire);
 	 */
-	stpd01->begin(0x5 +(channel*2), theWire);
-	//stpd01->begin(0x5 -(channel*1), theWire);
+	stpd01 = new STPD01(0x5 + (channel*2), theWire);
 
 	_volt = new Component(tft, 48, 22, 4);
 	_current = new Component(tft, 48, 22, 4);
@@ -42,6 +41,7 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 		int_mask[i] = new Component(tft, 14, 22, 2);
 	}
 	*/
+	pinMode(int_stpd01[channel], INPUT_PULLUP);
 }
 
 Channel::~Channel(void)
@@ -62,7 +62,7 @@ Channel::~Channel(void)
 
 bool Channel::isAvailableSTPD01()
 {
-	if (test() == 0xff) {
+	if (!stpd01->available()) {
 		stpd->setTextColor(FG_DISABLED, BG_DISABLED);
 		stpd->draw("STPD");
 		return 0;
@@ -74,8 +74,10 @@ bool Channel::isAvailableSTPD01()
 
 void Channel::initPower()
 {
+	/*
 	if (test() != 1)
 		delay(100);
+		*/
 	off();
 }
 
@@ -128,7 +130,6 @@ void Channel::initScreen()
 	for (int i=0; i < 10; i++)
 		tft->drawLine(x + 25 + i, y + 245, x + 25 + i, y + 275, TFT_RED);
 	tft->fillRoundRect(x + 135, y + 240, 60, 40, 10, TFT_WHITE);
-	//tft->fillCircle(x + 165, y + 255, 20, TFT_WHITE);
 	for (int i=0; i < 10; i++)
 		tft->drawLine(x + 150, y + 255 + i, x + 180, y + 255 + i, TFT_BLACK);
 }
@@ -143,28 +144,63 @@ uint8_t Channel::getIntMask(void)
 	return stpd01->readIntMask();
 }
 
+void Channel::initSTPD01(void)
+{
+	//detachInterrupt(digitalPinToInterrupt(pin))
+	/*
+	if (enabled stpd01)
+		pinMode(en_stpd01[channel], OUTPUT);
+	digitalWrite(en_stpd01[channel], HIGH);
+	*/
+}
+
+void Channel::enable(void)
+{
+	uint8_t cnt = 0;
+	pinMode(en_stpd01[channel], OUTPUT);
+	digitalWrite(en_stpd01[channel], HIGH);
+	while (!stpd01->available()) {
+		if (cnt++ > 10) {
+			Serial.printf("channel : %d STPD01 is not available!\n\r", channel);
+			break;
+		}
+		delay(100);
+	}
+}
+
+void Channel::disabled(void)
+{
+	pinMode(en_stpd01[channel], OUTPUT);
+	digitalWrite(en_stpd01[channel], LOW);
+
+	volt->setTextColor(TFT_DARKGREY, TFT_BLACK);
+	current->setTextColor(TFT_DARKGREY, TFT_BLACK);
+	watt->setTextColor(TFT_DARKGREY, TFT_BLACK);
+}
+
 bool Channel::on(void)
 {
 	bool err;
-	stpd01->setVoltage(volt_set);
-	stpd01->setCurrentLimit(current_limit);
-	stpd01->initInterrupt();
-	err = stpd01->on();
+	TRACE();
+	if (stpd01->available()) {
+		stpd01->setVoltage(volt_set);
+		stpd01->setCurrentLimit(current_limit);
+		stpd01->initInterrupt();
+		err = stpd01->on();
+	}
 	volt->setTextColor(TFT_RED, TFT_BLACK);
 	current->setTextColor(TFT_RED, TFT_BLACK);
 	watt->setTextColor(TFT_RED, TFT_BLACK);
 	return err;
 }
 
-uint8_t Channel::test(void)
-{
-	return stpd01->read8(STPD01_REGISTER_6);
-}
-
 bool Channel::off(void)
 {
 	bool err;
-	err = stpd01->off();
+	TRACE();
+	if (stpd01->available()) {
+		err = stpd01->off();
+	}
 	volt->setTextColor(TFT_DARKGREY, TFT_BLACK);
 	current->setTextColor(TFT_DARKGREY, TFT_BLACK);
 	watt->setTextColor(TFT_DARKGREY, TFT_BLACK);
@@ -349,6 +385,29 @@ void Channel::deActivate(comp_t comp)
 			break;
 		case WATT:
 			break;
+	}
+}
+
+void Channel::setIntFlag(void)
+{
+	flag_int = true;
+}
+
+void Channel::isr(void)
+{
+	byte latch = 0;
+	if (flag_int || !digitalRead(int_stpd01[channel])) {
+		DUMP(channel);
+		DUMP(flag_int);
+		if (stpd01->available()) {
+			latch = checkInterrupt();
+			DUMP(latch);
+			if (latch & 0x4) {
+				on();
+				Serial.printf("ch%d, flag_int %d Retry set voltage for short circuit protection\n\r", channel, flag_int);
+			}
+			flag_int = false;
+		}
 	}
 }
 
