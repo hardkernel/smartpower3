@@ -13,7 +13,7 @@
 }
 
 main>.container {
-  padding: 60px 15px 0;
+  padding: 60px 15px;
 }
 
 .sp3-divider {
@@ -21,7 +21,7 @@ main>.container {
   max-width: 100vw;
   margin-top: -4px;
   margin-left: calc(50% - 50vw);
-  height: 3rem;
+  height: 2rem;
   background-color: rgba(0, 0, 0, .1);
   border: solid rgba(0, 0, 0, .15);
   border-width: 1px 0;
