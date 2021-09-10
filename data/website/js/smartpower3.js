@@ -26,6 +26,7 @@ $(document).ready(() => {
     powerChannelDiv[1].find('.sp3-line-chart')[0],
   ]
 
+  // TODO: How can I fix the column numbers without this dummy data?
   const toastLineChartData = {
     categories: [
       '', '', '', '', '', '', '', '',
@@ -48,15 +49,9 @@ $(document).ready(() => {
   };
 
   const toastLineChartOptions = {
-    chart: { title: 'Realtime Voltage/Ampere/Watts', width: 'auto', height: 'auto' },
+    chart: { title: 'Voltage/Ampere/Watts', width: 'auto', height: 'auto' },
     xAxis: {
       title: 'Timeline',
-      tick: {
-        interval: 8,
-      },
-      label: {
-        interval: 16,
-      }
     },
     yAxis: {
       title: 'Vol/Amp/Wat',
@@ -132,15 +127,6 @@ $(document).ready(() => {
         console.log("[" + data['level'] + "]", data['message']);
         break;
       case 'power':
-        // For the power data, we use a foramtted string to reduce the CPU loads on SmartPower 3
-        // The data format: chNum,powerState,setVol,setAmp,curVol,curAmp,curWatt
-        /*
-        {
-          "type": "power",
-          "data": "1,1,12000,1000,12000,1000,12000"
-        }
-        */
-
         /*
         {
           "type": "power",
@@ -148,16 +134,16 @@ $(document).ready(() => {
             {
               "channel": 0,
               "active": true,
-              "voltage": "12.0",
-              "ampere": "3.0",
-              "watt": "36.0"
+              "voltage": "12000",
+              "ampere": "3000",
+              "watt": "36000"
             },
             {
               "channel": 1,
               "active": false,
-              "voltage": "5.0",
-              "ampere": "0.0",
-              "watt": "0.0"
+              "voltage": "5000",
+              "ampere": "0",
+              "watt": "0"
             }
           ]
         }
@@ -176,9 +162,9 @@ $(document).ready(() => {
 
           // Update the chart widgets
           if (isActive) {
-            toastLineChart[i].addData([vol, amp, watt], moment().format("HH:mm:ss"));
+            toastLineChart[i].addData([vol, amp, watt], moment().format("HH:mm:ss SSS"));
           } else {
-            toastLineChart[i].addData([0, 0, 0], moment().format("HH:mm:ss"));
+            toastLineChart[i].addData([0, 0, 0], moment().format("HH:mm:ss SSS"));
           }
         }
 
