@@ -16,10 +16,10 @@ uint32_t ctime1 = 0;
 uint32_t fps_ch0;
 
 void setup(void) {
-	ARDUINOTRACE_INIT(115200);
-	Serial.begin(115200);
+	ARDUINOTRACE_INIT(500000);
+	Serial.begin(500000);
 	TRACE();
-	I2CA.begin(15, 4, 100000);
+	I2CA.begin(15, 4, 10000);
 	I2CB.begin(21, 22, 400000);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
@@ -28,8 +28,7 @@ void setup(void) {
 
 	initEncoder(&dial);
 
-	//xTaskCreate(powerTask, "Read Power", 1800, NULL, 1, NULL);
-	//xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
+	xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 1500, NULL, 10, NULL);
 	xTaskCreate(logTask, "Log Task", 2000, NULL, 1, NULL);
 	xTaskCreate(wifiTask, "WiFi Connection Task", 4000, NULL, 1, NULL);
@@ -64,64 +63,6 @@ void initPAC1933(void)
 	PAC.UpdateRevisionID();
 }
 
-void powerTask(void *parameter)
-{
-	for (;;) {
-		PAC.Refresh();
-		onoff = screen.getOnOff();
-		if (onoff[0]) {
-			PAC.update(1);
-			volt[1] = (uint16_t)(PAC.Voltage);
-			amp[1] = (uint16_t)(PAC.Current);
-			watt[1] = (uint16_t)(PAC.Power*1000);
-			screen.pushPower(volt[1], amp[1], watt[1], 0);
-			wifiManager.setCurrentPower(
-				CHANNEL_0,
-				(WifiCurrentPower) {CHANNEL_0, true, volt[1], amp[1], watt[1]});
-		} else {
-			wifiManager.setCurrentPower(
-				CHANNEL_0,
-				(WifiCurrentPower) {CHANNEL_0, false, volt[1], amp[1], watt[1]});
-		}
-
-		if (onoff[1]) {
-			PAC.update(2);
-			volt[2] = (uint16_t)(PAC.Voltage);
-			amp[2] = (uint16_t)(PAC.Current);
-			watt[2] = (uint16_t)(PAC.Power*1000);
-			screen.pushPower(volt[2], amp[2], watt[2], 1);
-			wifiManager.setCurrentPower(
-				CHANNEL_1,
-				(WifiCurrentPower) {CHANNEL_1, true, volt[2], amp[2], watt[2]});
-		} else {
-			wifiManager.setCurrentPower(
-				CHANNEL_1,
-				(WifiCurrentPower) {CHANNEL_1, false, volt[2], amp[2], watt[2]});
-		}
-
-		if ((millis() - ctime1) > 500) {
-			ctime1 = millis();
-			PAC.update(0);
-			volt[0] = (uint16_t)(PAC.Voltage);
-			amp[0] = (uint16_t)(PAC.Current);
-			watt[0] = (uint16_t)(PAC.Power*100);
-			if (volt[0] < 6000) {
-				screen.debug();
-				PAC.update(0);
-				volt[0] = (uint16_t)(PAC.Voltage);
-				for (int i = 0; i < 3; i++) {
-					if (volt[0] > 6000) {
-						break;
-					}
-					low_input = true;
-				}
-			} else {
-				low_input = false;
-			}
-			screen.pushInputPower(volt[0], amp[0], watt[0]);
-		}
-	}
-}
 void logTask(void *parameter)
 {
 	char buffer_input[30];
@@ -157,7 +98,6 @@ void inputTask(void *parameter)
 		cur_time = millis();
 		for (int i = 0; i < 4; i++) {
 			if (button[i].checkPressed() == true) {
-				//get_memory_info();
 				screen.getBtnPress(i, cur_time);
 			}
 		}
@@ -235,7 +175,6 @@ void loop() {
 		}
 		screen.pushInputPower(volt[0], amp[0], watt[0]);
 	}
-		screen.run();
 }
 
 void get_memory_info(void)
