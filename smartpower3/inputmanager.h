@@ -10,7 +10,7 @@ void initEncoder(void *param);
 struct dial_t {
 	int8_t cnt;
 	bool direct;
-	uint8_t step;
+	uint8_t step = 1;
 };
 
 class Button

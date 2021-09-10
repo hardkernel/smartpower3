@@ -7,13 +7,6 @@ uint32_t ctime1 = 0;
 #define LED2	13
 #define LED1	2
 
-#define FAN		12
-
-#define FREQ	5000
-#define RESOLUTION	8
-
-uint32_t fps_ch0;
-
 void setup(void) {
 	ARDUINOTRACE_INIT(500000);
 	Serial.begin(500000);
@@ -144,7 +137,7 @@ void inputTask(void *parameter)
 			}
 		}
 		if (dial.cnt != 0) {
-			screen.countDial(dial.cnt, dial.direct, cur_time);
+			screen.countDial(dial.cnt, dial.direct, dial.step, cur_time);
 			dial.cnt = 0;
 		}
 		screen.setTime(cur_time);

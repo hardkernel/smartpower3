@@ -544,6 +544,8 @@ void Screen::changeVolt(screen_mode_t mode)
 	if (activated == STATE_VOLT0) {
 		if (dial_cnt < -(volt_set/100 - 30))
 			dial_cnt = -(volt_set/100 - 30);
+		else if (dial_cnt + (volt_set/100) > 200)
+			dial_cnt = 200 - (volt_set/100);
 		if (mode == BASE_MOVE) {
 			channel[0]->setVolt(dial_cnt);
 			Serial.println("set Volt!");
@@ -570,6 +572,8 @@ void Screen::changeVolt(screen_mode_t mode)
 	} else if (activated == STATE_VOLT1) {
 		if (dial_cnt < -(volt_set/100 - 30))
 			dial_cnt = -(volt_set/100 - 30);
+		else if (dial_cnt + (volt_set/100) > 200)
+			dial_cnt = 200 - (volt_set/100);
 		if (mode == BASE_MOVE) {
 			channel[1]->setVolt(dial_cnt);
 			if (dial_cnt != 0) {
@@ -604,12 +608,12 @@ void Screen::isrSTPD01()
 	}
 }
 
-void Screen::countDial(int8_t dial_cnt, bool direct, uint32_t milisec)
+void Screen::countDial(int8_t dial_cnt, bool direct, uint8_t step, uint32_t milisec)
 {
-	this->dial_cnt += dial_cnt;
+	this->dial_cnt += dial_cnt*step;
 	this->dial_time = milisec;
 	this->dial_direct = direct;
-	//Serial.printf("%d, %d\n\r", this->dial_cnt, this->dial_time);
+	this->dial_step = step;
 }
 
 void Screen::setTime(uint32_t milisec)

@@ -45,7 +45,7 @@ public:
 	void drawScreen(void);
 	void activate();
 	void activate_setting();
-	void countDial(int8_t mode_count, bool direct, uint32_t milisec);
+	void countDial(int8_t mode_count, bool direct, uint8_t step, uint32_t milisec);
 	void deActivate();
 	void deActivateSetting();
 	void getBtnPress(uint8_t idx, uint32_t cur_time);
@@ -81,10 +81,11 @@ private:
 	uint32_t time_print[2] = {0, 0};
 	int8_t onoff[2] = {2, 2};
 	bool btn_pressed[4] = {false,};
-	int8_t dial_cnt = 0;
-	int8_t dial_cnt_old;
+	int16_t dial_cnt = 0;
+	int16_t dial_cnt_old;
 	bool dial_direct;
 	uint8_t dial_state;
+	uint8_t dial_step;
 	void drawBase(void);
 	void drawBaseEdit(void);
 	void drawBaseMove(void);
