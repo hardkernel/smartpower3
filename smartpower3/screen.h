@@ -6,7 +6,6 @@
 #include "header.h"
 #include "setting.h"
 #include <STPD01.h>
-#include <Adafruit_BME280.h>
 
 enum screen_mode_t {
 	BASE = 0,
