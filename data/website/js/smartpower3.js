@@ -192,10 +192,10 @@ $(document).ready(() => {
     webSocket.close();
   }
 
-  // Request the current power information every 500 ms
+  // Request the current power information every 1 second
   setInterval(() => {
     webSocket.send(JSON.stringify({
       command: 1, // The command number for getting current power information
     }));
-  }, 500);
+  }, 1000);
 });
