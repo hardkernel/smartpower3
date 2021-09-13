@@ -17,30 +17,11 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 	current->fnd_init(NUM_OF_FND, 2, true, x, Y_CURRENT + y, FG_COLOR, BG_COLOR);
 	watt->fnd_init(NUM_OF_FND, 2, true, x, Y_WATT + y, FG_COLOR, BG_COLOR);
 
-	/*
-	 * Rev0.4 sptd01 address
-	 * I2CA : 0x5
-	 * I2CB : 0x4
-	 * stpd01->begin(0x5 -(channel*1), theWire);
-	 *
-	 * Rev1.0 sptd01 address
-	 * I2CA : 0x5
-	 * I2CB : 0x7
-	 * stpd01->begin(0x5 +(channel*2), theWire);
-	 */
 	stpd01 = new STPD01(0x5 + (channel*2), theWire);
 
 	_volt = new Component(tft, 48, 22, 4);
 	_current = new Component(tft, 48, 22, 4);
 	stpd = new Component(tft, 38, 16, 2);
-	/*
-
-	for (int i = 0; i < 8; i++) {
-		int_stat[i] = new Component(tft, 14, 22, 2);
-		int_latch[i] = new Component(tft, 14, 22, 2);
-		int_mask[i] = new Component(tft, 14, 22, 2);
-	}
-	*/
 	pinMode(int_stpd01[channel], INPUT_PULLUP);
 }
 
@@ -72,19 +53,6 @@ bool Channel::isAvailableSTPD01()
 	return 1;
 }
 
-void Channel::initPower()
-{
-	/*
-	if (test() != 1)
-		delay(100);
-		*/
-	off();
-}
-
-void Channel::deleteScreen()
-{
-}
-
 void Channel::initScreen()
 {
 	_volt->setCoordinate(x + 145, y + 5);
@@ -93,23 +61,6 @@ void Channel::initScreen()
 	_current->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
 	_current->setCoordinate(x + 145, y + 5 + Y_CURRENT);
 	_current->pushValue(current_limit);
-
-	/*
-	tft->drawString("Status", x, y + 220, 2);
-	tft->drawString("Latch", x, y + 235, 2);
-	tft->drawString("Mask", x, y + 250, 2);
-	for (int i = 0; i < 8; i++) {
-		int_stat[i]->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
-		int_stat[i]->setCoordinate(x + 90 + (i*15), y + 220);
-		int_stat[i]->draw(String("1"));
-		int_latch[i]->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
-		int_latch[i]->setCoordinate(x + 90 + (i*15), y + 235);
-		int_latch[i]->draw(String("1"));
-		int_mask[i]->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
-		int_mask[i]->setCoordinate(x + 90 + (i*15), y + 250);
-		int_mask[i]->draw(String("1"));
-	}
-	*/
 
 	//FG_DISABLED, BG_DISABLED
 	//stpd->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
@@ -142,16 +93,6 @@ uint8_t Channel::getIntStatus(void)
 uint8_t Channel::getIntMask(void)
 {
 	return stpd01->readIntMask();
-}
-
-void Channel::initSTPD01(void)
-{
-	//detachInterrupt(digitalPinToInterrupt(pin))
-	/*
-	if (enabled stpd01)
-		pinMode(en_stpd01[channel], OUTPUT);
-	digitalWrite(en_stpd01[channel], HIGH);
-	*/
 }
 
 void Channel::enable(void)
@@ -416,49 +357,12 @@ void Channel::monitorInterrupt()
 	stpd01->monitorInterrupt(channel);
 }
 
-void Channel::clearInterruptUI(void)
-{
-	for (int i = 0; i < 8; i++) {
-		int_stat[i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
-		int_stat[i]->draw(String("0"));
-		int_latch[i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
-		int_latch[i]->draw(String("0"));
-		int_mask[i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
-		int_mask[i]->draw(String("0"));
-	}
-}
-
 uint8_t Channel::checkInterrupt(void)
 {
 	uint8_t reg_stat, reg_latch, reg_mask;
 	reg_latch = stpd01->readIntLatch();
 	reg_stat = stpd01->readIntStatus();
 	reg_mask = stpd01->readIntMask();
-	/*
-	for (int i = 0; i < 8; i++) {
-		if (reg_stat & (1 << i)) {
-			int_stat[7-i]->setTextColor(TFT_YELLOW, TFT_BLACK);
-			int_stat[7-i]->draw(String("1"));
-		} else {
-			int_stat[7-i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
-			int_stat[7-i]->draw(String("0"));
-		}
-		if (reg_latch & (1 << i)) {
-			int_latch[7-i]->setTextColor(TFT_YELLOW, TFT_BLACK);
-			int_latch[7-i]->draw(String("1"));
-		} else {
-			int_latch[7-i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
-			int_latch[7-i]->draw(String("0"));
-		}
-		if (reg_mask & (1 << i)) {
-			int_mask[7-i]->setTextColor(TFT_YELLOW, TFT_BLACK);
-			int_mask[7-i]->draw(String("1"));
-		} else {
-			int_mask[7-i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
-			int_mask[7-i]->draw(String("0"));
-		}
-	}
-	*/
 	
 	return reg_latch;
 }
