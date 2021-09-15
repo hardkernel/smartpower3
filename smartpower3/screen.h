@@ -67,6 +67,7 @@ public:
 	void disablePower();
 	void setIntFlag(uint8_t channel);
 	uint16_t getLogInterval(void);
+	uint8_t getIntStat(uint8_t channel);
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
@@ -111,4 +112,5 @@ private:
 	uint16_t time_off = 0;
 	uint32_t fnd_time = 0;
 	bool enabled_stpd01[2] = {0,};
+	uint8_t int_stat[2] = {0,};
 };

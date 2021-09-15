@@ -604,8 +604,13 @@ void Screen::isrSTPD01()
 {
 	for (int i = 0; i < 2; i++) {
 		channel[i]->isAvailableSTPD01();
-		channel[i]->checkInterruptStat();
+		int_stat[i] = channel[i]->checkInterruptStat();
 	}
+}
+
+uint8_t Screen::getIntStat(uint8_t channel)
+{
+	return int_stat[channel];
 }
 
 void Screen::countDial(int8_t dial_cnt, bool direct, uint8_t step, uint32_t milisec)
