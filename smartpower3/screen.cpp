@@ -2,6 +2,8 @@
 #include <ArduinoTrace.h>
 
 bool Screen::_int = false;
+bool Screen::remoteSetupRequested = false;
+RemoteSetupData Screen::remoteSetupData = { RS_NONE, 0, };
 
 Screen::Screen()
 {
@@ -35,6 +37,7 @@ void Screen::run()
 {
 	checkOnOff();
 	drawScreen();
+	remoteSetup();
 
 	/*
 	if (btn_pressed[1]) {
@@ -644,6 +647,86 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 		dial_time = cur_time;
 		break;
 	}
+}
+
+void Screen::remoteSetup() {
+	if (remoteSetupRequested) {
+		switch (remoteSetupData.mode) {
+			case RS_NONE:
+				// Idle state - do nothing
+				break;
+			case RS_VOLTAGE: {
+				String sysParamKey = String("voltage" + remoteSetupData.targetChannel);
+				channel[remoteSetupData.targetChannel]->setVolt(remoteSetupData.voltage, 1);
+				setSysParam((char *) sysParamKey.c_str(), channel[remoteSetupData.targetChannel]->getVolt() / 1000.0);
+				break;
+			}
+			case RS_CURRENT_LIMIT: {
+				String sysParamKey = String("current_limit" + remoteSetupData.targetChannel);
+				channel[remoteSetupData.targetChannel]->setCurrentLimit(remoteSetupData.currentLimit);
+				setSysParam((char *) sysParamKey.c_str(), channel[remoteSetupData.targetChannel]->getCurrentLimit() / 10.0);
+				break;
+			}
+			case RS_BACKLIGHT_LEVEL: {
+				// TODO: Backlight level should be converted to 7 levels or get the value as 7-level
+				// setting->changeBacklight(remoteSetupData.backlightLevel);
+				// setSysParam("backlight_level", remoteSetupData.backlightLevel);
+				break;
+			}
+			case RS_FAN_SPEED: {
+				// TODO: Fanspeed level should be converted to 7 levels or get the value as 7-level
+				// setting->changeFan(remoteSetupData.fanSpeed);
+				// setSysParam("fan_speed", remoteSetupData.fanSpeed);
+				break;
+			}
+			case RS_LOG_INTERVAL: {
+				// TODO: Log interval should be converted to 7 levels or get the value as 7-level
+				// setting->changeLogInterval(remoteSetupData.logInterval);
+
+				// TODO: Won't save the log interval level but still remain this line for a chance
+				// setSysParam("log_interval", remoteSetupData.logInterval);
+				break;
+			}
+		}
+
+		remoteSetupData.mode = RS_NONE;
+		remoteSetupRequested = false;
+	}
+}
+
+void Screen::remoteSetVoltage(uint8_t channel, float voltage) {
+	remoteSetupData.targetChannel = channel;
+	remoteSetupData.voltage = voltage;
+	remoteSetupData.mode = RS_VOLTAGE;
+
+	remoteSetupRequested = true;
+}
+
+void Screen::remoteSetCurrentLimit(uint8_t channel, float current) {
+	remoteSetupData.targetChannel = channel;
+	remoteSetupData.currentLimit = current;
+	remoteSetupData.mode = RS_CURRENT_LIMIT;
+
+	remoteSetupRequested = true;
+}
+
+void Screen::remoteSetSettings(state_setting mode, uint16_t value) {
+	switch (mode) {
+		case STATE_BL:
+			remoteSetupData.backlightLevel = value;
+			remoteSetupData.mode = RS_BACKLIGHT_LEVEL;
+			break;
+		case STATE_FAN:
+			remoteSetupData.fanSpeed = value;
+			remoteSetupData.mode = RS_FAN_SPEED;
+			break;
+		case STATE_LOG:
+			remoteSetupData.logInterval = value;
+			remoteSetupData.mode = RS_LOG_INTERVAL;
+			break;
+	}
+
+	remoteSetupRequested = true;
 }
 
 void Screen::readFile(const char * path){

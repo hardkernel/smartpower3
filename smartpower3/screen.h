@@ -1,3 +1,5 @@
+#pragma once
+
 #include "FS.h"
 #include "SPIFFS.h"
 #include <Arduino.h>
@@ -29,9 +31,28 @@ enum state {
 enum state_setting {
 	STATE_LOG = 0,
 	STATE_FAN,
-	STATE_BL,	
+	STATE_BL,
 	STATE_SETTING,
 	STATE_NONE
+};
+
+enum RemoteSetupMode {
+	RS_NONE = 0,
+	RS_VOLTAGE,
+	RS_CURRENT_LIMIT,
+	RS_BACKLIGHT_LEVEL,
+	RS_FAN_SPEED,
+	RS_LOG_INTERVAL
+};
+
+struct RemoteSetupData {
+	RemoteSetupMode mode;
+	uint8_t targetChannel;
+	uint8_t voltage;
+	uint8_t currentLimit;
+	uint8_t backlightLevel;
+	uint8_t fanSpeed;
+	uint8_t logInterval;
 };
 
 class Screen
@@ -68,6 +89,9 @@ public:
 	void disablePower();
 	void setIntFlag(uint8_t channel);
 	uint16_t getLogInterval(void);
+	static void remoteSetVoltage(uint8_t channel, float volt);
+	static void remoteSetCurrentLimit(uint8_t channel, float current);
+	static void remoteSetSettings(state_setting mode, uint16_t value);
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
@@ -111,4 +135,7 @@ private:
 	uint16_t time_off = 0;
 	uint32_t fnd_time = 0;
 	bool enabled_stpd01[2] = {0,};
+	void remoteSetup();
+	static bool remoteSetupRequested;
+	static RemoteSetupData remoteSetupData;
 };
