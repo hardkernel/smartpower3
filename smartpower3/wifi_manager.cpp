@@ -32,11 +32,6 @@ WifiManager::WifiManager() {
 	wifiServiceState = WIFI_SERVICE_OFF;
 }
 
-void WifiManager::enrollScreen(Screen *screen) {
-	serialLogLine("Enrolling SmartPower 3 screen instance...");
-	spScreen = screen;
-}
-
 void WifiManager::init() {
 	webServer = new AsyncWebServer(WIFI_SERVER_PORT);
 	webSocket = new AsyncWebSocket(WIFI_SOCKET_URL);
@@ -300,16 +295,32 @@ void WifiManager::onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient 
 		DynamicJsonDocument receivedJsonDoc(1024);
 		deserializeJson(receivedJsonDoc, (char *) data);
 
-		// The received JSON object would be like this:
 		/*
+		 * The receiving JSON object has a command number which is one of the below:
+		 * - 1: get the current power (power settings for each channel)
+		 * - 2: get the current device settings (backlight level, fan level, ...)
+		 * - 3: set the power/device related settings (activity, voltage, current limit for each channel, backlight level, fanspeed level, ...)
+		 * >>> These numbers equivalent to the SocketCommand enum values
+		 *
+		 * Here is the example of the received JSON object:
 		{
-			"command": 1
+			"command": 1,
+			"data": {
+				"channel": 0,
+				"channelPowerSwitch": false,
+				"voltage": 0,
+				"currentLimit": 0,
+				"backlightLevel": 0,
+				"fanSpeedLevel": 0,
+				"logIntervalLevel": 0,
+				"apName": "",
+				"apPassword": "",
+			},
 		}
 		*/
 		switch (static_cast<SocketCommand>((int) receivedJsonDoc["command"])) {
 			case SOCKET_COMMAND_GET_CURRENT_POWER: {
-				actualJsonSize = JSON_ARRAY_SIZE(MAX_CHANNEL_NUM) + JSON_OBJECT_SIZE(2) + MAX_CHANNEL_NUM * JSON_OBJECT_SIZE(5) + MAX_CHANNEL_NUM * WIFI_EXTRA_CAPACITY_FOR_JSON;
-
+				actualJsonSize = JSON_ARRAY_SIZE(MAX_CHANNEL_NUM) + JSON_OBJECT_SIZE(2) + MAX_CHANNEL_NUM * JSON_OBJECT_SIZE(5) + 230;
 				// At least 1024 is recommended for heap allocation
 				DynamicJsonDocument jsonDoc(actualJsonSize < 1024 ? 1024 : actualJsonSize);
 
@@ -320,16 +331,20 @@ void WifiManager::onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient 
 						{
 							"channel": 0,
 							"active": true,
-							"voltage": "12.0",
-							"ampere": "3.0",
-							"watt": "36.0"
+							"voltage": "12000",
+							"ampere": "3000",
+							"watt": "36000",
+							"setVoltage": "12000",
+							"setCurrentLimit": "30",
 						},
 						{
 							"channel": 1,
 							"active": false,
-							"voltage": "5.0",
-							"ampere": "0.0",
-							"watt": "0.0"
+							"voltage": "5000",
+							"ampere": "0",
+							"watt": "0",
+							"setVoltage": "5000",
+							"setCurrentLimit": "30",
 						}
 					]
 				}
@@ -343,7 +358,81 @@ void WifiManager::onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient 
 					jsonObj["voltage"] = currentPower[i].voltage;
 					jsonObj["ampere"] = currentPower[i].ampere;
 					jsonObj["watt"] = currentPower[i].watt;
+					jsonObj["setVoltage"] = currentPower[i].setVoltage;
+					jsonObj["setCurrentLimit"] = currentPower[i].setCurrentLimit;
 				}
+
+				serializeJson(jsonDoc, resultJson);
+
+				// Delete the JSON document
+				jsonDoc.clear();
+				break;
+			}
+			case SOCKET_COMMAND_GET_SETTINGS: {
+
+				break;
+			}
+			case SOCKET_COMMAND_SET_SETTINGS: {
+				JsonObject dataObject = receivedJsonDoc["data"];
+
+				if (dataObject["channel"] != nullptr) {
+					int channel = dataObject["channel"];
+
+					if (dataObject["channelPowerSwitch"] != nullptr) {
+						if (dataObject["channelPowerSwitch"] == true) {
+							Screen::remoteSwitchChannelOnoff(channel);
+						} else {
+							// Do nothing
+						}
+					}
+
+					if (dataObject["voltage"] != nullptr) {
+						Screen::remoteSetVoltage(channel, dataObject["voltage"]);
+					}
+
+					if (dataObject["currentLimit"] != nullptr) {
+						Screen::remoteSetCurrentLimit(channel, dataObject["currentLimit"]);
+					}
+				}
+
+				if (dataObject["backlightLevel"] != nullptr) {
+					// TODO: implement this condition
+					// Serial.println("WiFi: DEBUG: new backlightLevel: " + String(dataObject["backlightLevel"]));
+				}
+
+				if (dataObject["fanSpeedLevel"] != nullptr) {
+					// TODO: implement this condition
+					// Serial.println("WiFi: DEBUG: new fanSpeedLevel: " + String(dataObject["fanSpeedLevel"]));
+				}
+
+				if (dataObject["logIntervalLevel"] != nullptr) {
+					// TODO: implement this condition
+					// Serial.println("WiFi: DEBUG: new logIntervalLevel: " + String(dataObject["logIntervalLevel"]));
+				}
+
+				if (dataObject["apName"] != nullptr && dataObject["apPassword"] != nullptr) {
+					// TODO: implement this condition
+					// Serial.println("WiFi: DEBUG: new AP auth: " + String(dataObject["apName"]) + "/" + String(dataObject["apPassword"]));
+				}
+
+				// At least 1024 is recommended for heap allocation
+				DynamicJsonDocument jsonDoc(1024);
+
+				/*
+				{
+					"type": "log",
+					"data": {
+						"message": "New settings saved",
+						"level": 0,
+					}
+				}
+				*/
+				// TODO: Needs to check it is saved actually
+				jsonDoc["type"] = "log";
+				JsonArray jsonArr = jsonDoc.createNestedArray("data");
+				JsonObject jsonObj = jsonArr.createNestedObject();
+				jsonObj["message"] = "New settings saved";
+				jsonObj["level"] = 0;
 
 				serializeJson(jsonDoc, resultJson);
 
@@ -358,22 +447,22 @@ void WifiManager::onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient 
 				actualJsonSize = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(1) + 70;
 
 				// At least 1024 is recommended for heap allocation
-				DynamicJsonDocument jsonDoc(actualJsonSize < 1024 ? 1024 : actualJsonSize);
+				DynamicJsonDocument jsonDoc(1024);
 
 				/*
 				{
 					"type": "log",
-					"data": [
-						{
-							"message": 0,
-						}
-					]
+					"data": {
+						"message": "Unknown command",
+						"level": 2
+					}
 				}
 				*/
 				jsonDoc["type"] = "log";
 				JsonArray jsonArr = jsonDoc.createNestedArray("data");
 				JsonObject jsonObj = jsonArr.createNestedObject();
 				jsonObj["message"] = "Unknown command - Error occurs";
+				jsonObj["level"] = 2;
 
 				serializeJson(jsonDoc, resultJson);
 

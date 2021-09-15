@@ -8,6 +8,7 @@
   <link rel="icon" type="image/png" href="image/favicon.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   <link rel="stylesheet" href="https://uicdn.toast.com/chart/latest/toastui-chart.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 
@@ -42,118 +43,135 @@
   <!-- Begin page content -->
   <main class="flex-shrink-0">
     <div id="sp3-contents my-10" class="container">
-
-      <div id="sp3-power-channel-1"" class="row my-3">
-        <div class="col-md-3">
-
-          <div class="row">
-            <div class="card mb-3 shadow-lg">
-              <div class="card-body">
-
-                <div class="row">
-                  <div class="card-title font-monospace lead">Channel A</div>
+      <div class="row mt-3">
+        <div class="col-md-6 sp3-power-channel-0">
+          <div class="card mb-3 shadow-lg">
+            <div class="card-body">
+              <div class="row">
+                <div class="card-title d-flex justify-content-between">
+                  <span class="font-monospace lead">Channel A</span>
+                  <button type="button" class="btn btn-secondary sp3-power-button fas fa-power-off" />
                 </div>
-
-                <div class="row">
-                  <div class="d-flex justify-content-between pt-2">
-                    <h6 class="card-title font-monospace">Voltage</h5>
-                    <span class="text-muted">V</span>
-                  </div>
-                  <div class="sp3-sevenseg-voltage"></div>
-                  <div class="d-flex justify-content-between pt-2">
-                    <h6 class="card-title font-monospace">Ampere</h5>
-                    <span class="text-muted">A</span>
-                  </div>
-                  <div class="sp3-sevenseg-ampere"></div>
-                  <div class="d-flex justify-content-between pt-2">
-                    <h6 class="card-title font-monospace">Watt</h5>
-                    <span class="text-muted">W</span>
-                  </div>
-                  <div class="sp3-sevenseg-watt"></div>
+              </div>
+              <div class="row">
+                <div class="d-flex justify-content-between pt-2">
+                  <h6 class="card-title font-monospace">Voltage</h5>
+                  <span class="text-muted">V</span>
                 </div>
-
-                <div class="row pt-4">
-                  <div class="row">
-                    <label for="sp3-voltage-adjustment" class="form-label font-monospace">Voltage Adjustment</label>
-                    <input type="range" class="form-range" min="5" max="19" step="0.1" id="sp3-voltage-adjustment">
-                  </div>
-                  <div class="row pt-2">
-                    <label for="sp3-ampere-current-limit" class="form-label font-monospace">Ampere Current Limit</label>
-                    <input type="range" class="form-range" min="0.1" max="3" step="0.1" id="sp3-ampere-current-limit">
+                <div class="sp3-sevenseg-voltage"></div>
+                <div class="d-flex justify-content-between pt-2">
+                  <h6 class="card-title font-monospace">Ampere</h5>
+                  <span class="text-muted">A</span>
+                </div>
+                <div class="sp3-sevenseg-ampere"></div>
+                <div class="d-flex justify-content-between pt-2">
+                  <h6 class="card-title font-monospace">Watt</h5>
+                  <span class="text-muted">W</span>
+                </div>
+                <div class="sp3-sevenseg-watt w-80"></div>
+              </div>
+              <div class="row pt-4">
+                <div class="d-flex justify-content-between">
+                  <label class="form-label font-monospace">Voltage Adjustment</label>
+                  <div class="d-flex justify-content-between">
+                    <span class="sp3-voltage-adjustment-value fw-bold">0.0</span>
+                    <span class="text-muted ps-3">V</span>
                   </div>
                 </div>
-
+                <div class="d-flex justify-content-between">
+                  <input type="range" class="form-range sp3-voltage-adjustment-input pt-2">
+                  <button class="btn btn-outline-primary btn-sm sp3-voltage-adjustment-apply ms-3" type="button">Apply</button>
+                </div>
+                <div class="d-flex justify-content-between pt-4">
+                  <label class="form-label font-monospace">Ampere Current Limit</label>
+                  <div class="d-flex justify-content-between">
+                    <span class="sp3-ampere-current-limit-value fw-bold">0.0</span>
+                    <span class="text-muted ps-3">A</span>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <input type="range" class="form-range sp3-ampere-current-limit-input pt-2">
+                  <button class="btn btn-outline-primary btn-sm sp3-ampere-current-limit-apply ms-3" type="button">Apply</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-
-        <div class="col-md-9">
-          <div class="card mb-5 shadow-lg">
+        <div class="col-md-6 sp3-power-channel-1">
+          <div class="card mb-3 shadow-lg">
             <div class="card-body">
-              <h6 class="card-title font-monospace">Realtime Chart</h5>
-              <div class="sp3-line-chart" style="width: 100%; height: 30vh"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      <div id="sp3-power-channel-2"" class="row my-3">
-        <div class="col-md-3">
-
-          <div class="row">
-            <div class="card mb-3 shadow-lg">
-              <div class="card-body">
-
-                <div class="row">
-                  <div class="card-title font-monospace lead">Channel A</div>
+              <div class="row">
+                <div class="card-title d-flex justify-content-between">
+                  <span class="font-monospace lead">Channel B</span>
+                  <button type="button" class="btn btn-secondary sp3-power-button fas fa-power-off" />
                 </div>
-
-                <div class="row">
-                  <div class="d-flex justify-content-between pt-2">
-                    <h6 class="card-title font-monospace">Voltage</h5>
-                    <span class="text-muted">V</span>
-                  </div>
-                  <div class="sp3-sevenseg-voltage"></div>
-                  <div class="d-flex justify-content-between pt-2">
-                    <h6 class="card-title font-monospace">Ampere</h5>
-                    <span class="text-muted">A</span>
-                  </div>
-                  <div class="sp3-sevenseg-ampere"></div>
-                  <div class="d-flex justify-content-between pt-2">
-                    <h6 class="card-title font-monospace">Watt</h5>
-                    <span class="text-muted">W</span>
-                  </div>
-                  <div class="sp3-sevenseg-watt"></div>
+              </div>
+              <div class="row">
+                <div class="d-flex justify-content-between pt-2">
+                  <h6 class="card-title font-monospace">Voltage</h5>
+                  <span class="text-muted">V</span>
                 </div>
-
-                <div class="row pt-4">
-                  <div class="row">
-                    <label for="sp3-voltage-adjustment" class="form-label font-monospace">Voltage Adjustment</label>
-                    <input type="range" class="form-range" min="5" max="19" step="0.1" id="sp3-voltage-adjustment">
-                  </div>
-                  <div class="row pt-2">
-                    <label for="sp3-ampere-current-limit" class="form-label font-monospace">Ampere Current Limit</label>
-                    <input type="range" class="form-range" min="0.1" max="3" step="0.1" id="sp3-ampere-current-limit">
+                <div class="sp3-sevenseg-voltage"></div>
+                <div class="d-flex justify-content-between pt-2">
+                  <h6 class="card-title font-monospace">Ampere</h5>
+                  <span class="text-muted">A</span>
+                </div>
+                <div class="sp3-sevenseg-ampere"></div>
+                <div class="d-flex justify-content-between pt-2">
+                  <h6 class="card-title font-monospace">Watt</h5>
+                  <span class="text-muted">W</span>
+                </div>
+                <div class="sp3-sevenseg-watt"></div>
+              </div>
+              <div class="row pt-4">
+                <div class="d-flex justify-content-between">
+                  <label class="form-label font-monospace">Voltage Adjustment</label>
+                  <div class="d-flex justify-content-between">
+                    <span class="sp3-voltage-adjustment-value fw-bold">0.0</span>
+                    <span class="text-muted ps-3">V</span>
                   </div>
                 </div>
-
+                <div class="d-flex justify-content-between">
+                  <input type="range" class="form-range sp3-voltage-adjustment-input pt-2">
+                  <button class="btn btn-outline-primary btn-sm sp3-voltage-adjustment-apply ms-3" type="button">Apply</button>
+                </div>
+                <div class="d-flex justify-content-between pt-4">
+                  <label class="form-label font-monospace">Ampere Current Limit</label>
+                  <div class="d-flex justify-content-between">
+                    <span class="sp3-ampere-current-limit-value fw-bold">0.0</span>
+                    <span class="text-muted ps-3">A</span>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <input type="range" class="form-range sp3-ampere-current-limit-input pt-2">
+                  <button class="btn btn-outline-primary btn-sm sp3-ampere-current-limit-apply ms-3" type="button">Apply</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-
-        <div class="col-md-9">
-          <div class="card mb-5 shadow-lg">
+      </div>
+      <div class="row sp3-power-channel-0">
+        <div class="col-md-12">
+          <div class="card mb-3 shadow-lg">
             <div class="card-body">
-              <h6 class="card-title font-monospace">Realtime Chart</h5>
-              <div class="sp3-line-chart" style="width: 100%; height: 30vh"></div>
+              <div class="card-title font-monospace lead">Channel A</div>
+              <div class="sp3-line-chart" style="width: 100%; height: 25vh"></div>
             </div>
           </div>
         </div>
       </div>
-
+      <div class="row sp3-power-channel-1">
+        <div class="col-md-12">
+          <div class="card mb-3 shadow-lg">
+            <div class="card-body">
+              <div class="card-title font-monospace lead">Channel B</div>
+              <div class="sp3-line-chart" style="width: 100%; height: 25vh"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <footer class="footer mt-auto py-3 bg-light">

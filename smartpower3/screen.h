@@ -38,6 +38,7 @@ enum state_setting {
 
 enum RemoteSetupMode {
 	RS_NONE = 0,
+	RS_ONOFF,
 	RS_VOLTAGE,
 	RS_CURRENT_LIMIT,
 	RS_BACKLIGHT_LEVEL,
@@ -48,8 +49,8 @@ enum RemoteSetupMode {
 struct RemoteSetupData {
 	RemoteSetupMode mode;
 	uint8_t targetChannel;
-	uint8_t voltage;
-	uint8_t currentLimit;
+	uint16_t voltage;
+	uint16_t currentLimit;
 	uint8_t backlightLevel;
 	uint8_t fanSpeed;
 	uint8_t logInterval;
@@ -89,6 +90,9 @@ public:
 	void disablePower();
 	void setIntFlag(uint8_t channel);
 	uint16_t getLogInterval(void);
+	uint16_t getVoltSet(uint8_t channel);
+	uint16_t getCurrentLimitSet(uint8_t channel);
+	static void remoteSwitchChannelOnoff(uint8_t channel);
 	static void remoteSetVoltage(uint8_t channel, float volt);
 	static void remoteSetCurrentLimit(uint8_t channel, float current);
 	static void remoteSetSettings(state_setting mode, uint16_t value);

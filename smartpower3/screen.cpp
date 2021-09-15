@@ -497,6 +497,14 @@ uint16_t Screen::getLogInterval(void)
 	return setting->getLogIntervalValue();
 }
 
+uint16_t Screen::getVoltSet(uint8_t ch) {
+	return channel[ch]->getVolt();
+}
+
+uint16_t Screen::getCurrentLimitSet(uint8_t ch) {
+	return channel[ch]->getCurrentLimit();
+}
+
 void Screen::drawScreen()
 {
 	switch (mode) {
@@ -655,15 +663,20 @@ void Screen::remoteSetup() {
 			case RS_NONE:
 				// Idle state - do nothing
 				break;
+			case RS_ONOFF: {
+				// If currently the channel is off, turn it on else turn it off
+				onoff[remoteSetupData.targetChannel] = onoff[remoteSetupData.targetChannel] == 0 ? 3 : 2;
+				break;
+			}
 			case RS_VOLTAGE: {
 				String sysParamKey = String("voltage" + remoteSetupData.targetChannel);
-				channel[remoteSetupData.targetChannel]->setVolt(remoteSetupData.voltage, 1);
+				channel[remoteSetupData.targetChannel]->setVolt(remoteSetupData.voltage, 2);
 				setSysParam((char *) sysParamKey.c_str(), channel[remoteSetupData.targetChannel]->getVolt() / 1000.0);
 				break;
 			}
 			case RS_CURRENT_LIMIT: {
 				String sysParamKey = String("current_limit" + remoteSetupData.targetChannel);
-				channel[remoteSetupData.targetChannel]->setCurrentLimit(remoteSetupData.currentLimit);
+				channel[remoteSetupData.targetChannel]->setCurrentLimit(remoteSetupData.currentLimit, 2);
 				setSysParam((char *) sysParamKey.c_str(), channel[remoteSetupData.targetChannel]->getCurrentLimit() / 10.0);
 				break;
 			}
@@ -692,6 +705,13 @@ void Screen::remoteSetup() {
 		remoteSetupData.mode = RS_NONE;
 		remoteSetupRequested = false;
 	}
+}
+
+void Screen::remoteSwitchChannelOnoff(uint8_t channel) {
+	remoteSetupData.targetChannel = channel;
+	remoteSetupData.mode = RS_ONOFF;
+
+	remoteSetupRequested = true;
 }
 
 void Screen::remoteSetVoltage(uint8_t channel, float voltage) {
@@ -723,6 +743,9 @@ void Screen::remoteSetSettings(state_setting mode, uint16_t value) {
 		case STATE_LOG:
 			remoteSetupData.logInterval = value;
 			remoteSetupData.mode = RS_LOG_INTERVAL;
+			break;
+		case STATE_SETTING:
+		default:
 			break;
 	}
 

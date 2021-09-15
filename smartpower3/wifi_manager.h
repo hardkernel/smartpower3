@@ -62,7 +62,9 @@ enum WifiConnectionState {
 
 enum SocketCommand {
 	SOCKET_COMMAND_NONE = 0,
-	SOCKET_COMMAND_GET_CURRENT_POWER
+	SOCKET_COMMAND_GET_CURRENT_POWER,
+	SOCKET_COMMAND_GET_SETTINGS,
+	SOCKET_COMMAND_SET_SETTINGS
 };
 
 struct WifiCurrentPower {
@@ -71,6 +73,8 @@ struct WifiCurrentPower {
 	uint16_t voltage;
 	uint16_t ampere;
 	uint16_t watt;
+	uint16_t setVoltage;
+	uint16_t setCurrentLimit;
 };
 
 class WifiManager {
@@ -84,7 +88,6 @@ public:
 
 	static WifiCurrentPower currentPower[2];
 
-	void enrollScreen(Screen *screen);
 	void init();
 	void start();
 	void stop();
@@ -100,7 +103,6 @@ public:
 private:
 	AsyncWebServer *webServer;
 	AsyncWebSocket *webSocket;
-	Screen *spScreen;
 	int discoveredApCount;
 
 	bool apConnected;

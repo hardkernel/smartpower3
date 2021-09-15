@@ -25,7 +25,6 @@ void setup(void) {
 	screen.begin(&I2CA);
 
 	wifiManager = WifiManager().instance();
-	wifiManager.enrollScreen(&screen);
 
 	initEncoder(&dial);
 
@@ -133,11 +132,19 @@ void loop() {
 		screen.pushPower(volt[1], amp[1], watt[1], 0);
 		wifiManager.setCurrentPower(
 			CHANNEL_0,
-			(WifiCurrentPower) {CHANNEL_0, true, volt[1], amp[1], watt[1]});
+			(WifiCurrentPower) {
+				CHANNEL_0, true,
+				volt[1], amp[1], watt[1],
+				screen.getVoltSet(CHANNEL_0), screen.getCurrentLimitSet(CHANNEL_0)
+			});
 	} else {
 		wifiManager.setCurrentPower(
 			CHANNEL_0,
-			(WifiCurrentPower) {CHANNEL_0, false, volt[1], amp[1], watt[1]});
+			(WifiCurrentPower) {
+				CHANNEL_0, false,
+				volt[1], amp[1], watt[1],
+				screen.getVoltSet(CHANNEL_0), screen.getCurrentLimitSet(CHANNEL_0)
+			});
 	}
 
 	if (onoff[1]) {
@@ -148,11 +155,19 @@ void loop() {
 		screen.pushPower(volt[2], amp[2], watt[2], 1);
 		wifiManager.setCurrentPower(
 			CHANNEL_1,
-			(WifiCurrentPower) {CHANNEL_1, true, volt[2], amp[2], watt[2]});
+			(WifiCurrentPower) {
+				CHANNEL_1, true,
+				volt[2], amp[2], watt[2],
+				screen.getVoltSet(CHANNEL_1), screen.getCurrentLimitSet(CHANNEL_1)
+			});
 	} else {
 		wifiManager.setCurrentPower(
 			CHANNEL_1,
-			(WifiCurrentPower) {CHANNEL_1, false, volt[2], amp[2], watt[2]});
+			(WifiCurrentPower) {
+				CHANNEL_1, false,
+				volt[2], amp[2], watt[2],
+				screen.getVoltSet(CHANNEL_1), screen.getCurrentLimitSet(CHANNEL_1)
+			});
 	}
 
 	if ((millis() - ctime1) > 500) {
