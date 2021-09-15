@@ -23,6 +23,8 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 
+#include "screen.h"
+
 // Soft AP mode configuration
 #define WIFI_SOFT_AP_SSID "SmartPower 3"
 #define WIFI_SOFT_AP_PASSWORD "12345678"
@@ -82,6 +84,7 @@ public:
 
 	static WifiCurrentPower currentPower[2];
 
+	void enrollScreen(Screen *screen);
 	void init();
 	void start();
 	void stop();
@@ -97,6 +100,7 @@ public:
 private:
 	AsyncWebServer *webServer;
 	AsyncWebSocket *webSocket;
+	Screen *spScreen;
 	int discoveredApCount;
 
 	bool apConnected;

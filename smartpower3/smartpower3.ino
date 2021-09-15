@@ -25,6 +25,7 @@ void setup(void) {
 	screen.begin(&I2CA);
 
 	wifiManager = WifiManager().instance();
+	wifiManager.enrollScreen(&screen);
 
 	initEncoder(&dial);
 

@@ -21,6 +21,7 @@
 #include "SPIFFS.h"
 
 #include "wifi_manager.h"
+#include "screen.h"
 
 WifiCurrentPower WifiManager::currentPower[MAX_CHANNEL_NUM] = { 0 };
 
@@ -29,6 +30,11 @@ WifiManager::WifiManager() {
 	discoveredApCount = -1;
 	apConnected = WIFI_AP_DISCONNECTED;
 	wifiServiceState = WIFI_SERVICE_OFF;
+}
+
+void WifiManager::enrollScreen(Screen *screen) {
+	serialLogLine("Enrolling SmartPower 3 screen instance...");
+	spScreen = screen;
 }
 
 void WifiManager::init() {
