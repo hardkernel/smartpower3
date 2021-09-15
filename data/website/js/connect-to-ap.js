@@ -81,6 +81,7 @@ $(document).ready(() => {
                     $.ajax("/api/is_sta_connected", {
                       method: "GET",
                       dataType: "json",
+                      ajax: true,
                       success: (data) => {
                         console.log("Results about STA connection: ", data);
                         if (data.established) {
@@ -102,7 +103,7 @@ $(document).ready(() => {
                         clearInterval(checkingStaConnInterval);
                       },
                     });
-                  }, 2000);
+                  }, 1000);
                 } else {
                   showApErrorPage("Requesting STA connection failed with unknown reason");
                 }
