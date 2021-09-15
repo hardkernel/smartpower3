@@ -1,3 +1,5 @@
+#pragma once
+
 #include "component.h"
 #include "fndwidget.h"
 #include <STPD01.h>
