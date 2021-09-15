@@ -31,15 +31,20 @@ public:
 	void activate(void);
 	void deActivate(void);
 	void setTextColor(uint16_t fg_color, uint16_t bg_color);
+	void setIconColor(uint16_t fg_color, uint16_t bg_color);
 	struct fnd* fnd_init (uint8_t cnt, uint8_t dot_pos, bool rbo,
 			uint16_t x, uint16_t y, uint16_t fg_color, uint16_t bg_color);
+	struct icon* icon_init (uint8_t nr_icon, uint16_t x, uint16_t y, uint16_t fg_color, uint16_t bg_color);
 	void fnd_dot_write(void);
+	void icon_update(bool forced=0, uint8_t channel=0);
 	void fnd_num_write(uint16_t f_pos);
 	void fnd_clear_all(void);
 	void fnd_update(bool forced=0);
 	void fnd_fb_write(int8_t f_pos, int8_t f_value, int16_t color);
 	void fnd_dd_clear(void);
 	uint16_t getValue(void);
+	void icon_clear_all(void);
+	void icon_input_write(void);
 	
 private:
 	uint8_t mode = 0;
@@ -47,6 +52,8 @@ private:
 	uint16_t y;
 	uint16_t width;
 	uint16_t height;
+	uint16_t width_icon;
+	uint16_t height_icon;
 	uint8_t font;
 	TFT_eSPI *tft;
 	uint16_t value;
@@ -55,6 +62,7 @@ private:
 	void drawOutLines(void);
 	void clearOutLines(void);
 	struct fnd *f;
+	struct icon *ic;
 };
 
 #endif

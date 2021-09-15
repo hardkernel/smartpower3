@@ -23,6 +23,8 @@
 
 #define BG_ENABLED     0x4D9      /* 00000 100110 11001 , 204, 204, 204 */
 #define FG_ENABLED     0xFFFF      /* 01100 011001 01100, 204, 204, 204 */
+#define BG_ENABLED_INT    TFT_RED      /* 01100 011001 01100, 204, 204, 204 */
+#define FG_ENABLED_INT    TFT_WHITE      /* 01100 011001 01100, 204, 204, 204 */
 
 class Component
 {
@@ -34,7 +36,7 @@ public:
 	void init(uint16_t fg_color, uint16_t bg_color, uint8_t size, uint8_t align);
 	void draw(bool force_update = false);
 	void draw(String s);
-	void draw(char *s);
+	void draw(const char[]);
 	void clear(void);
 	void setCoordinate(uint16_t x, uint16_t y);
 	void pushValue(uint16_t value);

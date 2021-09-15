@@ -66,11 +66,11 @@ void Screen::initScreen(void)
 	tft.fillRect(0, 35, 480, 285, TFT_BLACK);
 
 	for (int i = 0; i < 3; i++) {
-		tft.drawLine(0, 33 + i, 480, 33 + i, TFT_WHITE);
-		tft.drawLine(0, 250 + i, 480, 250 + i, TFT_WHITE);
+		tft.drawLine(0, 36 + i, 480, 36 + i, TFT_WHITE);
+		tft.drawLine(0, 270 + i, 480, 270 + i, TFT_WHITE);
 	}
 	for (int i = 0; i < 4; i++)
-		tft.drawLine(238 + i, 35, 238 + i, 320, TFT_WHITE);
+		tft.drawLine(238 + i, 38, 238 + i, 320, TFT_WHITE);
 
 	channel[0]->initScreen();
 	channel[1]->initScreen();
@@ -604,7 +604,7 @@ void Screen::isrSTPD01()
 {
 	for (int i = 0; i < 2; i++) {
 		channel[i]->isAvailableSTPD01();
-		//channel[i]->checkInterrupt();
+		channel[i]->checkInterruptStat();
 	}
 }
 

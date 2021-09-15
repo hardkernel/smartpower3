@@ -3,6 +3,7 @@
 #define HEADER_H
 
 #include "component.h"
+#include "fndwidget.h"
 
 class Header : public Component
 {
@@ -17,8 +18,6 @@ public:
 	bool getLowInput(void);
 	void setLowInput(bool low_input);
 	uint16_t getInputVoltage(void);
-	void lowIntPin();
-	void highIntPin();
 	void setDebug(void);
 
 private:
@@ -31,9 +30,9 @@ private:
 	bool low_input = 1;
 	uint8_t intPin = -1;
 	Component *input;
-	Component *int0;
 	Component *mode;
 	Component *display_mode;
+	FndWidget *icon_input;
 	uint16_t debug = 0;
 };
 

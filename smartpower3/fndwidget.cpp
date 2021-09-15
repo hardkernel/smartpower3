@@ -62,6 +62,33 @@ struct fnd* FndWidget::fnd_init(uint8_t cnt, uint8_t dot_pos, bool rbo,
 	return	f;
 }
 
+struct icon* FndWidget::icon_init(uint8_t nr_icon, uint16_t x, uint16_t y,
+		uint16_t fg_color, uint16_t bg_color)
+{
+	ic = (struct icon *)malloc(sizeof(struct icon));
+	if (ic == NULL) {
+		Serial.printf("fnd struct allocation fail!\n\r");
+		return NULL;
+	}
+
+	ic->x = x;
+	ic->y = y;
+	ic->bg_color 	= bg_color;
+	ic->fg_color 	= fg_color;
+	if (nr_icon == 9) {
+		ic->width	= 32;
+		ic->height	= 32;
+	} else {
+		ic->width	= IMG_OP_WIDTH;
+		ic->height	= IMG_OP_HEIGHT;
+	}
+	ic->nr_icon = nr_icon;
+
+	icon_clear_all();
+
+	return	ic;
+}
+
 void FndWidget::fnd_num_write(uint16_t f_pos)
 {
 	uint16_t	w_offset;
@@ -73,6 +100,11 @@ void FndWidget::fnd_num_write(uint16_t f_pos)
 
 	tft->pushImage(x + w_offset, y,
 			FONT_WIDTH, FONT_HEIGHT, &f->fb[0]);
+}
+
+void FndWidget::icon_clear_all(void)
+{
+	tft->fillRect(ic->x, ic->y, ic->width, ic->height, ic->bg_color);
 }
 
 void FndWidget::fnd_clear_all(void)
@@ -91,6 +123,68 @@ void FndWidget::fnd_clear_all(void)
 			f->fb[w + h * FONT_WIDTH] = f->bg_color;
 	}
 	tft->fillRect(x, y, f_width, FONT_HEIGHT, f->bg_color);
+}
+
+void FndWidget::icon_input_write()
+{
+	uint16_t	w, h, h_end, i_pos;
+	uint8_t		ic_mask;
+	const uint8_t	*ic_img;
+
+	w     = ic->x;
+	h     = ic->y;
+	h_end = h + 8;
+
+	ic_img = &IMG_INPUT_DATA[0];
+
+	for (ic_mask = 0x01; h < h_end; h++, ic_mask <<= 1) {
+		for (i_pos = 0; i_pos < 32; i_pos++) {
+			if (ic_img[i_pos] & ic_mask)
+				tft->drawPixel(w + i_pos, h, ic->fg_color);
+		}
+		for (i_pos = 0; i_pos < 32; i_pos++) {
+			if (ic_img[i_pos+32] & ic_mask)
+				tft->drawPixel(w + i_pos, h+8, ic->fg_color);
+		}
+		for (i_pos = 0; i_pos < 32; i_pos++) {
+			if (ic_img[i_pos+64] & ic_mask)
+				tft->drawPixel(w + i_pos, h+16, ic->fg_color);
+		}
+		for (i_pos = 0; i_pos < 32; i_pos++) {
+			if (ic_img[i_pos+96] & ic_mask)
+				tft->drawPixel(w + i_pos, h+24, ic->fg_color);
+		}
+	}
+}
+
+void FndWidget::icon_update(bool forced, uint8_t channel)
+{
+	uint16_t	w, h, h_end, i_pos;
+	uint8_t		ic_mask;
+	const uint8_t	*ic_img;
+
+	if (!ic->refresh && !forced) {
+		return;
+	}
+
+	ic->refresh = false;
+
+	w     = ic->x;
+	h     = ic->y;
+	h_end = h + 8;
+
+	ic_img = &IMG_ICON_TABLE[ic->nr_icon][0];
+
+	for (ic_mask = 0x01; h < h_end; h++, ic_mask <<= 1) {
+		for (i_pos = 0; i_pos < IMG_OP_WIDTH; i_pos++) {
+			if (ic_img[i_pos] & ic_mask)
+				tft->drawPixel(w + i_pos, h, ic->fg_color);
+		}
+		for (i_pos = 0; i_pos < IMG_OP_WIDTH; i_pos++) {
+			if (ic_img[i_pos+32] & ic_mask)
+				tft->drawPixel(w + i_pos, h+8, ic->fg_color);
+		}
+	}
 }
 
 void FndWidget::fnd_dot_write(void)
@@ -243,6 +337,14 @@ void FndWidget::setTextColor(uint16_t fg_color, uint16_t bg_color)
 	f->bg_color = bg_color;
 	f->dot_on = false;
 	fnd_dd_clear();
+}
+
+void FndWidget::setIconColor(uint16_t fg_color, uint16_t bg_color)
+{
+	if ((ic->fg_color != fg_color) || (ic->bg_color != bg_color))
+		ic->refresh = true;
+	ic->fg_color = fg_color;
+	ic->bg_color = bg_color;
 }
 
 void FndWidget::setCoordinate(uint16_t x, uint16_t y)

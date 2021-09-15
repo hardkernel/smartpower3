@@ -42,8 +42,9 @@ public:
 	void editCurrentLimit(float val);
 	uint16_t getVolt(void);
 	uint16_t getCurrentLimit(void);
-	void monitorInterrupt();
 	uint8_t checkInterrupt(void);
+	uint8_t checkInterruptLatch(void);
+	uint8_t checkInterruptStat(void);
 	bool isAvailableSTPD01();
 	uint8_t getIntStatus(void);
 	uint8_t getIntMask(void);
@@ -57,6 +58,8 @@ public:
 	void enable();
 	void isr(void);
 	void setIntFlag(void);
+	void drawInterrupt(void);
+	void drawPolarity(void);
 private:
 	bool activated;
 	TFT_eSPI *tft;
@@ -70,6 +73,7 @@ private:
 	Component *stpd;
 	FndWidget *current;
 	FndWidget *watt;
+	FndWidget *icon_op, *icon_sp, *icon_cc, *icon_tp, *icon_tw, *icon_ip;
 	STPD01 *stpd01;
 	uint8_t channel;
 	uint16_t x, y;
@@ -83,4 +87,5 @@ private:
 	uint8_t int_stpd01[2] = {PIN_INT_CH0, PIN_INT_CH1};
 #endif
 	bool flag_int = 0;
+	uint8_t latch = 0;
 };

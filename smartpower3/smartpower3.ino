@@ -11,7 +11,7 @@ void setup(void) {
 	ARDUINOTRACE_INIT(500000);
 	Serial.begin(500000);
 	TRACE();
-	I2CA.begin(15, 4, 100000);
+	I2CA.begin(15, 4, 10000);
 	I2CB.begin(21, 22, 400000);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);

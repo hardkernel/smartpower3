@@ -1,6 +1,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 #include "fnd_font_32x64.h"
+#include "icon.h"
 //#include "fnd_font_40x80.h"
 //#include "fnd_font_48x96.h"
 
@@ -9,6 +10,8 @@
 #define	DOT_POS		1
 #define	FG_COLOR	TFT_DARKGREY
 #define	BG_COLOR	TFT_BLACK
+
+#define	NUM_OF_ICON 1
 
 //------------------------------------------------------------------------------
 #define	FND_CLEAR_NUM	8
@@ -112,6 +115,17 @@ struct fnd {
 	bool			rbo;
 	uint16_t		bg_color, fg_color;
 	bool			refresh;
+};
+
+struct icon {
+	/* fnd position */
+	uint16_t		x, y;
+	uint16_t	width, height;
+
+	// FND ripple blanking control
+	uint16_t		bg_color, fg_color;
+	bool			refresh;
+	uint8_t nr_icon;
 };
 
 //------------------------------------------------------------------------------
