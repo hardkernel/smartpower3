@@ -245,6 +245,11 @@ void Channel::setVolt(float volt_set, uint8_t mode)
 		this->volt_set = volt_set;
 		this->_volt_set = volt_set;
 		this->_volt->pushValue(min((uint16_t)20000, _volt_set));
+	} else if (mode == 2) {
+		this->volt_set = volt_set;
+		this->_volt_set = volt_set;
+		this->_volt->pushValue(min((uint16_t)20000, _volt_set));
+		stpd01->setVoltage(min((uint16_t)20000, this->volt_set));
 	}
 }
 
@@ -265,6 +270,13 @@ void Channel::setCurrentLimit(float val, uint8_t mode)
 		_current_limit = min((uint16_t)3000, _current_limit);
 		_current_limit = max((uint16_t)500, _current_limit);
 		this->_current->pushValue(_current_limit);
+	} else if (mode == 2) {
+		current_limit = val;
+		_current_limit = current_limit;
+		_current_limit = min((uint16_t)3000, _current_limit);
+		_current_limit = max((uint16_t)500, _current_limit);
+		this->_current->pushValue(_current_limit);
+		stpd01->setCurrentLimit(current_limit);
 	}
 }
 
@@ -459,6 +471,6 @@ uint8_t Channel::checkInterrupt(void)
 		}
 	}
 	*/
-	
+
 	return reg_latch;
 }
