@@ -197,17 +197,17 @@ void WifiManager::start() {
 			break;
 			case WL_NO_SHIELD:
 			case WL_IDLE_STATUS:
-				// Currently in idle state or waiting for the trying to connection to be finished
-				jsonDoc["established"] = false;
-				jsonDoc["ipAddress"] = "";
-				jsonDoc["error"] = false;
-				jsonDoc["errorMessage"] = "";
+				// // Currently in idle state or waiting for the trying to connection to be finished
+				// jsonDoc["established"] = false;
+				// jsonDoc["ipAddress"] = "";
+				// jsonDoc["error"] = false;
+				// jsonDoc["errorMessage"] = "";
 			break;
 			default:
-				jsonDoc["established"] = false;
-				jsonDoc["ipAddress"] = "";
-				jsonDoc["error"] = true;
-				jsonDoc["errorMessage"] = "Connection failed with unknown reason. Maybe the wrong password?";
+				// jsonDoc["established"] = false;
+				// jsonDoc["ipAddress"] = "";
+				// jsonDoc["error"] = true;
+				// jsonDoc["errorMessage"] = "Connection failed with unknown reason. Maybe the wrong password?";
 			break;
 		}
 
