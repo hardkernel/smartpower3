@@ -28,7 +28,6 @@ WifiCurrentPower WifiManager::currentPower[MAX_CHANNEL_NUM] = { 0 };
 WifiManager::WifiManager() {
 	// Set the properties using the default value
 	discoveredApCount = -1;
-	apConnected = WIFI_AP_DISCONNECTED;
 	wifiServiceState = WIFI_SERVICE_OFF;
 }
 
@@ -251,7 +250,7 @@ int WifiManager::getConnectionState() {
 		case WL_CONNECTED:
 			return WIFI_AP_CONNECTED;
 		default:
-			// Handle it as disconnected if not connected
+			// Handle it as disconnected if there is no connected AP
 			return WIFI_AP_DISCONNECTED;
 	}
 }

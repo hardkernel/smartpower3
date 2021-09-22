@@ -56,8 +56,8 @@ enum WifiServiceState {
 };
 
 enum WifiConnectionState {
-	WIFI_AP_CONNECTED = 0,
-	WIFI_AP_DISCONNECTED
+	WIFI_AP_DISCONNECTED = 0,
+	WIFI_AP_CONNECTED
 };
 
 enum SocketCommand {
@@ -104,8 +104,6 @@ private:
 	AsyncWebServer *webServer;
 	AsyncWebSocket *webSocket;
 	int discoveredApCount;
-
-	bool apConnected;
 	bool wifiServiceState;
 
 	static void onWebSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
