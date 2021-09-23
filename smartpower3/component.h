@@ -4,7 +4,6 @@
 #include <TFT_eSPI.h>
 
 #define WAIT 1
-#define W_SEG 140
 #define H_SEG 48
 #define OFFSET_SEG 35
 #define OFFSET_CH 15

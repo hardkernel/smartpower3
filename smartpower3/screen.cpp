@@ -16,8 +16,10 @@ void Screen::begin(TwoWire *theWire)
 {
 	_wire = theWire;
 	header = new Header(&tft);
-	channel[0] = new Channel(&tft, _wire, 10, 40, 0);
-	channel[1] = new Channel(&tft, _wire, 260, 40, 1);
+	channel[0] = new Channel(&tft, _wire, 0, 40, 0);
+	channel[1] = new Channel(&tft, _wire, 246, 40, 1);
+	//channel[0] = new Channel(&tft, _wire, 35, 40, 0);
+	//channel[1] = new Channel(&tft, _wire, 295, 40, 1);
 
 	setting = new Setting(&tft);
 	fsInit();
@@ -70,10 +72,10 @@ void Screen::initScreen(void)
 		tft.drawLine(0, 270 + i, 480, 270 + i, TFT_WHITE);
 	}
 	for (int i = 0; i < 4; i++)
-		tft.drawLine(238 + i, 38, 238 + i, 320, TFT_WHITE);
+		tft.drawLine(236 + i, 38, 236 + i, 320, TFT_WHITE);
 
-	channel[0]->initScreen();
-	channel[1]->initScreen();
+	channel[0]->initScreen(onoff[0]);
+	channel[1]->initScreen(onoff[1]);
 }
 
 void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch)
@@ -88,7 +90,6 @@ void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch
 void Screen::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 {
 	if ((volt < 6000 || volt >= 26000) && !low_input) {
-		Serial.println("Hello low input");
 		low_input = true;
 		header->setLowInput(true);
 		state_power = 1;
@@ -161,7 +162,6 @@ void Screen::disablePower()
 void Screen::deActivate()
 {
 	activated = 0;
-	header->deActivate();
 	channel[0]->deActivate(VOLT);
 	channel[0]->deActivate(CURRENT);
 	channel[1]->deActivate(VOLT);
@@ -170,7 +170,6 @@ void Screen::deActivate()
 
 void Screen::deActivateSetting()
 {
-	header->deActivate();
 	setting->deActivateBLLevel();
 	setting->deActivateFanLevel();
 	setting->deActivateLogInterval();
@@ -181,17 +180,14 @@ void Screen::activate()
 	if (dial_cnt == dial_cnt_old)
 		return;
 	dial_cnt_old = dial_cnt;
-	if (dial_cnt > 4)
+	if (dial_cnt > 3)
 		dial_cnt = 0;
 	else if (dial_cnt < 0)
-		dial_cnt = 4;
+		dial_cnt = 3;
 
 	deActivate();
 	activated = dial_cnt;
 	switch (dial_cnt) {
-		case STATE_HEADER:
-			header->activate();
-			break;
 		case STATE_VOLT0:
 			channel[0]->activate(VOLT);
 			break;
@@ -212,17 +208,14 @@ void Screen::activate_setting()
 	if (dial_cnt == dial_cnt_old)
 		return;
 	dial_cnt_old = dial_cnt;
-	if (dial_cnt > 3)
-		dial_cnt = 3;
+	if (dial_cnt > 2)
+		dial_cnt = 2;
 	else if (dial_cnt < 0)
 		dial_cnt = 0;
 
 	deActivateSetting();
 	activated = dial_cnt;
 	switch (dial_cnt) {
-		case STATE_SETTING:
-			header->activate();
-			break;
 		case STATE_BL:
 			setting->activateBLLevel();
 			break;
@@ -240,6 +233,15 @@ void Screen::drawBase()
 	if (dial_cnt != dial_cnt_old) {
 		clearBtnEvent();
 		mode = BASE_MOVE;
+	}
+	if (btn_pressed[2] == true) {
+		btn_pressed[2] = false;
+		channel[0]->setHide();
+		channel[1]->setHide();
+		mode = SETTING;
+		tft.fillRect(0, 35, 480, 285, TFT_BLACK);
+		setting->init(10, 100);
+		activated = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
 }
 
@@ -277,15 +279,6 @@ void Screen::drawBaseMove()
 			mode = BASE_EDIT;
 			channel[1]->setCompColor(CURRENT);
 			current_limit = channel[1]->getCurrentLimit();
-		} else if (activated == STATE_HEADER) {
-			channel[0]->setHide();
-			channel[1]->setHide();
-			mode = SETTING;
-			tft.fillRect(0, 35, 480, 285, TFT_BLACK);
-			header->activate();
-			setting->init(10, 100);
-			activated = dial_cnt = dial_cnt_old = STATE_SETTING;
-			return;
 		}
 		dial_state = dial_cnt;
 		dial_cnt = 0;
@@ -342,8 +335,7 @@ void Screen::drawSetting()
 			channel[0]->clearHide();
 			channel[1]->clearHide();
 			initScreen();
-			mode = BASE_MOVE;
-			header->activate();
+			mode = BASE;
 			activated = dial_cnt = 0;
 		} else {
 			deActivateSetting();
@@ -357,7 +349,6 @@ void Screen::drawSetting()
 			channel[1]->clearHide();
 			initScreen();
 			mode = BASE_MOVE;
-			header->activate();
 			activated = dial_cnt = 0;
 		} else if (activated == STATE_BL) {
 			mode = SETTING_BL;
@@ -491,38 +482,40 @@ void Screen::drawSettingLOG()
 
 uint16_t Screen::getLogInterval(void)
 {
-	return setting->getLogIntervalValue();
+	uint16_t tmp;
+
+	tmp = setting->getLogIntervalValue();
+	if (tmp > 0) {
+		header->onLogging();
+	} else {
+		header->offLogging();
+	}
+
+	return tmp;
 }
 
 void Screen::drawScreen()
 {
 	switch (mode) {
 	case BASE:
-		header->drawMode("POWER");
 		drawBase();
 		break;
 	case BASE_MOVE:
-		header->drawMode("DIAL");
 		drawBaseMove();
 		break;
 	case BASE_EDIT:
-		header->drawMode("EDIT");
 		drawBaseEdit();
 		break;
 	case SETTING:
-		header->drawMode("SETTING");
 		drawSetting();
 		break;
 	case SETTING_BL:
-		header->drawMode("EDIT_BL");
 		drawSettingBL();
 		break;
 	case SETTING_FAN:
-		header->drawMode("EDIT_FAN");
 		drawSettingFAN();
 		break;
 	case SETTING_LOG:
-		header->drawMode("EDIT_LOG");
 		drawSettingLOG();
 		break;
 	}
@@ -548,7 +541,6 @@ void Screen::changeVolt(screen_mode_t mode)
 			dial_cnt = 200 - (volt_set/100);
 		if (mode == BASE_MOVE) {
 			channel[0]->setVolt(dial_cnt);
-			Serial.println("set Volt!");
 			if (dial_cnt != 0) {
 				setSysParam("voltage0", channel[0]->getVolt()/1000.0);
 			}
@@ -604,7 +596,7 @@ void Screen::isrSTPD01()
 {
 	for (int i = 0; i < 2; i++) {
 		channel[i]->isAvailableSTPD01();
-		int_stat[i] = channel[i]->checkInterruptStat();
+		int_stat[i] = channel[i]->checkInterruptStat(onoff[i]);
 	}
 }
 
@@ -797,6 +789,7 @@ void Screen::setSysParam(char *key, float value)
 {
 	char str[5];
 	sprintf(str, "%04.1f", value);
+	vTaskDelay(100);
 	File f = fs->open("/setting.txt", "r+");
 	f.seek(0, SeekSet);
 	f.findUntil(key, "\n\r");
@@ -808,6 +801,7 @@ void Screen::setSysParam(char *key, float value)
 
 void Screen::setSysParam(char *key, String value)
 {
+	vTaskDelay(100);
 	File f = fs->open("/setting.txt", "r+");
 	Serial.printf("size of file %d, value %s\n\r", f.size(), value);
 	f.seek(0, SeekSet);

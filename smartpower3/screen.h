@@ -18,8 +18,7 @@ enum screen_mode_t {
 };
 
 enum state {
-	STATE_HEADER = 0,
-	STATE_VOLT1,
+	STATE_VOLT1 = 0,
 	STATE_CURRENT1,
 	STATE_CURRENT0,
 	STATE_VOLT0

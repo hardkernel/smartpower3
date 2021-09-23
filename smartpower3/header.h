@@ -19,6 +19,9 @@ public:
 	void setLowInput(bool low_input);
 	uint16_t getInputVoltage(void);
 	void setDebug(void);
+	void onLogging(void);
+	void offLogging(void);
+	Component *display_mode;
 
 private:
 	TFT_eSPI *tft;
@@ -29,11 +32,15 @@ private:
 	bool updated;
 	bool low_input = 1;
 	uint8_t intPin = -1;
-	Component *input;
 	Component *mode;
-	Component *display_mode;
 	FndWidget *icon_input;
+	FndWidget *icon_wifi;
+	FndWidget *icon_log;
+	FndWidget *icon_v, *icon_a;
+	FndWidget *input_v, *input_a;
 	uint16_t debug = 0;
+	bool flag_logging = false;
+	bool update_logging_icon = false;
 };
 
 #endif

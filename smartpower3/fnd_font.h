@@ -1,9 +1,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+#include "fnd_font_16x32.h"
 #include "fnd_font_32x64.h"
+#include "fnd_font_40x80.h"
+#include "fnd_font_48x96.h"
 #include "icon.h"
-//#include "fnd_font_40x80.h"
-//#include "fnd_font_48x96.h"
 
 //------------------------------------------------------------------------------
 #define	NUM_OF_FND	4
@@ -16,75 +17,21 @@
 //------------------------------------------------------------------------------
 #define	FND_CLEAR_NUM	8
 
-//------------------------------------------------------------------------------
-const int8_t FONT_IMG_TABLE[16][8][3] = {
-	{
-		/* FND 0 */
-		SEG_ON_A, SEG_ON_B, SEG_ON_C, SEG_ON_D,
-		SEG_ON_E, SEG_ON_F, SEG_END
-	},{
-		/* FND 1 */
-		SEG_ON_B, SEG_ON_C, SEG_END,
-	},{
-		/* FND 2 */
-		SEG_ON_A, SEG_ON_B, SEG_ON_D,
-		SEG_ON_E, SEG_ON_G, SEG_END,
-	},{
-		/* FND 3 */
-		SEG_ON_A, SEG_ON_B, SEG_ON_C, SEG_ON_D,
-		SEG_ON_G, SEG_END,
-	},{
-		/* FND 4 */
-		SEG_ON_B, SEG_ON_C,
-		SEG_ON_F, SEG_ON_G, SEG_END,
-	},{
-		/* FND 5 */
-		SEG_ON_A, SEG_ON_C, SEG_ON_D,
-		SEG_ON_F, SEG_ON_G, SEG_END,
-	},{
-		/* FND 6 */
-		SEG_ON_A, SEG_ON_C, SEG_ON_D,
-		SEG_ON_E, SEG_ON_F, SEG_ON_G, SEG_END,
-	},{
-		/* FND 7 */
-		SEG_ON_A, SEG_ON_B, SEG_ON_C,
-		SEG_ON_F, SEG_END,
-	},{
-		/* FND 8 */
-		SEG_ON_A, SEG_ON_B, SEG_ON_C, SEG_ON_D,
-		SEG_ON_E, SEG_ON_F, SEG_ON_G, SEG_END,
-	},{
-		/* FND 9 */
-		SEG_ON_A, SEG_ON_B, SEG_ON_C, SEG_ON_D,
-		SEG_ON_F, SEG_ON_G, SEG_END,
-	},{
-		/* FND A */
-		SEG_ON_A, SEG_ON_B, SEG_ON_C,
-		SEG_ON_E, SEG_ON_F, SEG_ON_G, SEG_END,
-	},{
-		/* FND b */
-		SEG_ON_C, SEG_ON_D,
-		SEG_ON_E, SEG_ON_F, SEG_ON_G, SEG_END,
-	},{
-		/* FND c */
-		SEG_ON_D,
-		SEG_ON_E, SEG_ON_G, SEG_END,
-	},{
-		/* FND d */
-		SEG_ON_B, SEG_ON_C, SEG_ON_D,
-		SEG_ON_E, SEG_ON_G, SEG_END,
-	},{
-		/* FND E */
-		SEG_ON_A, SEG_ON_D,
-		SEG_ON_E, SEG_ON_F, SEG_ON_G, SEG_END,
-	},{
-		/* FND F */
-		SEG_ON_A,
-		SEG_ON_E, SEG_ON_F, SEG_ON_G, SEG_END,
-	},
+enum FND_FONT_SIZE {
+	FND_FONT_16x32,
+	FND_FONT_32x64,
+	FND_FONT_40x80,
+	FND_FONT_48x96,
 };
 
-//------------------------------------------------------------------------------
+struct font_info {
+	uint32_t	w, h;
+	uint32_t	v_width, v_height;
+	uint32_t	h_width, h_height;
+	uint32_t	d_width, d_height;
+	const uint8_t	*v_data, *h_data, *d_data;
+	uint16_t	d_y_offset;
+};
 
 struct font_table {
 	int8_t		x_offset, y_offset;
@@ -99,9 +46,14 @@ struct display_data {
 struct fnd {
 	uint16_t		*fb;
 	struct display_data	*dd;
+	struct font_info	*f_info;
+
+	enum FND_FONT_SIZE	f_size;
 
 	/* num of fnd */
 	uint8_t			cnt;
+
+	uint32_t div;
 
 	/* fnd position */
 	uint16_t		x, y;
@@ -115,6 +67,8 @@ struct fnd {
 	bool			rbo;
 	uint16_t		bg_color, fg_color;
 	bool			refresh;
+
+	bool			off;
 };
 
 struct icon {

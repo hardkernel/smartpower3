@@ -18,7 +18,6 @@ void setup(void) {
 
 	initEncoder(&dial);
 
-	xTaskCreate(powerTask, "Read Power", 1800, NULL, 1, NULL);
 	xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 1500, NULL, 10, NULL);
 	xTaskCreate(logTask, "Log Task", 2000, NULL, 1, NULL);
@@ -80,8 +79,9 @@ void powerTask(void *parameter)
 			volt[0] = (uint16_t)(PAC.Voltage);
 			amp[0] = (uint16_t)(PAC.Current);
 			watt[0] = (uint16_t)(PAC.Power*100);
+			Serial.println(volt[0]);
 			if (volt[0] < 6000) {
-				screen.debug();
+				//screen.debug();
 				PAC.update(0);
 				volt[0] = (uint16_t)(PAC.Voltage);
 				for (int i = 0; i < 3; i++) {
@@ -93,7 +93,7 @@ void powerTask(void *parameter)
 			} else {
 				low_input = false;
 			}
-			screen.pushInputPower(volt[0], amp[0], watt[0]);
+			//screen.pushInputPower(volt[0], amp[0], watt[0]);
 		}
 	}
 }
@@ -146,8 +146,45 @@ void inputTask(void *parameter)
 }
 
 void loop() {
-	delay(500);
-	//Serial.println(uxTaskPriorityGet(NULL));
+		PAC.Refresh();
+		onoff = screen.getOnOff();
+		if (onoff[0]) {
+			PAC.update(1);
+			volt[1] = (uint16_t)(PAC.Voltage);
+			amp[1] = (uint16_t)(PAC.Current);
+			watt[1] = (uint16_t)(PAC.Power*1000);
+			screen.pushPower(volt[1], amp[1], watt[1], 0);
+		}
+
+		if (onoff[1]) {
+			PAC.update(2);
+			volt[2] = (uint16_t)(PAC.Voltage);
+			amp[2] = (uint16_t)(PAC.Current);
+			watt[2] = (uint16_t)(PAC.Power*1000);
+			screen.pushPower(volt[2], amp[2], watt[2], 1);
+		}
+
+		if ((millis() - ctime1) > 500) {
+			ctime1 = millis();
+			PAC.update(0);
+			volt[0] = (uint16_t)(PAC.Voltage);
+			amp[0] = (uint16_t)(PAC.Current);
+			watt[0] = (uint16_t)(PAC.Power*100);
+			if (volt[0] < 6000) {
+				screen.debug();
+				PAC.update(0);
+				volt[0] = (uint16_t)(PAC.Voltage);
+				for (int i = 0; i < 3; i++) {
+					if (volt[0] > 6000) {
+						break;
+					}
+					low_input = true;
+				}
+			} else {
+				low_input = false;
+			}
+			screen.pushInputPower(volt[0], amp[0], watt[0]);
+		}
 }
 
 void get_memory_info(void)

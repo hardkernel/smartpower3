@@ -3,9 +3,6 @@
 #include <STPD01.h>
 
 #define OFFSET_FND 5
-#define Y_VOLT FONT_HEIGHT*0 + OFFSET_FND*0
-#define Y_CURRENT FONT_HEIGHT*1 + OFFSET_FND*1
-#define Y_WATT FONT_HEIGHT*2 + OFFSET_FND*2
 #define PIN_EN_STPD01_CH0 27
 #define PIN_EN_STPD01_CH1 14
 
@@ -29,7 +26,7 @@ public:
 	void drawVoltSet(bool forced=0);
 	void pushPower(uint16_t volt, uint16_t current, uint16_t watt);
 	void pushPowerEdit(void);
-	void initScreen();
+	void initScreen(uint8_t onoff);
 	bool on(void);
 	bool off(void);
 	void setVolt(float volt_set, uint8_t mode = 0);
@@ -44,7 +41,7 @@ public:
 	uint16_t getCurrentLimit(void);
 	uint8_t checkInterrupt(void);
 	uint8_t checkInterruptLatch(void);
-	uint8_t checkInterruptStat(void);
+	uint8_t checkInterruptStat(uint8_t onoff);
 	bool isAvailableSTPD01();
 	uint8_t getIntStatus(void);
 	uint8_t getIntMask(void);
@@ -60,6 +57,7 @@ public:
 	void setIntFlag(void);
 	void drawInterrupt(void);
 	void drawPolarity(void);
+	void drawUnits(bool onoff);
 private:
 	bool activated;
 	TFT_eSPI *tft;
@@ -68,12 +66,13 @@ private:
 	uint16_t current_limit = 500;
 	uint16_t _current_limit = 500;
 	FndWidget *volt;
-	Component *_volt;
-	Component *_current;
+	FndWidget *_volt;
+	FndWidget *_current;
 	Component *stpd;
 	FndWidget *current;
 	FndWidget *watt;
 	FndWidget *icon_op, *icon_sp, *icon_cc, *icon_tp, *icon_tw, *icon_ip;
+	FndWidget *icon_p, *icon_n, *icon_v, *icon_a, *icon_w;
 	STPD01 *stpd01;
 	uint8_t channel;
 	uint16_t x, y;

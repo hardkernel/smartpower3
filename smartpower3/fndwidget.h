@@ -7,7 +7,7 @@
 #include "component.h"
 
 #define WAIT 1
-#define W_SEG 140
+#define W_SEG 180
 #define H_SEG 48
 #define OFFSET_SEG 35
 #define OFFSET_CH 15
@@ -28,12 +28,10 @@ public:
 	void draw(String s);
 	void setCoordinate(uint16_t x, uint16_t y);
 	void pushValue(uint16_t value);
-	void activate(void);
-	void deActivate(void);
 	void setTextColor(uint16_t fg_color, uint16_t bg_color);
 	void setIconColor(uint16_t fg_color, uint16_t bg_color);
 	struct fnd* fnd_init (uint8_t cnt, uint8_t dot_pos, bool rbo,
-			uint16_t x, uint16_t y, uint16_t fg_color, uint16_t bg_color);
+			uint16_t x, uint16_t y, uint16_t fg_color, uint16_t bg_color, enum FND_FONT_SIZE f_size=FND_FONT_32x64, uint32_t div=1);
 	struct icon* icon_init (uint8_t nr_icon, uint16_t x, uint16_t y, uint16_t fg_color, uint16_t bg_color);
 	void fnd_dot_write(void);
 	void icon_update(bool forced=0, uint8_t channel=0);
@@ -45,11 +43,19 @@ public:
 	uint16_t getValue(void);
 	void icon_clear_all(void);
 	void icon_input_write(void);
+	void icon_wifi_write(void);
+	void icon_log_write(void);
+	void icon_polarity_write(bool polarity);
+	void icon_units_write(uint8_t nr_unit);
+	void fnd_font_init(struct font_info *f_info, enum FND_FONT_SIZE font);
+	void drawOutLines();
+	void clearOutLines();
+	void activate();
+	void deActivate();
+
 	
 private:
 	uint8_t mode = 0;
-	uint16_t x;
-	uint16_t y;
 	uint16_t width;
 	uint16_t height;
 	uint16_t width_icon;
@@ -59,8 +65,6 @@ private:
 	uint16_t value;
 	uint16_t old_value;
 	uint16_t value_old;
-	void drawOutLines(void);
-	void clearOutLines(void);
 	struct fnd *f;
 	struct icon *ic;
 };
