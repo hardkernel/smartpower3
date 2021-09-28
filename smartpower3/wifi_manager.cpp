@@ -186,27 +186,34 @@ void WifiManager::start() {
 				jsonDoc["established"] = false;
 				jsonDoc["ipAddress"] = "";
 				jsonDoc["error"] = true;
-				jsonDoc["errorMessage"] = "Not found the given SSID";
+				jsonDoc["errorMessage"] = "Not found the given SSID.";
 			break;
 			case WL_CONNECT_FAILED:
 				jsonDoc["established"] = false;
 				jsonDoc["ipAddress"] = "";
 				jsonDoc["error"] = true;
-				jsonDoc["errorMessage"] = "Connection failed with unknown reason";
+				jsonDoc["errorMessage"] = "Connection failed with unknown reason. Maybe the wrong password?";
+			break;
+			case WL_CONNECTION_LOST:
+				jsonDoc["established"] = false;
+				jsonDoc["ipAddress"] = "";
+				jsonDoc["error"] = true;
+				jsonDoc["errorMessage"] = "Connection failed with timeout. Please try again from the start.";
 			break;
 			case WL_NO_SHIELD:
 			case WL_IDLE_STATUS:
-				// // Currently in idle state or waiting for the trying to connection to be finished
-				// jsonDoc["established"] = false;
-				// jsonDoc["ipAddress"] = "";
-				// jsonDoc["error"] = false;
-				// jsonDoc["errorMessage"] = "";
+				// Currently in idle state or waiting for the trying to connection to be finished
+				// This results does not update the client page
+				jsonDoc["established"] = false;
+				jsonDoc["ipAddress"] = "";
+				jsonDoc["error"] = false;
+				jsonDoc["errorMessage"] = "";
 			break;
 			default:
-				// jsonDoc["established"] = false;
-				// jsonDoc["ipAddress"] = "";
-				// jsonDoc["error"] = true;
-				// jsonDoc["errorMessage"] = "Connection failed with unknown reason. Maybe the wrong password?";
+				jsonDoc["established"] = false;
+				jsonDoc["ipAddress"] = "";
+				jsonDoc["error"] = true;
+				jsonDoc["errorMessage"] = "Connection failed with unknown reason.";
 			break;
 		}
 
