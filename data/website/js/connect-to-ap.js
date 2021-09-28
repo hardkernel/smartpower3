@@ -76,34 +76,36 @@ $(document).ready(() => {
                 if (data.success) {
                   console.log("Start checking the STA connection established...");
 
-                  var checkingStaConnInterval = setInterval(() => {
-                    // TODO: Have to check the previous Ajax completed before sending another Ajax
-                    $.ajax("/api/is_sta_connected", {
-                      method: "GET",
-                      dataType: "json",
-                      ajax: true,
-                      success: (data) => {
-                        console.log("Results about STA connection: ", data);
-                        if (data.established) {
-                          showApConnectedPage(apInfo, data.ipAddress);
+                  setTimeout(() => {
+                    var checkingStaConnInterval = setInterval(() => {
+                      // TODO: Have to check the previous Ajax completed before sending another Ajax
+                      $.ajax("/api/is_sta_connected", {
+                        method: "GET",
+                        dataType: "json",
+                        ajax: true,
+                        success: (data) => {
+                          console.log("Results about STA connection: ", data);
+                          if (data.established) {
+                            showApConnectedPage(apInfo, data.ipAddress);
+                            clearInterval(checkingStaConnInterval);
+                          } else if (data.error) {
+                            showApErrorPage(data.errorMessage);
+                            clearInterval(checkingStaConnInterval);
+                          } else {
+                            // Do nothing
+                            // The board maybe in IDLE state or currently trying to connect to AP
+                            // Do not clear the interval in this condition because it should wait for
+                            // the clear results from the server
+                          }
+                        },
+                        error: (err) => {
+                          console.log("Unknown error checking the STA connection: ", err);
+                          showApErrorPage();
                           clearInterval(checkingStaConnInterval);
-                        } else if (data.error) {
-                          showApErrorPage(data.errorMessage);
-                          clearInterval(checkingStaConnInterval);
-                        } else {
-                          // Do nothing
-                          // The board maybe in IDLE state or currently trying to connect to AP
-                          // Do not clear the interval in this condition because it should wait for
-                          // the clear results from the server
-                        }
-                      },
-                      error: (err) => {
-                        console.log("Unknown error checking the STA connection: ", err);
-                        showApErrorPage();
-                        clearInterval(checkingStaConnInterval);
-                      },
-                    });
-                  }, 1000);
+                        },
+                      });
+                    }, 1000); // Request what the current state is every 1 second
+                  }, 5000); // Execute the handler after 5 seconds
                 } else {
                   showApErrorPage("Requesting STA connection failed with unknown reason");
                 }
