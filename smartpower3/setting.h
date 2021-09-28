@@ -7,6 +7,10 @@
 #define FREQ	50000
 #define RESOLUTION	8
 
+#define X_BL_LEVEL 250
+#define X_FAN_LEVEL 250
+#define X_LOG_LEVEL 250
+
 class Setting
 {
 public:

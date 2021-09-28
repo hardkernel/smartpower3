@@ -55,7 +55,9 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 
 	stpd01 = new STPD01(0x5 + (channel*2), theWire);
 
+#ifdef DEBUG_STPD01
 	stpd = new Component(tft, 32, 16, 2);
+#endif
 	pinMode(int_stpd01[channel], INPUT_PULLUP);
 }
 
@@ -77,6 +79,7 @@ Channel::~Channel(void)
 
 bool Channel::isAvailableSTPD01()
 {
+#ifdef DEBUG_STPD01
 	if (!stpd01->available()) {
 		stpd->setTextColor(FG_DISABLED, BG_DISABLED);
 		stpd->draw("STPD");
@@ -85,6 +88,7 @@ bool Channel::isAvailableSTPD01()
 	stpd->setTextColor(FG_ENABLED, BG_ENABLED);
 	stpd->draw("STPD");
 	return 1;
+#endif
 }
 
 void Channel::initScreen(uint8_t onoff)
@@ -92,9 +96,11 @@ void Channel::initScreen(uint8_t onoff)
 	_volt->pushValue(volt_set);
 	_current->pushValue(current_limit);
 
+#ifdef DEBUG_STPD01
 	stpd->init(FG_ENABLED, BG_ENABLED, 1, TR_DATUM);
 	stpd->setCoordinate(x, y + 210);
 	stpd->draw(String("STPD"));
+#endif
 
 	drawChannel(true);
 	drawVoltSet(true);
@@ -266,7 +272,6 @@ void Channel::setVolt(float volt_set, uint8_t mode)
 void Channel::editVolt(float volt_set)
 {
 	this->_volt_set = this->volt_set + volt_set*100;
-	Serial.printf("volt_set : %d, %f\n\r", _volt_set, volt_set);
 }
 
 void Channel::setCurrentLimit(float val, uint8_t mode)

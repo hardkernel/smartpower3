@@ -40,12 +40,12 @@ void countEncoder(void *dial)
 	int8_t cnt;
 	for (;;) {
 		cnt = encoder.getCount();
-		if (cnt > 6) {
+		if (cnt > 5) {
 			encoder.setCount(0);
 			tmp->cnt += 1;
 			tmp->direct = true;
 			tmp->step = 10;
-		} else if (cnt < -6) {
+		} else if (cnt < -5) {
 			encoder.setCount(0);
 			tmp->cnt -= 1;
 			tmp->direct = false;

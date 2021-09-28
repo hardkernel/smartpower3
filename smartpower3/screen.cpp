@@ -18,10 +18,16 @@ void Screen::begin(TwoWire *theWire)
 	header = new Header(&tft);
 	channel[0] = new Channel(&tft, _wire, 0, 40, 0);
 	channel[1] = new Channel(&tft, _wire, 246, 40, 1);
-	//channel[0] = new Channel(&tft, _wire, 35, 40, 0);
-	//channel[1] = new Channel(&tft, _wire, 295, 40, 1);
+
+	if (!SPIFFS.begin(false)) {
+		Serial.println("SPIFFS mount error");
+		return;
+	}
+
+	fs = &SPIFFS;
 
 	setting = new Setting(&tft);
+
 	fsInit();
 
 	initScreen();
@@ -37,17 +43,6 @@ void Screen::run()
 {
 	checkOnOff();
 	drawScreen();
-
-	/*
-	if (btn_pressed[1]) {
-		btn_pressed[1] = false;
-	}
-	if (btn_pressed[2]) {
-		btn_pressed[2] = false;
-	}
-	if (btn_pressed[3]) {
-		btn_pressed[3] = false;
-	}*/
 
 	if (!header->getLowInput()) {
 		for (int i = 0; i < 2; i++) {
@@ -65,7 +60,7 @@ void Screen::setIntFlag(uint8_t ch)
 
 void Screen::initScreen(void)
 {
-	tft.fillRect(0, 35, 480, 285, TFT_BLACK);
+	tft.fillRect(0, 39, 480, 285, TFT_BLACK);
 
 	for (int i = 0; i < 3; i++) {
 		tft.drawLine(0, 36 + i, 480, 36 + i, TFT_WHITE);
@@ -239,7 +234,7 @@ void Screen::drawBase()
 		channel[0]->setHide();
 		channel[1]->setHide();
 		mode = SETTING;
-		tft.fillRect(0, 35, 480, 285, TFT_BLACK);
+		tft.fillRect(0, 39, 480, 285, TFT_BLACK);
 		setting->init(10, 100);
 		activated = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
@@ -707,14 +702,6 @@ void Screen::fsInit(void)
 	float current_limit0, current_limit1;
 	uint8_t backlight_level = 0;
 	uint8_t fan_level = 0;
-
-	if (!SPIFFS.begin(false)) {
-		Serial.println("SPIFFS mount error");
-		return;
-	}
-
-	fs = &SPIFFS;
-
 
 	if (isFirstBoot()) {
 		Serial.println("First boot!!!");

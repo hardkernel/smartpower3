@@ -35,8 +35,8 @@ void Header::init(uint16_t x, uint16_t y)
 
 
 	icon_input->icon_init(9, x, y, FG_COLOR, BG_COLOR);
-	icon_wifi->icon_init(9, x + 440, y-3, FG_COLOR, BG_COLOR);
-	icon_log->icon_init(9, x + 400, y-3, FG_COLOR, BG_COLOR);
+	//icon_wifi->icon_init(9, x + 440, y-3, FG_COLOR, BG_COLOR);
+	icon_log->icon_init(9, x + 440, y-3, FG_COLOR, BG_COLOR);
 
 	display_mode->init(TFT_BLACK, TFT_YELLOW, 1, TL_DATUM);
 	display_mode->setCoordinate(x + 300, y);
@@ -44,8 +44,8 @@ void Header::init(uint16_t x, uint16_t y)
 	mode->init(TFT_YELLOW, TFT_BLACK, 1, TL_DATUM);
 	mode->setCoordinate(x + 200, y);
 
-	icon_wifi->setIconColor(TFT_GREEN, BG_ENABLED_INT);
-	icon_wifi->icon_wifi_write();
+	//icon_wifi->setIconColor(TFT_GREEN, BG_ENABLED_INT);
+	//icon_wifi->icon_wifi_write();
 	icon_log->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
 	icon_log->icon_log_write();
 }
@@ -128,7 +128,9 @@ void Header::draw(void)
 		input_a->pushValue(in_ampere);
 		input_a->fnd_update();
 	}
+#ifdef DEBUG_STPD01
 	tft->drawString(String(debug), 220, 10, 2);
+#endif
 
 	if (update_logging_icon) {
 		update_logging_icon = false;
