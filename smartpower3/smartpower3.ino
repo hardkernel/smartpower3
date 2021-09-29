@@ -135,6 +135,10 @@ void loop() {
 			low_input = false;
 		}
 		screen.pushInputPower(volt[0], amp[0], watt[0]);
+		if ((cur_time/1000)%2)
+			ledcWrite(0, 50);
+		else
+			ledcWrite(0, 0);
 	}
 }
 
