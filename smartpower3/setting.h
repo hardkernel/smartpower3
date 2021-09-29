@@ -27,7 +27,7 @@ public:
 
 	void changeBacklight(uint8_t level=255);
 	void changeFan(uint8_t level=255);
-	void changeLogInterval(uint16_t log_interval=0);
+	void changeLogInterval(uint16_t log_interval=65535);
 	void setBacklightLevel(uint8_t level);
 	void setFanLevel(uint8_t level);
 

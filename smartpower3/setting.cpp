@@ -98,6 +98,8 @@ void Setting::changeFan(uint8_t level)
 
 void Setting::changeLogInterval(uint16_t log_interval)
 {
+	if (log_interval == 65535)
+		log_interval = this->log_interval;
 	drawLogInterval(log_value[log_interval]);
 	log_interval_edit = log_interval;
 }
@@ -177,9 +179,15 @@ void Setting::drawFanLevel(uint8_t level)
 
 void Setting::drawLogInterval(uint16_t log_value)
 {
+	uint8_t old_datum;
+	old_datum = tft->getTextDatum();
+	tft->setTextDatum(CC_DATUM);
 	tft->fillRect(x + X_LOG_LEVEL + 2, y+1 + 100, 130, 24, TFT_BLACK);
+	tft->loadFont("Chewy-Regular24");
 	if (log_value == 0)
-		tft->drawString("OFF", x + X_LOG_LEVEL + 5, y + 100, 4);
+		tft->drawString("OFF", x + X_LOG_LEVEL + 65, y + 113, 4);
 	else
-		tft->drawString(String(log_value) + " ms", x + X_LOG_LEVEL + 5, y + 100, 4);
+		tft->drawString(String(log_value) + " ms", x + X_LOG_LEVEL + 65, y + 113, 4);
+	tft->unloadFont();
+	tft->setTextDatum(old_datum);
 }
