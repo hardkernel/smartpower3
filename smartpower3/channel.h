@@ -1,5 +1,6 @@
 #include "component.h"
 #include "fndwidget.h"
+#include "iconwidget.h"
 #include <STPD01.h>
 
 #define OFFSET_FND 5
@@ -71,8 +72,8 @@ private:
 	Component *stpd;
 	FndWidget *current;
 	FndWidget *watt;
-	FndWidget *icon_op, *icon_sp, *icon_cc, *icon_tp, *icon_tw, *icon_ip;
-	FndWidget *icon_p, *icon_n, *icon_v, *icon_a, *icon_w;
+	IconWidget *icon_op, *icon_sp, *icon_cc, *icon_tp, *icon_tw, *icon_ip;
+	IconWidget *icon_p, *icon_n, *icon_v, *icon_a, *icon_w;
 	STPD01 *stpd01;
 	uint8_t channel;
 	uint16_t x, y;

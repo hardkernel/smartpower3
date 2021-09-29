@@ -774,9 +774,10 @@ bool Screen::isFirstBoot()
 
 void Screen::setSysParam(char *key, float value)
 {
+#if 1
 	char str[5];
 	sprintf(str, "%04.1f", value);
-	vTaskDelay(100);
+	vTaskDelay(200);
 	File f = fs->open("/setting.txt", "r+");
 	f.seek(0, SeekSet);
 	f.findUntil(key, "\n\r");
@@ -784,11 +785,13 @@ void Screen::setSysParam(char *key, float value)
 	f.print(str);
 	f.flush();
 	f.close();
+#endif
 }
 
 void Screen::setSysParam(char *key, String value)
 {
-	vTaskDelay(100);
+#if 1
+	vTaskDelay(200);
 	File f = fs->open("/setting.txt", "r+");
 	Serial.printf("size of file %d, value %s\n\r", f.size(), value);
 	f.seek(0, SeekSet);
@@ -797,6 +800,7 @@ void Screen::setSysParam(char *key, String value)
 	f.print(value);
 	f.flush();
 	f.close();
+#endif
 }
 
 void Screen::debug()

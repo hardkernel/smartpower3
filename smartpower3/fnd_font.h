@@ -4,7 +4,6 @@
 #include "fnd_font_32x64.h"
 #include "fnd_font_40x80.h"
 #include "fnd_font_48x96.h"
-#include "icon.h"
 
 //------------------------------------------------------------------------------
 #define	NUM_OF_FND	4
@@ -69,17 +68,6 @@ struct fnd {
 	bool			refresh;
 
 	bool			off;
-};
-
-struct icon {
-	/* fnd position */
-	uint16_t		x, y;
-	uint16_t	width, height;
-
-	// FND ripple blanking control
-	uint16_t		bg_color, fg_color;
-	bool			refresh;
-	uint8_t nr_icon;
 };
 
 //------------------------------------------------------------------------------
