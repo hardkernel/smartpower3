@@ -21,13 +21,13 @@ enum state {
 	STATE_VOLT1 = 0,
 	STATE_CURRENT1,
 	STATE_CURRENT0,
-	STATE_VOLT0
+	STATE_VOLT0,
 };
 
 enum state_setting {
 	STATE_LOG = 0,
 	STATE_FAN,
-	STATE_BL,	
+	STATE_BL,
 	STATE_SETTING,
 	STATE_NONE
 };
@@ -44,7 +44,7 @@ public:
 	void drawScreen(void);
 	void activate();
 	void activate_setting();
-	void countDial(int8_t mode_count, bool direct, uint8_t step, uint32_t milisec);
+	void countDial(int8_t mode_count, int8_t direct, uint8_t step, uint32_t milisec);
 	void deActivate();
 	void deActivateSetting();
 	void getBtnPress(uint8_t idx, uint32_t cur_time);
@@ -86,7 +86,7 @@ private:
 	bool btn_pressed[4] = {false,};
 	int16_t dial_cnt = 0;
 	int16_t dial_cnt_old;
-	bool dial_direct;
+	int8_t dial_direct;
 	uint8_t dial_state;
 	uint8_t dial_step;
 	void drawBase(void);

@@ -9,7 +9,7 @@ void initEncoder(void *param);
 
 struct dial_t {
 	int8_t cnt;
-	bool direct;
+	int8_t direct;
 	uint8_t step = 1;
 };
 

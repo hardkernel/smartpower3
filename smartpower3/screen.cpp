@@ -71,6 +71,7 @@ void Screen::initScreen(void)
 
 	channel[0]->initScreen(onoff[0]);
 	channel[1]->initScreen(onoff[1]);
+	activated = dial_cnt = dial_cnt_old = STATE_NONE;
 }
 
 void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch)
@@ -156,7 +157,6 @@ void Screen::disablePower()
 
 void Screen::deActivate()
 {
-	activated = 0;
 	channel[0]->deActivate(VOLT);
 	channel[0]->deActivate(CURRENT);
 	channel[1]->deActivate(VOLT);
@@ -175,10 +175,16 @@ void Screen::activate()
 	if (dial_cnt == dial_cnt_old)
 		return;
 	dial_cnt_old = dial_cnt;
-	if (dial_cnt > 3)
-		dial_cnt = 0;
-	else if (dial_cnt < 0)
+	if (dial_cnt > 3) {
 		dial_cnt = 3;
+		if (dial_direct == 1)
+			dial_cnt = 0;
+	} else if (dial_cnt < 0) {
+		dial_cnt = 0;
+		if (dial_direct == -1)
+			dial_cnt = 3;
+	}
+	Serial.println(dial_cnt);
 
 	deActivate();
 	activated = dial_cnt;
@@ -203,10 +209,15 @@ void Screen::activate_setting()
 	if (dial_cnt == dial_cnt_old)
 		return;
 	dial_cnt_old = dial_cnt;
-	if (dial_cnt > 2)
+	if (dial_cnt > 2) {
 		dial_cnt = 2;
-	else if (dial_cnt < 0)
+		if (dial_direct == 1)
+			dial_cnt = 0;
+	} else if (dial_cnt < 0) {
 		dial_cnt = 0;
+		if (dial_direct == -1)
+			dial_cnt = 2;
+	}
 
 	deActivateSetting();
 	activated = dial_cnt;
@@ -256,15 +267,13 @@ void Screen::drawBaseMove()
 	if ((cur_time - dial_time) > 5000) {
 		mode = BASE;
 		deActivate();
-		dial_cnt = 0;
-		dial_cnt_old = 0;
+		activated = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
 	if (btn_pressed[2] == true) {
 		mode = BASE;
 		btn_pressed[2] = false;
 		deActivate();
-		dial_cnt = 0;
-		dial_cnt_old = 0;
+		activated = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
@@ -625,7 +634,7 @@ uint8_t Screen::getIntStat(uint8_t channel)
 	return int_stat[channel];
 }
 
-void Screen::countDial(int8_t dial_cnt, bool direct, uint8_t step, uint32_t milisec)
+void Screen::countDial(int8_t dial_cnt, int8_t direct, uint8_t step, uint32_t milisec)
 {
 	this->dial_cnt += dial_cnt*step;
 	this->dial_time = milisec;

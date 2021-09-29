@@ -49,22 +49,22 @@ void countEncoder(void *dial)
 		if (cnt > 5) {
 			encoder.setCount(0);
 			tmp->cnt += 1;
-			tmp->direct = true;
+			tmp->direct = 1;
 			tmp->step = 10;
 		} else if (cnt < -5) {
 			encoder.setCount(0);
 			tmp->cnt -= 1;
-			tmp->direct = false;
+			tmp->direct = -1;
 			tmp->step = 10;
 		} else if (cnt > 1) {
 			encoder.setCount(0);
 			tmp->cnt += 1;
-			tmp->direct = true;
+			tmp->direct = 1;
 			tmp->step = 1;
 		} else if (cnt < -1) {
 			encoder.setCount(0);
 			tmp->cnt -= 1;
-			tmp->direct = false;
+			tmp->direct = -1;
 			tmp->step = 1;
 		}
 		vTaskDelay(100);
