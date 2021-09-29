@@ -5,12 +5,18 @@ ESP32Encoder encoder;
 Button::Button(uint8_t pin) : PIN(pin)
 {
 	pinMode(pin, INPUT_PULLUP);
-	attachInterrupt(pin, std::bind(&Button::isr, this), FALLING);
+	attachInterrupt(digitalPinToInterrupt(pin), std::bind(&Button::isr, this), FALLING);
 }
 
 void Button::isr(void) {
 	debounceTimer = millis();
 	pressed = true;
+}
+
+void Button::attachInt(void)
+{
+	pinMode(PIN, INPUT_PULLUP);
+	attachInterrupt(digitalPinToInterrupt(PIN), std::bind(&Button::isr, this), FALLING);
 }
 
 bool Button::checkPressed(void) {

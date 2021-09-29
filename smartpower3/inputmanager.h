@@ -28,4 +28,5 @@ public:
 	}
 	void IRAM_ATTR isr(void);
 	bool checkPressed(void);
+	void attachInt(void);
 };

@@ -67,6 +67,9 @@ public:
 	void setIntFlag(uint8_t channel);
 	uint16_t getLogInterval(void);
 	uint8_t getIntStat(uint8_t channel);
+	bool checkAttachBtn(uint8_t pin);
+	void disableBtn(void);
+	void enableBtn(void);
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
@@ -112,4 +115,5 @@ private:
 	uint32_t fnd_time = 0;
 	bool enabled_stpd01[2] = {0,};
 	uint8_t int_stat[2] = {0,};
+	bool flag_attach[4] = {0,};
 };

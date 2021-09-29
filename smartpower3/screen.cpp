@@ -223,6 +223,15 @@ void Screen::activate_setting()
 	}
 }
 
+bool Screen::checkAttachBtn(uint8_t pin)
+{
+	if (flag_attach[pin])
+		flag_attach[pin] = false;
+	else
+		return 0;
+	return 1;
+}
+
 void Screen::drawBase()
 {
 	if (dial_cnt != dial_cnt_old) {
@@ -231,12 +240,13 @@ void Screen::drawBase()
 	}
 	if (btn_pressed[2] == true) {
 		btn_pressed[2] = false;
+		disableBtn();
 		channel[0]->setHide();
 		channel[1]->setHide();
 		mode = SETTING;
-		tft.fillRect(0, 39, 480, 285, TFT_BLACK);
 		setting->init(10, 100);
 		activated = dial_cnt = dial_cnt_old = STATE_NONE;
+		enableBtn();
 	}
 }
 
@@ -281,31 +291,45 @@ void Screen::drawBaseMove()
 	}
 }
 
+void Screen::disableBtn()
+{
+	uint8_t list_btn[4] = {39, 34, 36, 35};
+	for (int i = 0; i < 4; i++)
+		detachInterrupt(digitalPinToInterrupt(list_btn[i]));
+}
+
+void Screen::enableBtn()
+{
+	for (int i = 0; i < 4; i++)
+		flag_attach[i] = true;
+}
+
 void Screen::drawBaseEdit()
 {
 	if ((cur_time - dial_time) > 10000) {
 		mode = BASE;
 		deActivate();
-		dial_cnt = 0;
-		dial_cnt_old = 0;
+		activated = dial_cnt = dial_cnt_old = STATE_NONE;
 		channel[0]->clearCompColor();
 		channel[1]->clearCompColor();
 	}
 	if (btn_pressed[2] == true) {
 		mode = BASE_MOVE;
-		dial_cnt = 0;
-		dial_cnt_old = 0;
+		dial_cnt = dial_cnt_old = dial_state;
 		channel[0]->clearCompColor();
 		channel[1]->clearCompColor();
 		btn_pressed[2] = false;
+		return;
 	}
 	if (btn_pressed[3] == true) {
 		mode = BASE_MOVE;
 		btn_pressed[3] = false;
+		disableBtn();
 		changeVolt(mode);
 		channel[0]->clearCompColor();
 		channel[1]->clearCompColor();
 		dial_cnt = dial_state;
+		enableBtn();
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -326,16 +350,17 @@ void Screen::drawSetting()
 	}
 	if (btn_pressed[2] == true) {
 		btn_pressed[2] = false;
+		disableBtn();
 		if (activated == STATE_NONE) {
 			channel[0]->clearHide();
 			channel[1]->clearHide();
 			initScreen();
 			mode = BASE;
-			activated = dial_cnt = 0;
 		} else {
 			deActivateSetting();
-			activated = dial_cnt =  STATE_NONE;
 		}
+		activated = dial_cnt =  STATE_NONE;
+		enableBtn();
 	}
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
@@ -777,7 +802,6 @@ void Screen::setSysParam(char *key, float value)
 #if 1
 	char str[5];
 	sprintf(str, "%04.1f", value);
-	vTaskDelay(200);
 	File f = fs->open("/setting.txt", "r+");
 	f.seek(0, SeekSet);
 	f.findUntil(key, "\n\r");
@@ -791,7 +815,6 @@ void Screen::setSysParam(char *key, float value)
 void Screen::setSysParam(char *key, String value)
 {
 #if 1
-	vTaskDelay(200);
 	File f = fs->open("/setting.txt", "r+");
 	Serial.printf("size of file %d, value %s\n\r", f.size(), value);
 	f.seek(0, SeekSet);

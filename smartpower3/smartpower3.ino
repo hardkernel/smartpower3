@@ -86,10 +86,10 @@ void inputTask(void *parameter)
 	for (;;) {
 		cur_time = millis();
 		for (int i = 0; i < 4; i++) {
-			if (button[i].checkPressed() == true) {
-				//get_memory_info();
+			if (screen.checkAttachBtn(i))
+				button[i].attachInt();
+			if (button[i].checkPressed() == true)
 				screen.getBtnPress(i, cur_time);
-			}
 		}
 		if (dial.cnt != 0) {
 			screen.countDial(dial.cnt, dial.direct, dial.step, cur_time);
