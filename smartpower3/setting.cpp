@@ -16,6 +16,7 @@ void Setting::init(uint16_t x, uint16_t y)
 	this->x = x;
 	this->y = y;
 
+	tft->fillRect(0, 39, 480, 285, TFT_BLACK);
 	tft->loadFont("NotoSans-Bold20");
 	tft->drawString("Build date : ", x + 140, y + 195, 2);
 	tft->drawString(String(__DATE__), x + 260, y + 195, 2);
