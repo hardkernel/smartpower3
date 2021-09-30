@@ -1,5 +1,4 @@
 #include "screen.h"
-#include <ArduinoTrace.h>
 
 bool Screen::_int = false;
 bool Screen::remoteSetupRequested = false;
@@ -18,8 +17,8 @@ void Screen::begin(TwoWire *theWire)
 {
 	_wire = theWire;
 	header = new Header(&tft);
-	channel[0] = new Channel(&tft, _wire, 0, 40, 0);
-	channel[1] = new Channel(&tft, _wire, 246, 40, 1);
+	channel[0] = new Channel(&tft, _wire, 0, 50, 0);
+	channel[1] = new Channel(&tft, _wire, 246, 50, 1);
 
 	if (!SPIFFS.begin(false)) {
 		Serial.println("SPIFFS mount error");
@@ -33,7 +32,7 @@ void Screen::begin(TwoWire *theWire)
 	fsInit();
 
 	initScreen();
-	header->init(3, 3);
+	header->init(5, 8);
 }
 
 int8_t* Screen::getOnOff()
@@ -63,14 +62,14 @@ void Screen::setIntFlag(uint8_t ch)
 
 void Screen::initScreen(void)
 {
-	tft.fillRect(0, 39, 480, 285, TFT_BLACK);
+	tft.fillRect(0, 50, 480, 285, TFT_BLACK);
 
-	for (int i = 0; i < 3; i++) {
-		tft.drawLine(0, 36 + i, 480, 36 + i, TFT_WHITE);
-		tft.drawLine(0, 270 + i, 480, 270 + i, TFT_WHITE);
+	for (int i = 0; i < 2; i++) {
+		tft.drawLine(0, 50 + i, 480, 50 + i, TFT_DARKGREY);
+		tft.drawLine(0, 274 + i, 480, 274 + i, TFT_DARKGREY);
 	}
-	for (int i = 0; i < 4; i++)
-		tft.drawLine(236 + i, 38, 236 + i, 320, TFT_WHITE);
+	for (int i = 0; i < 2; i++)
+		tft.drawLine(236 + i, 50, 236 + i, 320, TFT_DARKGREY);
 
 	channel[0]->initScreen(onoff[0]);
 	channel[1]->initScreen(onoff[1]);
@@ -868,11 +867,9 @@ void Screen::fsInit(void)
 		f.findUntil("voltage0", "\n\r");
 		f.seek(1, SeekCur);
 		volt_set0 = f.readStringUntil('\n').toFloat()*1000;
-		DUMP(volt_set0);
 		f.findUntil("voltage1", "\n\r");
 		f.seek(1, SeekCur);
 		volt_set1 = f.readStringUntil('\n').toFloat()*1000;
-		DUMP(volt_set1);
 		f.findUntil("current_limit0", "\n\r");
 		f.seek(1, SeekCur);
 		current_limit0 = f.readStringUntil('\n').toFloat()*1000;

@@ -1,5 +1,4 @@
 #include "STPD01.h"
-#include <ArduinoTrace.h>
 
 STPD01::STPD01(uint8_t addr, TwoWire *theWire)
 {
@@ -117,7 +116,6 @@ void STPD01::monitorInterrupt(uint8_t ch)
 uint8_t STPD01::setCurrentLimit(uint16_t milliampere)
 {
 	uint8_t val, tmp;
-	TRACE();
 	if ((milliampere < 100) and (milliampere > 3000)) {
 		Serial.printf("Invalid current limit value : %d\n\r", milliampere);
 		return 1;
@@ -161,7 +159,6 @@ bool STPD01::readOnOff(void)
 bool STPD01::on(void)
 {
 	byte tmp;
-	TRACE();
 	write8(STPD01_REGISTER_6, 0x1);
 	if (readOnOff() != 1)
 		return 1;
@@ -171,7 +168,6 @@ bool STPD01::on(void)
 bool STPD01::off(void)
 {
 	byte tmp;
-	TRACE();
 	write8(STPD01_REGISTER_6, 0x0);
 	if (readOnOff() != 0)
 		return 1;
@@ -182,7 +178,6 @@ uint16_t STPD01::readVoltage()
 {
 	uint8_t val = 0;
 	uint16_t volt = 0;
-	TRACE();
 	val = read8(STPD01_REGISTER_0);
 	if (val < 0x91)
 		volt = val*20 + 3000;
@@ -197,7 +192,6 @@ uint16_t STPD01::readVoltage()
 uint8_t STPD01::setVoltage(uint16_t volt)
 {
 	uint8_t val, tmp;
-	TRACE();
 	if (volt < 3000) {
 		val = 0x00;
 	} else if (volt < 5900) {

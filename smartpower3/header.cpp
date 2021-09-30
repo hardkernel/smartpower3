@@ -36,7 +36,7 @@ void Header::init(uint16_t x, uint16_t y)
 
 	icon_input->init(9, x, y, FG_COLOR, BG_COLOR);
 	//icon_wifi->icon_init(9, x + 440, y-3, FG_COLOR, BG_COLOR);
-	icon_log->init(9, x + 440, y-3, FG_COLOR, BG_COLOR);
+	icon_log->init(9, x + 440, y, FG_COLOR, BG_COLOR);
 
 	display_mode->init(TFT_BLACK, TFT_YELLOW, 1, TL_DATUM);
 	display_mode->setCoordinate(x + 300, y);
