@@ -35,7 +35,7 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 	watt->fnd_init(NUM_OF_FND, 2, true, x + 40, 64*2 + 10 + y+10, FG_COLOR, BG_COLOR);
 
 	_volt->fnd_init(3, 1, true, x + W_SEG-2, y+12, TFT_YELLOW, BG_COLOR, FND_FONT_16x32, 10);
-	_current->fnd_init(2, 1, true, x + W_SEG+14, y+12+64, TFT_YELLOW, BG_COLOR, FND_FONT_16x32, 10);
+	_current->fnd_init(2, 1, true, x + W_SEG+14, y+18+64, TFT_YELLOW, BG_COLOR, FND_FONT_16x32, 10);
 
 	uint16_t gap_int_icon = 25;
 	uint16_t base = 40;
@@ -46,8 +46,8 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 	icon_tw->init(4, x, y+base + gap_int_icon*4, FG_COLOR, BG_COLOR);
 	icon_ip->init(5, x, y+base + gap_int_icon*5, FG_COLOR, BG_COLOR);
 
-	icon_p->init(9, x + 26 + channel*(10), y+245, FG_COLOR, BG_COLOR);
-	icon_n->init(9, x + 156 + channel*(10), y+245, FG_COLOR, BG_COLOR);
+	icon_p->init(9, x + 26 + channel*(10), y+234, FG_COLOR, BG_COLOR);
+	icon_n->init(9, x + 156 + channel*(10), y+234, FG_COLOR, BG_COLOR);
 
 	icon_v->init(9, x + W_SEG-10, y+46, FG_COLOR, BG_COLOR);
 	icon_a->init(9, x + W_SEG-10, y+32 + H_SEG+OFFSET_SEG, FG_COLOR, BG_COLOR);
