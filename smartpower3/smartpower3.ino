@@ -1,4 +1,3 @@
-#include <ArduinoTrace.h>
 #include <Wire.h>
 #include "smartpower3.h"
 
@@ -8,9 +7,7 @@ uint32_t ctime1 = 0;
 #define LED1	2
 
 void setup(void) {
-	ARDUINOTRACE_INIT(500000);
 	Serial.begin(500000);
-	TRACE();
 	I2CA.begin(15, 4, 10000);
 	I2CB.begin(21, 22, 400000);
 	PAC.begin(&I2CB);

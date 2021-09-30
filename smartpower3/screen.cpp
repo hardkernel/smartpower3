@@ -1,5 +1,4 @@
 #include "screen.h"
-#include <ArduinoTrace.h>
 
 bool Screen::_int = false;
 
@@ -762,11 +761,9 @@ void Screen::fsInit(void)
 		f.findUntil("voltage0", "\n\r");
 		f.seek(1, SeekCur);
 		volt_set0 = f.readStringUntil('\n').toFloat()*1000;
-		DUMP(volt_set0);
 		f.findUntil("voltage1", "\n\r");
 		f.seek(1, SeekCur);
 		volt_set1 = f.readStringUntil('\n').toFloat()*1000;
-		DUMP(volt_set1);
 		f.findUntil("current_limit0", "\n\r");
 		f.seek(1, SeekCur);
 		current_limit0 = f.readStringUntil('\n').toFloat()*1000;

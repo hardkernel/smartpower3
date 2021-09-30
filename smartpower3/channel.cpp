@@ -1,5 +1,4 @@
 #include "channel.h"
-#include <ArduinoTrace.h>
 
 Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 		uint8_t channel)
@@ -184,7 +183,6 @@ void Channel::disabled(void)
 bool Channel::on(void)
 {
 	bool err;
-	TRACE();
 	if (stpd01->available()) {
 		stpd01->setVoltage(volt_set);
 		stpd01->setCurrentLimit(current_limit);
@@ -208,7 +206,6 @@ bool Channel::on(void)
 bool Channel::off(void)
 {
 	bool err;
-	TRACE();
 	if (stpd01->available()) {
 		err = stpd01->off();
 	}
@@ -426,11 +423,8 @@ void Channel::setIntFlag(void)
 void Channel::isr(void)
 {
 	if (flag_int || !digitalRead(int_stpd01[channel])) {
-		DUMP(channel);
-		DUMP(flag_int);
 		if (stpd01->available()) {
 			latch = checkInterruptLatch();
-			DUMP(latch);
 			if (latch & INT_OTP) {
 				off();
 				Serial.printf("ch%d, flag_int %d, latch : %x OTP\n\r", channel, flag_int, latch);
