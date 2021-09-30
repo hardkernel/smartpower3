@@ -60,7 +60,7 @@ void Component::clearOutLines(void)
 	}
 }
 
-void Component::draw(char *s)
+void Component::draw(const char s[])
 {
 	if (align == TR_DATUM)
 		img->drawString(s, width, 0, font);

@@ -7,7 +7,7 @@
 #include "component.h"
 
 #define WAIT 1
-#define W_SEG 140
+#define W_SEG 180
 #define H_SEG 48
 #define OFFSET_SEG 35
 #define OFFSET_CH 15
@@ -28,11 +28,9 @@ public:
 	void draw(String s);
 	void setCoordinate(uint16_t x, uint16_t y);
 	void pushValue(uint16_t value);
-	void activate(void);
-	void deActivate(void);
 	void setTextColor(uint16_t fg_color, uint16_t bg_color);
 	struct fnd* fnd_init (uint8_t cnt, uint8_t dot_pos, bool rbo,
-			uint16_t x, uint16_t y, uint16_t fg_color, uint16_t bg_color);
+			uint16_t x, uint16_t y, uint16_t fg_color, uint16_t bg_color, enum FND_FONT_SIZE f_size=FND_FONT_32x64, uint32_t div=1);
 	void fnd_dot_write(void);
 	void fnd_num_write(uint16_t f_pos);
 	void fnd_clear_all(void);
@@ -40,11 +38,15 @@ public:
 	void fnd_fb_write(int8_t f_pos, int8_t f_value, int16_t color);
 	void fnd_dd_clear(void);
 	uint16_t getValue(void);
+	void fnd_font_init(struct font_info *f_info, enum FND_FONT_SIZE font);
+	void drawOutLines();
+	void clearOutLines();
+	void activate();
+	void deActivate();
+
 	
 private:
 	uint8_t mode = 0;
-	uint16_t x;
-	uint16_t y;
 	uint16_t width;
 	uint16_t height;
 	uint8_t font;
@@ -52,8 +54,6 @@ private:
 	uint16_t value;
 	uint16_t old_value;
 	uint16_t value_old;
-	void drawOutLines(void);
-	void clearOutLines(void);
 	struct fnd *f;
 };
 

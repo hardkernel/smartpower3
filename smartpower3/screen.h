@@ -8,7 +8,6 @@
 #include "header.h"
 #include "setting.h"
 #include <STPD01.h>
-#include <Adafruit_BME280.h>
 
 enum screen_mode_t {
 	BASE = 0,
@@ -21,11 +20,10 @@ enum screen_mode_t {
 };
 
 enum state {
-	STATE_HEADER = 0,
-	STATE_VOLT1,
+	STATE_VOLT1 = 0,
 	STATE_CURRENT1,
 	STATE_CURRENT0,
-	STATE_VOLT0
+	STATE_VOLT0,
 };
 
 enum state_setting {
@@ -68,7 +66,7 @@ public:
 	void drawScreen(void);
 	void activate();
 	void activate_setting();
-	void countDial(int8_t mode_count, bool direct, uint32_t milisec);
+	void countDial(int8_t mode_count, int8_t direct, uint8_t step, uint32_t milisec);
 	void deActivate();
 	void deActivateSetting();
 	void getBtnPress(uint8_t idx, uint32_t cur_time);
@@ -90,6 +88,10 @@ public:
 	void disablePower();
 	void setIntFlag(uint8_t channel);
 	uint16_t getLogInterval(void);
+	uint8_t getIntStat(uint8_t channel);
+	bool checkAttachBtn(uint8_t pin);
+	void disableBtn(void);
+	void enableBtn(void);
 	uint16_t getVoltSet(uint8_t channel);
 	uint16_t getCurrentLimitSet(uint8_t channel);
 	static void remoteSwitchChannelOnoff(uint8_t channel);
@@ -110,10 +112,11 @@ private:
 	uint32_t time_print[2] = {0, 0};
 	int8_t onoff[2] = {2, 2};
 	bool btn_pressed[4] = {false,};
-	int8_t dial_cnt = 0;
-	int8_t dial_cnt_old;
-	bool dial_direct;
+	int16_t dial_cnt = 0;
+	int16_t dial_cnt_old;
+	int8_t dial_direct;
 	uint8_t dial_state;
+	uint8_t dial_step;
 	void drawBase(void);
 	void drawBaseEdit(void);
 	void drawBaseMove(void);
@@ -138,6 +141,8 @@ private:
 	uint16_t time_on = 0;
 	uint16_t time_off = 0;
 	uint32_t fnd_time = 0;
+	uint8_t int_stat[2] = {0,};
+	bool flag_attach[4] = {0,};
 	bool enabled_stpd01[2] = {0,};
 	void remoteSetup();
 	static bool remoteSetupRequested;

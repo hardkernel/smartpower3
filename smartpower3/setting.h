@@ -9,6 +9,10 @@
 #define FREQ	50000
 #define RESOLUTION	8
 
+#define X_BL_LEVEL 250
+#define X_FAN_LEVEL 250
+#define X_LOG_LEVEL 250
+
 class Setting
 {
 public:
@@ -25,7 +29,7 @@ public:
 
 	void changeBacklight(uint8_t level=255);
 	void changeFan(uint8_t level=255);
-	void changeLogInterval(uint16_t log_interval=0);
+	void changeLogInterval(uint16_t log_interval=65535);
 	void setBacklightLevel(uint8_t level);
 	void setFanLevel(uint8_t level);
 

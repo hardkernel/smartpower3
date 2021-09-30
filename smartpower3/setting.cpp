@@ -16,24 +16,29 @@ void Setting::init(uint16_t x, uint16_t y)
 	this->x = x;
 	this->y = y;
 
-	tft->drawString("Build date : ", x + 230, y + 200, 2);
-	tft->drawString(String(__DATE__), x + 310, y + 200, 2);
-	tft->drawString(String(__TIME__), x + 400, y + 200, 2);
+	tft->fillRect(0, 39, 480, 285, TFT_BLACK);
+	tft->loadFont("NotoSans-Bold20");
+	tft->drawString("Build date : ", x + 140, y + 195, 2);
+	tft->drawString(String(__DATE__), x + 260, y + 195, 2);
+	tft->drawString(String(__TIME__), x + 380, y + 195, 2);
+	tft->unloadFont();
 
+	tft->loadFont("Chewy-Regular32");
 	tft->drawString("Backlight Level", x, y, 4);
 	tft->drawString("Fan Level", x, y + 50, 4);
 	tft->drawString("Logging", x, y + 100, 4);
+	tft->unloadFont();
 
-	tft->fillRect(x + 200, y, 135, 26, TFT_BLACK);
-	tft->drawRect(x + 200, y-1, 135, 28, TFT_YELLOW);
+	tft->fillRect(x + X_BL_LEVEL, y, 135, 26, TFT_BLACK);
+	tft->drawRect(x + X_BL_LEVEL, y-1, 135, 28, TFT_YELLOW);
 	changeBacklight(backlight_level);
 
-	tft->fillRect(x + 200, y + 50, 135, 26, TFT_BLACK);
-	tft->drawRect(x + 200, y-1 + 50, 135, 28, TFT_YELLOW);
+	tft->fillRect(x + X_FAN_LEVEL, y + 50, 135, 26, TFT_BLACK);
+	tft->drawRect(x + X_FAN_LEVEL, y-1 + 50, 135, 28, TFT_YELLOW);
 	changeFan(fan_level);
 
-	tft->fillRect(x + 200, y + 100, 135, 26, TFT_BLACK);
-	tft->drawRect(x + 200, y-1 + 100, 135, 28, TFT_YELLOW);
+	tft->fillRect(x + X_LOG_LEVEL, y + 100, 135, 26, TFT_BLACK);
+	tft->drawRect(x + X_LOG_LEVEL, y-1 + 100, 135, 28, TFT_YELLOW);
 	changeLogInterval(log_interval);
 }
 
@@ -94,6 +99,8 @@ void Setting::changeFan(uint8_t level)
 
 void Setting::changeLogInterval(uint16_t log_interval)
 {
+	if (log_interval == 65535)
+		log_interval = this->log_interval;
 	drawLogInterval(log_value[log_interval]);
 	log_interval_edit = log_interval;
 }
@@ -121,61 +128,67 @@ void Setting::setFanLevel(uint8_t level)
 void Setting::activateBLLevel(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
-		tft->drawRect(x + 200 -i, y-1-i, 135+i*2, 28+i*2, color);
+		tft->drawRect(x + X_BL_LEVEL-i, y-1-i, 135+i*2, 28+i*2, color);
 }
 
 void Setting::deActivateBLLevel(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
-		tft->drawRect(x + 200 -i, y-1-i, 135+i*2, 28+i*2, color);
+		tft->drawRect(x + X_BL_LEVEL -i, y-1-i, 135+i*2, 28+i*2, color);
 }
 
 void Setting::activateFanLevel(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
-		tft->drawRect(x + 200 -i, y-1-i + 50, 135+i*2, 28+i*2, color);
+		tft->drawRect(x + X_FAN_LEVEL -i, y-1-i + 50, 135+i*2, 28+i*2, color);
 }
 
 void Setting::deActivateFanLevel(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
-		tft->drawRect(x + 200 -i, y-1-i + 50, 135+i*2, 28+i*2, color);
+		tft->drawRect(x + X_FAN_LEVEL -i, y-1-i + 50, 135+i*2, 28+i*2, color);
 }
 
 void Setting::activateLogInterval(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
-		tft->drawRect(x + 200 -i, y-1-i + 100, 135+i*2, 28+i*2, color);
+		tft->drawRect(x + X_LOG_LEVEL -i, y-1-i + 100, 135+i*2, 28+i*2, color);
 }
 
 void Setting::deActivateLogInterval(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
-		tft->drawRect(x + 200 -i, y-1-i + 100, 135+i*2, 28+i*2, color);
+		tft->drawRect(x + X_LOG_LEVEL -i, y-1-i + 100, 135+i*2, 28+i*2, color);
 }
 
 
 void Setting::drawBacklightLevel(uint8_t level)
 {
-	tft->fillRect(x + 202, y+1, 130, 24, TFT_BLACK);
+	tft->fillRect(x + X_BL_LEVEL + 2, y+1, 130, 24, TFT_BLACK);
 	for (int i = 0; i < level; i++) {
-		tft->fillRect(x + 202 + (i*22), y + 1, 20, 24, TFT_YELLOW);
+		tft->fillRect(x + X_BL_LEVEL + 2 + (i*22), y + 1, 20, 24, TFT_YELLOW);
 	}
 }
 
 void Setting::drawFanLevel(uint8_t level)
 {
-	tft->fillRect(x + 202, y+1 + 50, 130, 24, TFT_BLACK);
+	tft->fillRect(x + X_FAN_LEVEL + 2, y+1 + 50, 130, 24, TFT_BLACK);
 	for (int i = 0; i < level; i++) {
-		tft->fillRect(x + 202 + (i*22), y + 1 + 50, 20, 24, TFT_YELLOW);
+		tft->fillRect(x + X_FAN_LEVEL + 2 + (i*22), y + 1 + 50, 20, 24, TFT_YELLOW);
 	}
 }
 
 void Setting::drawLogInterval(uint16_t log_value)
 {
-	tft->fillRect(x + 202, y+1 + 100, 130, 24, TFT_BLACK);
+	uint8_t old_datum;
+	old_datum = tft->getTextDatum();
+	tft->setTextDatum(CC_DATUM);
+	tft->fillRect(x + X_LOG_LEVEL + 2, y+1 + 100, 130, 24, TFT_BLACK);
+	tft->loadFont("Chewy-Regular24");
 	if (log_value == 0)
-		tft->drawString("OFF", x + 200 + 5, y + 100, 4);
+		tft->drawString("OFF", x + X_LOG_LEVEL + 65, y + 113, 4);
 	else
-		tft->drawString(String(log_value) + " ms", x + 200 + 5, y + 100, 4);
+		tft->drawString(String(log_value) + " ms", x + X_LOG_LEVEL + 65, y + 113, 4);
+	tft->unloadFont();
+	tft->setTextDatum(old_datum);
 }

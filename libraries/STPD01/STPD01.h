@@ -32,14 +32,14 @@ enum {
 #define STPD01_WATCHDOG_ENABLE	0x2
 
 enum {
-	INT_OVERVOLTAGE_PROTECTION = 0x1,
-	INT_CONSTANT_CURRENT_FUNCTION = 0x02,
-	INT_SHORT_CIRCUIT_PROTECTION = 0x04,
-	INT_POWER_ON = 0x08,
-	INT_WATCHDOG = 0x10,
-	INT_OVERTEMPERATURE_PROTECTION = 0x20, // Junction temperature 165 celcious degrees.
-	INT_OVERTEMPERATURE_WARNING = 0x40, // Junction temperature 145 celcious degrees.
-	INT_INDUCTOR_PEAK_CURRENT_PROTECTION = 0x80
+	INT_OVP = 0x1,
+	INT_CC = 0x02,
+	INT_SCP = 0x04,
+	INT_PWR_ON = 0x08,
+	INT_WTD = 0x10,
+	INT_OTP = 0x20, // Junction temperature 165 celcious degrees.
+	INT_OTW = 0x40, // Junction temperature 145 celcious degrees.
+	INT_IPCP = 0x80
 };
 
 enum {

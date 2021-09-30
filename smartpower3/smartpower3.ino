@@ -8,16 +8,9 @@ uint32_t ctime1 = 0;
 #define LED2	13
 #define LED1	2
 
-#define FAN		12
-
-#define FREQ	5000
-#define RESOLUTION	8
-
-uint32_t fps_ch0;
-
 void setup(void) {
-	ARDUINOTRACE_INIT(500000);
-	Serial.begin(500000);
+	ARDUINOTRACE_INIT(115200);
+	Serial.begin(115200);
 	TRACE();
 	I2CA.begin(15, 4, 10000);
 	I2CB.begin(21, 22, 400000);
@@ -28,7 +21,7 @@ void setup(void) {
 
 	initEncoder(&dial);
 
-	xTaskCreate(screenTask, "Draw Screen", 2000, NULL, 1, NULL);
+	xTaskCreate(screenTask, "Draw Screen", 3000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 1500, NULL, 10, NULL);
 	xTaskCreate(logTask, "Log Task", 2000, NULL, 1, NULL);
 	xTaskCreate(wifiTask, "WiFi Connection Task", 4000, NULL, 1, NULL);
@@ -74,9 +67,9 @@ void logTask(void *parameter)
 		log_interval = screen.getLogInterval();
 		if (log_interval > 0) {
 			vTaskDelay(log_interval-5);
-			sprintf(buffer_input, "%010d,%05d,%04d,%05d,%1d,", millis(), volt[0], amp[0], watt[0], low_input);
-			sprintf(buffer_ch0, "%05d,%04d,%05d,%d,%x,", volt[1], amp[1], watt[1], onoff[0], 0xff);
-			sprintf(buffer_ch1, "%05d,%04d,%05d,%d,%x\n\r", volt[2], amp[2], watt[2], onoff[1], 0xff);
+			sprintf(buffer_input, "%010d,%05d,%04d,%05d,%1d,", cur_time, volt[0], amp[0], watt[0], low_input);
+			sprintf(buffer_ch0, "%05d,%04d,%05d,%d,%x,", volt[1], amp[1], watt[1], onoff[0], screen.getIntStat(0));
+			sprintf(buffer_ch1, "%05d,%04d,%05d,%d,%x\n\r", volt[2], amp[2], watt[2], onoff[1], screen.getIntStat(1));
 			Serial.printf(buffer_input);
 			Serial.printf(buffer_ch0);
 			Serial.printf(buffer_ch1);
@@ -97,12 +90,13 @@ void inputTask(void *parameter)
 	for (;;) {
 		cur_time = millis();
 		for (int i = 0; i < 4; i++) {
-			if (button[i].checkPressed() == true) {
+			if (screen.checkAttachBtn(i))
+				button[i].attachInt();
+			if (button[i].checkPressed() == true)
 				screen.getBtnPress(i, cur_time);
-			}
 		}
 		if (dial.cnt != 0) {
-			screen.countDial(dial.cnt, dial.direct, cur_time);
+			screen.countDial(dial.cnt, dial.direct, dial.step, cur_time);
 			dial.cnt = 0;
 		}
 		screen.setTime(cur_time);
@@ -190,6 +184,10 @@ void loop() {
 			low_input = false;
 		}
 		screen.pushInputPower(volt[0], amp[0], watt[0]);
+		if ((cur_time/1000)%2)
+			ledcWrite(0, 50);
+		else
+			ledcWrite(0, 0);
 	}
 }
 

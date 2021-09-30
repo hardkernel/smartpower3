@@ -13,55 +13,71 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 	current = new FndWidget(tft);
 	watt = new FndWidget(tft);
 
-	volt->fnd_init(NUM_OF_FND, 2, true, x, Y_VOLT + y, FG_COLOR, BG_COLOR);
-	current->fnd_init(NUM_OF_FND, 2, true, x, Y_CURRENT + y, FG_COLOR, BG_COLOR);
-	watt->fnd_init(NUM_OF_FND, 2, true, x, Y_WATT + y, FG_COLOR, BG_COLOR);
+	_volt = new FndWidget(tft);
+	_current = new FndWidget(tft);
 
-	/*
-	 * Rev0.4 sptd01 address
-	 * I2CA : 0x5
-	 * I2CB : 0x4
-	 * stpd01->begin(0x5 -(channel*1), theWire);
-	 *
-	 * Rev1.0 sptd01 address
-	 * I2CA : 0x5
-	 * I2CB : 0x7
-	 * stpd01->begin(0x5 +(channel*2), theWire);
-	 */
+	icon_op = new IconWidget(tft, channel);
+	icon_sp = new IconWidget(tft, channel);
+	icon_cc = new IconWidget(tft, channel);
+	icon_tp = new IconWidget(tft, channel);
+	icon_tw = new IconWidget(tft, channel);
+	icon_ip = new IconWidget(tft, channel);
+
+	icon_p = new IconWidget(tft, channel);
+	icon_n = new IconWidget(tft, channel);
+
+	icon_v = new IconWidget(tft, channel);
+	icon_w = new IconWidget(tft, channel);
+	icon_a = new IconWidget(tft, channel);
+
+	volt->fnd_init(NUM_OF_FND, 2, true, x + 40, + y+10, FG_COLOR, BG_COLOR);
+	current->fnd_init(NUM_OF_FND, 2, true, x + 40, 64 + 5 + y+10, FG_COLOR, BG_COLOR);
+	watt->fnd_init(NUM_OF_FND, 2, true, x + 40, 64*2 + 10 + y+10, FG_COLOR, BG_COLOR);
+
+	_volt->fnd_init(3, 1, true, x + W_SEG-2, y+12, TFT_YELLOW, BG_COLOR, FND_FONT_16x32, 10);
+	_current->fnd_init(2, 1, true, x + W_SEG+14, y+12+64, TFT_YELLOW, BG_COLOR, FND_FONT_16x32, 10);
+
+	uint16_t gap_int_icon = 25;
+	uint16_t base = 40;
+	icon_op->init(0, x, y+base, FG_COLOR, BG_COLOR);
+	icon_sp->init(1, x, y+base + gap_int_icon, FG_COLOR, BG_COLOR);
+	icon_cc->init(2, x, y+base + gap_int_icon*2, FG_COLOR, BG_COLOR);
+	icon_tp->init(3, x, y+base + gap_int_icon*3, FG_COLOR, BG_COLOR);
+	icon_tw->init(4, x, y+base + gap_int_icon*4, FG_COLOR, BG_COLOR);
+	icon_ip->init(5, x, y+base + gap_int_icon*5, FG_COLOR, BG_COLOR);
+
+	icon_p->init(9, x + 26 + channel*(10), y+245, FG_COLOR, BG_COLOR);
+	icon_n->init(9, x + 156 + channel*(10), y+245, FG_COLOR, BG_COLOR);
+
+	icon_v->init(9, x + W_SEG-10, y+46, FG_COLOR, BG_COLOR);
+	icon_a->init(9, x + W_SEG-10, y+32 + H_SEG+OFFSET_SEG, FG_COLOR, BG_COLOR);
+	icon_w->init(9, x + W_SEG-10, y+20+H_SEG*2+OFFSET_SEG*2, FG_COLOR, BG_COLOR);
+
 	stpd01 = new STPD01(0x5 + (channel*2), theWire);
 
-	_volt = new Component(tft, 48, 22, 4);
-	_current = new Component(tft, 48, 22, 4);
-	stpd = new Component(tft, 38, 16, 2);
-	/*
-
-	for (int i = 0; i < 8; i++) {
-		int_stat[i] = new Component(tft, 14, 22, 2);
-		int_latch[i] = new Component(tft, 14, 22, 2);
-		int_mask[i] = new Component(tft, 14, 22, 2);
-	}
-	*/
+#ifdef DEBUG_STPD01
+	stpd = new Component(tft, 32, 16, 2);
+#endif
 	pinMode(int_stpd01[channel], INPUT_PULLUP);
 }
 
 Channel::~Channel(void)
 {
-#if 0
 	delete volt;
-	delete ampere;
+	delete current;
 	delete watt;
 	delete _volt;
-	delete _ampere;
+	delete _current;
 	volt = NULL;
-	ampere = NULL;
+	current = NULL;
 	watt = NULL;
 	_volt = NULL;
-	_ampere = NULL;
-#endif
+	_current = NULL;
 }
 
 bool Channel::isAvailableSTPD01()
 {
+#ifdef DEBUG_STPD01
 	if (!stpd01->available()) {
 		stpd->setTextColor(FG_DISABLED, BG_DISABLED);
 		stpd->draw("STPD");
@@ -70,68 +86,65 @@ bool Channel::isAvailableSTPD01()
 	stpd->setTextColor(FG_ENABLED, BG_ENABLED);
 	stpd->draw("STPD");
 	return 1;
+#endif
 }
 
-void Channel::initPower()
+void Channel::initScreen(uint8_t onoff)
 {
-	/*
-	if (test() != 1)
-		delay(100);
-		*/
-	off();
-}
-
-void Channel::deleteScreen()
-{
-}
-
-void Channel::initScreen()
-{
-	_volt->setCoordinate(x + 145, y + 5);
-	_volt->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
 	_volt->pushValue(volt_set);
-	_current->init(TFT_YELLOW, TFT_BLACK, 1, TR_DATUM);
-	_current->setCoordinate(x + 145, y + 5 + Y_CURRENT);
 	_current->pushValue(current_limit);
 
-	/*
-	tft->drawString("Status", x, y + 220, 2);
-	tft->drawString("Latch", x, y + 235, 2);
-	tft->drawString("Mask", x, y + 250, 2);
-	for (int i = 0; i < 8; i++) {
-		int_stat[i]->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
-		int_stat[i]->setCoordinate(x + 90 + (i*15), y + 220);
-		int_stat[i]->draw(String("1"));
-		int_latch[i]->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
-		int_latch[i]->setCoordinate(x + 90 + (i*15), y + 235);
-		int_latch[i]->draw(String("1"));
-		int_mask[i]->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
-		int_mask[i]->setCoordinate(x + 90 + (i*15), y + 250);
-		int_mask[i]->draw(String("1"));
-	}
-	*/
-
-	//FG_DISABLED, BG_DISABLED
-	//stpd->init(TFT_YELLOW, TFT_DARKGREY, 1, TR_DATUM);
+#ifdef DEBUG_STPD01
 	stpd->init(FG_ENABLED, BG_ENABLED, 1, TR_DATUM);
-	//stpd->init(FG_DISABLED, BG_DISABLED, 1, TR_DATUM);
-	stpd->setCoordinate(x + 180, y + 180);
+	stpd->setCoordinate(x, y + 210);
 	stpd->draw(String("STPD"));
+#endif
 
-	tft->drawString("V", x + W_SEG-4, y + 38, 4);
-	tft->drawString("A", x + W_SEG-4, y + 29 + H_SEG + OFFSET_SEG, 4);
-	tft->drawString("W", x + W_SEG-4, y + 10 + H_SEG*2 + OFFSET_SEG*2, 4);
 	drawChannel(true);
 	drawVoltSet(true);
+	drawInterrupt();
+	drawPolarity();
+	if ((onoff == 1) or (onoff == 1))
+		drawUnits(true);
+	else
+		drawUnits(false);
+}
 
-	tft->fillRoundRect(x, y + 240, 60, 40, 10, TFT_WHITE);
-	for (int i=0; i < 10; i++)
-		tft->drawLine(x + 15, y + 255 + i, x + 45, y + 255 + i, TFT_RED);
-	for (int i=0; i < 10; i++)
-		tft->drawLine(x + 25 + i, y + 245, x + 25 + i, y + 275, TFT_RED);
-	tft->fillRoundRect(x + 135, y + 240, 60, 40, 10, TFT_WHITE);
-	for (int i=0; i < 10; i++)
-		tft->drawLine(x + 150, y + 255 + i, x + 180, y + 255 + i, TFT_BLACK);
+void Channel::drawUnits(bool onoff)
+{
+	if (onoff) {
+		icon_v->setIconColor(TFT_RED, BG_ENABLED_INT);
+		icon_v->unitsWrite(0);
+		icon_a->setIconColor(TFT_RED, BG_ENABLED_INT);
+		icon_a->unitsWrite(1);
+		icon_w->setIconColor(TFT_RED, BG_ENABLED_INT);
+		icon_w->unitsWrite(2);
+	} else {
+		icon_v->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
+		icon_v->unitsWrite(0);
+		icon_a->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
+		icon_a->unitsWrite(1);
+		icon_w->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
+		icon_w->unitsWrite(2);
+	}
+}
+
+void Channel::drawPolarity(void)
+{
+	icon_p->setIconColor(TFT_RED, BG_ENABLED_INT);
+	icon_p->polarityWrite(1);
+	icon_n->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
+	icon_n->polarityWrite(0);
+}
+
+void Channel::drawInterrupt(void)
+{
+	icon_op->update(true, channel);
+	icon_sp->update(true, channel);
+	icon_cc->update(true, channel);
+	icon_tp->update(true, channel);
+	icon_tw->update(true, channel);
+	icon_ip->update(true, channel);
 }
 
 uint8_t Channel::getIntStatus(void)
@@ -142,16 +155,6 @@ uint8_t Channel::getIntStatus(void)
 uint8_t Channel::getIntMask(void)
 {
 	return stpd01->readIntMask();
-}
-
-void Channel::initSTPD01(void)
-{
-	//detachInterrupt(digitalPinToInterrupt(pin))
-	/*
-	if (enabled stpd01)
-		pinMode(en_stpd01[channel], OUTPUT);
-	digitalWrite(en_stpd01[channel], HIGH);
-	*/
 }
 
 void Channel::enable(void)
@@ -191,6 +194,14 @@ bool Channel::on(void)
 	volt->setTextColor(TFT_RED, TFT_BLACK);
 	current->setTextColor(TFT_RED, TFT_BLACK);
 	watt->setTextColor(TFT_RED, TFT_BLACK);
+	if (!hide) {
+		icon_v->setIconColor(TFT_RED, BG_ENABLED_INT);
+		icon_v->unitsWrite(0);
+		icon_a->setIconColor(TFT_RED, BG_ENABLED_INT);
+		icon_a->unitsWrite(1);
+		icon_w->setIconColor(TFT_RED, BG_ENABLED_INT);
+		icon_w->unitsWrite(2);
+	}
 	return err;
 }
 
@@ -204,9 +215,17 @@ bool Channel::off(void)
 	volt->setTextColor(TFT_DARKGREY, TFT_BLACK);
 	current->setTextColor(TFT_DARKGREY, TFT_BLACK);
 	watt->setTextColor(TFT_DARKGREY, TFT_BLACK);
-	this->volt->pushValue(0);
-	this->current->pushValue(0);
-	this->watt->pushValue(0);
+	volt->pushValue(0);
+	current->pushValue(0);
+	watt->pushValue(0);
+	if (!hide) {
+		icon_v->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
+		icon_v->unitsWrite(0);
+		icon_a->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
+		icon_a->unitsWrite(1);
+		icon_w->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
+		icon_w->unitsWrite(2);
+	}
 	return err;
 }
 
@@ -227,7 +246,6 @@ void Channel::write(uint8_t addr, uint8_t reg)
 
 uint16_t Channel::getVolt(void)
 {
-	//return volt_set;
 	return volt_set;
 }
 
@@ -249,7 +267,7 @@ void Channel::setVolt(float volt_set, uint8_t mode)
 		this->volt_set = volt_set;
 		this->_volt_set = volt_set;
 		this->_volt->pushValue(min((uint16_t)20000, _volt_set));
-		stpd01->setVoltage(min((uint16_t)20000, this->volt_set));
+		stpd01->setVoltage(min((uint16_t)20000, this->_volt_set));
 	}
 }
 
@@ -285,13 +303,14 @@ void Channel::editCurrentLimit(float val)
 	_current_limit = current_limit + val*100;
 	_current_limit = min((uint16_t)3000, _current_limit);
 	_current_limit = max((uint16_t)500, _current_limit);
+	Serial.println(_current_limit);
 }
 
 void Channel::drawVoltSet(bool forced)
 {
 	if (!hide) {
-		_volt->draw(forced);
-		_current->draw(forced);
+		_volt->fnd_update(forced);
+		_current->fnd_update(forced);
 	}
 }
 
@@ -312,19 +331,18 @@ void Channel::clearCompColor(void)
 	_current_limit = current_limit;
 	_volt->pushValue(volt_set);
 	_current->pushValue(current_limit);
-	_volt->draw(true);
-	_current->draw(true);
+	_volt->fnd_update(true);
+	_current->fnd_update(true);
 }
 
 void Channel::setCompColor(comp_t comp)
 {
 	if (comp == VOLT) {
-		//_volt->setTextColor(TFT_YELLOW, TFT_BLACK);
-		_volt->setTextColor(TFT_DARKGREY, TFT_WHITE);
-		_volt->draw(true);
+		_volt->setTextColor(TFT_RED, BG_COLOR);
+		_volt->fnd_update(true);
 	} else if (comp == CURRENT) {
-		_current->setTextColor(TFT_RED, TFT_GREEN);
-		_current->draw(true);
+		_current->setTextColor(TFT_RED, BG_COLOR);
+		_current->fnd_update(true);
 	}
 }
 
@@ -407,37 +425,62 @@ void Channel::setIntFlag(void)
 
 void Channel::isr(void)
 {
-	byte latch = 0;
 	if (flag_int || !digitalRead(int_stpd01[channel])) {
 		DUMP(channel);
 		DUMP(flag_int);
 		if (stpd01->available()) {
-			latch = checkInterrupt();
+			latch = checkInterruptLatch();
 			DUMP(latch);
-			if (latch & 0x4) {
+			if (latch & INT_OTP) {
+				off();
+				Serial.printf("ch%d, flag_int %d, latch : %x OTP\n\r", channel, flag_int, latch);
+			} else if (latch & (INT_OVP|INT_SCP|INT_OTW|INT_IPCP)) {
 				on();
-				Serial.printf("ch%d, flag_int %d Retry set voltage for short circuit protection\n\r", channel, flag_int);
+				Serial.printf("ch%d, flag_int %d, latch : %x Retry set voltage for interrupts\n\r", channel, flag_int, latch);
 			}
 			flag_int = false;
 		}
 	}
 }
 
-void Channel::monitorInterrupt()
+uint8_t Channel::checkInterruptLatch(void)
 {
-	stpd01->monitorInterrupt(channel);
+	uint8_t reg_latch;
+
+	reg_latch = stpd01->readIntLatch();
+	icon_op->setInt(reg_latch & INT_OVP);
+	icon_sp->setInt(reg_latch & INT_SCP);
+	icon_tp->setInt(reg_latch & INT_OTP);
+	icon_tw->setInt(reg_latch & INT_OTW);
+	icon_ip->setInt(reg_latch & INT_IPCP);
+
+	if (!hide) {
+		icon_op->update(channel);
+		icon_sp->update(channel);
+		icon_tp->update(channel);
+		icon_tw->update(channel);
+		icon_ip->update(channel);
+	}
+
+	return reg_latch;
 }
 
-void Channel::clearInterruptUI(void)
+uint8_t Channel::checkInterruptStat(uint8_t onoff)
 {
-	for (int i = 0; i < 8; i++) {
-		int_stat[i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
-		int_stat[i]->draw(String("0"));
-		int_latch[i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
-		int_latch[i]->draw(String("0"));
-		int_mask[i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
-		int_mask[i]->draw(String("0"));
+	uint8_t reg_stat;
+	reg_stat = stpd01->readIntStatus();
+
+	if (onoff == 0)
+		reg_stat = 0x00;
+
+	if (reg_stat & INT_CC) {
+		icon_cc->setIconColor(TFT_RED, BG_ENABLED_INT);
+	} else {
+		icon_cc->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
 	}
+	icon_cc->update(channel);
+
+	return reg_stat;
 }
 
 uint8_t Channel::checkInterrupt(void)
@@ -446,31 +489,5 @@ uint8_t Channel::checkInterrupt(void)
 	reg_latch = stpd01->readIntLatch();
 	reg_stat = stpd01->readIntStatus();
 	reg_mask = stpd01->readIntMask();
-	/*
-	for (int i = 0; i < 8; i++) {
-		if (reg_stat & (1 << i)) {
-			int_stat[7-i]->setTextColor(TFT_YELLOW, TFT_BLACK);
-			int_stat[7-i]->draw(String("1"));
-		} else {
-			int_stat[7-i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
-			int_stat[7-i]->draw(String("0"));
-		}
-		if (reg_latch & (1 << i)) {
-			int_latch[7-i]->setTextColor(TFT_YELLOW, TFT_BLACK);
-			int_latch[7-i]->draw(String("1"));
-		} else {
-			int_latch[7-i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
-			int_latch[7-i]->draw(String("0"));
-		}
-		if (reg_mask & (1 << i)) {
-			int_mask[7-i]->setTextColor(TFT_YELLOW, TFT_BLACK);
-			int_mask[7-i]->draw(String("1"));
-		} else {
-			int_mask[7-i]->setTextColor(TFT_WHITE, TFT_DARKGREY);
-			int_mask[7-i]->draw(String("0"));
-		}
-	}
-	*/
-
 	return reg_latch;
 }
