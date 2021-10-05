@@ -24,13 +24,13 @@ public:
 	~FndWidget(void);
 
 	void init(uint16_t fg_color, uint16_t bg_color, uint8_t size, uint8_t align);
-	void draw(void);
-	void draw(String s);
 	void setCoordinate(uint16_t x, uint16_t y);
 	void pushValue(uint16_t value);
+	void pushValue(uint16_t value, uint16_t diff);
 	void setTextColor(uint16_t fg_color, uint16_t bg_color);
+	void setFGColor(uint16_t fg_color);
 	struct fnd* fnd_init (uint8_t cnt, uint8_t dot_pos, bool rbo,
-			uint16_t x, uint16_t y, uint16_t fg_color, uint16_t bg_color, enum FND_FONT_SIZE f_size=FND_FONT_32x64, uint32_t div=1);
+			uint16_t x, uint16_t y, uint16_t fg_color, uint16_t bg_color,enum FND_FONT_SIZE f_size=FND_FONT_32x64, uint32_t div=0);
 	void fnd_dot_write(void);
 	void fnd_num_write(uint16_t f_pos);
 	void fnd_clear_all(void);
@@ -43,7 +43,8 @@ public:
 	void clearOutLines();
 	void activate();
 	void deActivate();
-
+	void setMonitorVoltage(void);
+	void setCurrentLimit(void);
 	
 private:
 	uint8_t mode = 0;
@@ -53,8 +54,10 @@ private:
 	TFT_eSPI *tft;
 	uint16_t value;
 	uint16_t old_value;
-	uint16_t value_old;
 	struct fnd *f;
+	uint16_t diff = 0;
+	bool set_current_limit = false;
+	bool set_monitor_voltage = false;
 };
 
 #endif

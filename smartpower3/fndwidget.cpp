@@ -215,6 +215,26 @@ void FndWidget::fnd_update(bool forced)
 	} else if (value == old_value) {
 		return;
 	}
+
+	if (!forced) {
+		if (this->set_current_limit && diff) {
+			if (diff < value) {
+				setFGColor(TFT_YELLOW);
+			} else {
+				setFGColor(TFT_RED);
+			}
+		}
+
+		if (this->set_monitor_voltage && diff) {
+			float diff_abs = abs(diff - value);
+			if (diff_abs/value > 0.05) {
+				setFGColor(TFT_YELLOW);
+			} else {
+				setFGColor(TFT_RED);
+			}
+		}
+	}
+
 	old_value = value;
 
 	if (f->div)
@@ -350,6 +370,15 @@ void FndWidget::setTextColor(uint16_t fg_color, uint16_t bg_color)
 	fnd_dd_clear();
 }
 
+void FndWidget::setFGColor(uint16_t fg_color)
+{
+	if (f->fg_color != fg_color) {
+		f->fg_color = fg_color;
+		f->dot_on = false;
+		fnd_dd_clear();
+	}
+}
+
 void FndWidget::setCoordinate(uint16_t x, uint16_t y)
 {
 	f->x = x;
@@ -370,33 +399,15 @@ void FndWidget::clearOutLines(void)
 	}
 }
 
-void FndWidget::draw(String s)
+void FndWidget::pushValue(uint16_t value, uint16_t diff)
 {
-#if 0
-	img->drawString(s, 0, 0, font);
-	//img->pushSprite(x, y);
-	delay(WAIT);
-#endif
-}
-
-void FndWidget::draw(void)
-{
-#if 0
-	if (value == value_old)
-		return;
-	value_old = value;
-	if (value < 10)
-		img->drawString("0" + String(value, 2), width, 0, font);
-	else
-		img->drawString(String(value, 2), width, 0, font);
-	img->pushSprite(x, y);
-	delay(WAIT);
-#endif
+	this->value = value;
+	this->diff = diff;
 }
 
 void FndWidget::pushValue(uint16_t value)
 {
-	this->value = value/10;
+	this->value = value;
 }
 
 uint16_t FndWidget::getValue()
@@ -412,4 +423,14 @@ void FndWidget::activate(void)
 void FndWidget::deActivate(void)
 {
 	clearOutLines();
+}
+
+void FndWidget::setCurrentLimit(void)
+{
+	this->set_current_limit = true;
+}
+
+void FndWidget::setMonitorVoltage(void)
+{
+	this->set_monitor_voltage = true;
 }

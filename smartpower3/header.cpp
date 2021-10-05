@@ -19,10 +19,10 @@ void Header::init(uint16_t x, uint16_t y)
 	this->x = x;
 	this->y = y;
 
-	input_v->fnd_init(3, 1, true, x + 35, y, FG_COLOR, BG_COLOR, FND_FONT_16x32, 10);
+	input_v->fnd_init(3, 1, true, x + 35, y, FG_COLOR, BG_COLOR, FND_FONT_16x32, 100);
 	input_v->pushValue(0);
 	input_v->fnd_update(true);
-	input_a->fnd_init(2, 1, true, x + 110, y, FG_COLOR, BG_COLOR, FND_FONT_16x32, 10);
+	input_a->fnd_init(2, 1, true, x + 110, y, FG_COLOR, BG_COLOR, FND_FONT_16x32, 100);
 	input_a->pushValue(0);
 	input_a->fnd_update(true);
 

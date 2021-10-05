@@ -75,11 +75,8 @@ void Screen::initScreen(void)
 
 void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch)
 {
-	if (onoff[ch] == 1) {
+	if (onoff[ch] == 1)
 		channel[ch]->pushPower(volt, ampere, watt);
-	} else {
-		channel[ch]->pushPower(0, 0, 0);
-	}
 }
 
 void Screen::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt)
@@ -133,17 +130,15 @@ void Screen::checkOnOff()
 				channel[i]->on();
 				onoff[i] = 1;
 			} else if (onoff[i] == 2) {
+				onoff[i] = 0;
 				channel[i]->off();
 				channel[i]->drawChannel(true);
-				onoff[i] = 0;
 			}
 		}
 	}
 
-	if (state_power != old_state_power) {
+	if (state_power != old_state_power)
 		old_state_power = state_power;
-		Serial.printf("[ power state ] : %d\n\r", state_power);
-	}
 }
 
 void Screen::disablePower()
@@ -550,8 +545,10 @@ void Screen::drawScreen()
 	if (mode < SETTING) {
 		if ((cur_time - fnd_time) > 300) {
 			fnd_time = cur_time;
-			channel[0]->drawChannel();
-			channel[1]->drawChannel();
+			if (onoff[0])
+				channel[0]->drawChannel();
+			if (onoff[1])
+				channel[1]->drawChannel();
 		}
 		channel[0]->drawVoltSet();
 		channel[1]->drawVoltSet();

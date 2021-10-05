@@ -263,9 +263,9 @@ void IconWidget::clearInt(void)
 void IconWidget::setInt(bool val)
 {
 	if (val) {
-		//setIconColor(TFT_RED, BG_ENABLED_INT);
+		setIconColor(TFT_RED, BG_ENABLED_INT);
 	} else {
-		//setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
+		setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
 	}
 
 	value = val;

@@ -367,17 +367,15 @@ void Channel::pushPower(uint16_t volt, uint16_t current, uint16_t watt)
 			current += moving_avg[i];
 		}
 		current = current/5;
-	} else {
-		this->volt->pushValue(volt);
-		return;
 	}
 
-	if (current < 5) {
+	if (current < 10) {
 		current = 0;
 		watt = 0;
 	}
-	this->volt->pushValue(volt);
-	this->current->pushValue(current);
+
+	this->volt->pushValue(volt, volt_set);
+	this->current->pushValue(current, current_limit);
 	this->watt->pushValue(watt);
 }
 
