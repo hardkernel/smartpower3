@@ -39,8 +39,8 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 	uint16_t gap_int_icon = 25;
 	uint16_t base = 40;
 	icon_op->init(0, x, y+base, FG_COLOR, BG_COLOR);
-	icon_sp->init(1, x, y+base + gap_int_icon, FG_COLOR, BG_COLOR);
-	icon_cc->init(2, x, y+base + gap_int_icon*2, FG_COLOR, BG_COLOR);
+	icon_cc->init(1, x, y+base + gap_int_icon, FG_COLOR, BG_COLOR);
+	icon_sp->init(2, x, y+base + gap_int_icon*2, FG_COLOR, BG_COLOR);
 	icon_tp->init(3, x, y+base + gap_int_icon*3, FG_COLOR, BG_COLOR);
 	icon_tw->init(4, x, y+base + gap_int_icon*4, FG_COLOR, BG_COLOR);
 	icon_ip->init(5, x, y+base + gap_int_icon*5, FG_COLOR, BG_COLOR);
