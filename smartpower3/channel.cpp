@@ -29,12 +29,14 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 	icon_w = new IconWidget(tft, channel);
 	icon_a = new IconWidget(tft, channel);
 
-	volt->fnd_init(NUM_OF_FND, 2, true, x + 40, + y+10, FG_COLOR, BG_COLOR);
-	current->fnd_init(NUM_OF_FND, 2, true, x + 40, 64 + 5 + y+10, FG_COLOR, BG_COLOR);
-	watt->fnd_init(NUM_OF_FND, 2, true, x + 40, 64*2 + 10 + y+10, FG_COLOR, BG_COLOR);
+	volt->fnd_init(NUM_OF_FND, 2, true, x + 40, + y+10, FG_COLOR, BG_COLOR, FND_FONT_32x64, 10);
+	volt->setMonitorVoltage();
+	current->fnd_init(NUM_OF_FND, 2, true, x + 40, 64 + 5 + y+10, FG_COLOR, BG_COLOR, FND_FONT_32x64, 10);
+	current->setCurrentLimit();
+	watt->fnd_init(NUM_OF_FND, 2, true, x + 40, 64*2 + 10 + y+10, FG_COLOR, BG_COLOR, FND_FONT_32x64, 10);
 
-	_volt->fnd_init(3, 1, true, x + W_SEG-2, y+12, TFT_YELLOW, BG_COLOR, FND_FONT_16x32, 10);
-	_current->fnd_init(2, 1, true, x + W_SEG+14, y+18+64, TFT_YELLOW, BG_COLOR, FND_FONT_16x32, 10);
+	_volt->fnd_init(3, 1, true, x + W_SEG-2, y+12, TFT_YELLOW, BG_COLOR, FND_FONT_16x32, 100);
+	_current->fnd_init(2, 1, true, x + W_SEG+14, y+18+64, TFT_YELLOW, BG_COLOR, FND_FONT_16x32, 100);
 
 	uint16_t gap_int_icon = 25;
 	uint16_t base = 40;
@@ -162,10 +164,8 @@ void Channel::enable(void)
 	pinMode(en_stpd01[channel], OUTPUT);
 	digitalWrite(en_stpd01[channel], HIGH);
 	while (!stpd01->available()) {
-		if (cnt++ > 10) {
-			Serial.printf("channel : %d STPD01 is not available!\n\r", channel);
+		if (cnt++ > 10)
 			break;
-		}
 		delay(100);
 	}
 }
@@ -300,7 +300,6 @@ void Channel::editCurrentLimit(float val)
 	_current_limit = current_limit + val*100;
 	_current_limit = min((uint16_t)3000, _current_limit);
 	_current_limit = max((uint16_t)500, _current_limit);
-	Serial.println(_current_limit);
 }
 
 void Channel::drawVoltSet(bool forced)
@@ -445,6 +444,7 @@ uint8_t Channel::checkInterruptLatch(void)
 	icon_tp->setInt(reg_latch & INT_OTP);
 	icon_tw->setInt(reg_latch & INT_OTW);
 	icon_ip->setInt(reg_latch & INT_IPCP);
+	Serial.println(reg_latch);
 
 	if (!hide) {
 		icon_op->update(channel);

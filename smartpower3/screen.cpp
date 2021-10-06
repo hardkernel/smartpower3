@@ -115,10 +115,8 @@ void Screen::checkOnOff()
 #endif
 		state_power = 4;
 	} else if (state_power == 4) {
-		Serial.println("check interrupt");
 		state_power = 5;
 	} else if (state_power == 5) {
-		Serial.println("check autostart");
 		state_power = 6;
 	} else if (state_power == 6) {
 		for (int i = 0; i < 2; i++) {
@@ -178,7 +176,6 @@ void Screen::activate()
 		if (dial_direct == -1)
 			dial_cnt = 3;
 	}
-	Serial.println(dial_cnt);
 
 	deActivate();
 	activated = dial_cnt;
@@ -651,7 +648,6 @@ void Screen::clearBtnEvent(void)
 
 void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 {
-	//Serial.printf("button pressed %d\n\r", idx);
 	btn_pressed[idx] = true;
 	switch (idx) {
 	case 0: /* Channel0 ON/OFF */
@@ -673,8 +669,6 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 }
 
 void Screen::readFile(const char * path){
-    Serial.printf("Reading file: %s\r\n", path);
-
     File file = fs->open(path);
     if(!file || file.isDirectory()){
         Serial.println("- failed to open file for reading");
@@ -819,7 +813,6 @@ void Screen::setSysParam(char *key, String value)
 {
 #if 1
 	File f = fs->open("/setting.txt", "r+");
-	Serial.printf("size of file %d, value %s\n\r", f.size(), value);
 	f.seek(0, SeekSet);
 	f.findUntil(key, "\n\r");
 	f.seek(1, SeekCur);

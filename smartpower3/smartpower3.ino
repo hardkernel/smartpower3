@@ -100,26 +100,21 @@ void inputTask(void *parameter)
 void loop() {
 	PAC.Refresh();
 	onoff = screen.getOnOff();
-	PAC.update(1);
-	volt[1] = (uint16_t)(PAC.Voltage);
-	amp[1] = (uint16_t)(PAC.Current);
-	watt[1] = (uint16_t)(PAC.Power*1000);
-	screen.pushPower(volt[1], amp[1], watt[1], 0);
+	for (int i = 1; i < 3; i++) {
+		PAC.update(i);
+		volt[i] = (uint16_t)(PAC.Voltage);
+		amp[i] = (uint16_t)(PAC.Current);
+		watt[i] = (uint16_t)(PAC.Power*1000);
+	}
 
-	PAC.update(2);
-	volt[2] = (uint16_t)(PAC.Voltage);
-	amp[2] = (uint16_t)(PAC.Current);
-	watt[2] = (uint16_t)(PAC.Power*1000);
-	screen.pushPower(volt[2], amp[2], watt[2], 1);
-
-	if ((millis() - ctime1) > 500) {
+	if ((millis() - ctime1) > 300) {
 		ctime1 = millis();
 		PAC.update(0);
 		volt[0] = (uint16_t)(PAC.Voltage);
 		amp[0] = (uint16_t)(PAC.Current);
-		watt[0] = (uint16_t)(PAC.Power*100);
 		if (volt[0] < 6000) {
 			screen.debug();
+			PAC.Refresh();
 			PAC.update(0);
 			volt[0] = (uint16_t)(PAC.Voltage);
 			for (int i = 0; i < 3; i++) {
@@ -132,6 +127,9 @@ void loop() {
 			low_input = false;
 		}
 		screen.pushInputPower(volt[0], amp[0], watt[0]);
+		for (int i = 1; i < 3; i++)
+			screen.pushPower(volt[i], amp[i], watt[i], i-1);
+
 		if ((cur_time/1000)%2)
 			ledcWrite(0, 50);
 		else
