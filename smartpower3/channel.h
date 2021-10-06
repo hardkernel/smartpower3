@@ -59,6 +59,10 @@ public:
 	void drawInterrupt(void);
 	void drawPolarity(void);
 	void drawUnits(bool onoff);
+	void clearLowVoltage();
+	void countLowVoltage();
+	void clearDebug(void);
+
 private:
 	bool activated;
 	TFT_eSPI *tft;
@@ -70,6 +74,8 @@ private:
 	FndWidget *_volt;
 	FndWidget *_current;
 	Component *stpd;
+	Component *lowV;
+	Component *debug_intr[8];
 	FndWidget *current;
 	FndWidget *watt;
 	IconWidget *icon_op, *icon_sp, *icon_cc, *icon_tp, *icon_tw, *icon_ip;
@@ -88,4 +94,7 @@ private:
 #endif
 	bool flag_int = 0;
 	uint8_t latch = 0;
+	uint16_t low_volt = 0;
+	uint8_t count_intr[8] = {0,};
+	uint8_t flag_clear_debug = 0;
 };

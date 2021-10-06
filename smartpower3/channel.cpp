@@ -58,6 +58,12 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 
 #ifdef DEBUG_STPD01
 	stpd = new Component(tft, 32, 16, 2);
+	lowV = new Component(tft, 16, 16, 2);
+	for (int i = 0; i < 8; i++) {
+		if (i == 3 or i == 4)
+			continue;
+		debug_intr[i] = new Component(tft, 16, 16, 2);
+	}
 #endif
 	pinMode(int_stpd01[channel], INPUT_PULLUP);
 }
@@ -86,6 +92,24 @@ bool Channel::isAvailableSTPD01()
 	}
 	stpd->setTextColor(FG_ENABLED, BG_ENABLED);
 	stpd->draw("STPD");
+
+	if (flag_clear_debug == 0) {
+		flag_clear_debug++;
+		lowV->clear();
+		for (int i = 0; i < 8; i++) {
+			if (i == 3 or i == 4)
+				continue;
+			debug_intr[i]->clear();
+		}
+	}
+
+	lowV->draw(String(low_volt));
+	for (int i = 0; i < 8; i++) {
+		if (i == 3 or i == 4)
+			continue;
+		debug_intr[i]->draw(String(count_intr[i]));
+	}
+
 	return 1;
 #endif
 }
@@ -97,8 +121,20 @@ void Channel::initScreen(uint8_t onoff)
 
 #ifdef DEBUG_STPD01
 	stpd->init(FG_ENABLED, BG_ENABLED, 1, TR_DATUM);
-	stpd->setCoordinate(x, y + 210);
+	stpd->setCoordinate(x, y + 200);
 	stpd->draw(String("STPD"));
+
+	lowV->init(FG_ENABLED, BG_ENABLED, 1, TR_DATUM);
+	lowV->setCoordinate(x + 100, y + 250);
+	lowV->draw(String(low_volt));
+
+	for (int i = 0; i < 8; i++) {
+		if (i == 3 or i == 4)
+			continue;
+		debug_intr[i]->init(FG_ENABLED, BG_ENABLED, 1, TR_DATUM);
+		debug_intr[i]->setCoordinate(x + 34 + i*18, y + 216);
+		debug_intr[i]->draw(String(0));
+	}
 #endif
 
 	drawChannel(true);
@@ -422,13 +458,16 @@ void Channel::isr(void)
 	if (flag_int || !digitalRead(int_stpd01[channel])) {
 		if (stpd01->available()) {
 			latch = checkInterruptLatch();
-			if (latch & INT_OTP) {
-				off();
-				Serial.printf("ch%d, flag_int %d, latch : %x OTP\n\r", channel, flag_int, latch);
-			} else if (latch & (INT_OVP|INT_SCP|INT_OTW|INT_IPCP)) {
-				on();
-				Serial.printf("ch%d, flag_int %d, latch : %x Retry set voltage for interrupts\n\r", channel, flag_int, latch);
+			Serial.println(latch);
+			for (int i = 0; i < 8; i++) {
+				if ((latch >> i) & 0x1) {
+					count_intr[i]++;
+				}
 			}
+			if (latch & INT_OTP)
+				off();
+			else if (latch & (INT_OVP|INT_SCP|INT_OTW|INT_IPCP))
+				on();
 			flag_int = false;
 		}
 	}
@@ -472,6 +511,17 @@ uint8_t Channel::checkInterruptStat(uint8_t onoff)
 	}
 	icon_cc->update(channel);
 
+	if (flag_clear_debug == 1) {
+		flag_clear_debug++;
+		if (!hide) {
+			icon_op->update(channel);
+			icon_sp->update(channel);
+			icon_tp->update(channel);
+			icon_tw->update(channel);
+			icon_ip->update(channel);
+		}
+	}
+
 	return reg_stat;
 }
 
@@ -483,4 +533,28 @@ uint8_t Channel::checkInterrupt(void)
 	reg_mask = stpd01->readIntMask();
 	
 	return reg_latch;
+}
+
+void Channel::countLowVoltage()
+{
+	low_volt++;
+}
+
+void Channel::clearLowVoltage()
+{
+	low_volt = 0;
+}
+
+void Channel::clearDebug()
+{
+	clearLowVoltage();
+	icon_op->setInt(0);
+	icon_sp->setInt(0);
+	icon_tp->setInt(0);
+	icon_tw->setInt(0);
+	icon_ip->setInt(0);
+	icon_cc->setInt(0);
+	for (int i = 0; i < 8; i++)
+		count_intr[i] = 0;
+	flag_clear_debug = 0;
 }

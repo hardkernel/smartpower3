@@ -70,6 +70,8 @@ public:
 	bool checkAttachBtn(uint8_t pin);
 	void disableBtn(void);
 	void enableBtn(void);
+	void countLowVoltage(uint8_t ch=0);
+	void clearLowVoltage(uint8_t ch=0);
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;

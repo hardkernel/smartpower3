@@ -105,6 +105,13 @@ void loop() {
 		volt[i] = (uint16_t)(PAC.Voltage);
 		amp[i] = (uint16_t)(PAC.Current);
 		watt[i] = (uint16_t)(PAC.Power*1000);
+
+#ifdef DEBUG_STPD01
+		if (onoff[i-1]) {
+			if (volt[i] < 3000)
+				screen.countLowVoltage((uint8_t)(i-1));
+		}
+#endif
 	}
 
 	if ((millis() - ctime1) > 300) {

@@ -250,6 +250,14 @@ void Screen::drawBase()
 		activated = dial_cnt = dial_cnt_old = STATE_NONE;
 		enableBtn();
 	}
+
+#ifdef DEBUG_STPD01
+	if (btn_pressed[3] == true) {
+		btn_pressed[3] = false;
+		channel[0]->clearDebug();
+		channel[1]->clearDebug();
+	}
+#endif
 }
 
 void Screen::drawBaseMove()
@@ -825,4 +833,14 @@ void Screen::setSysParam(char *key, String value)
 void Screen::debug()
 {
 	header->setDebug();
+}
+
+void Screen::countLowVoltage(uint8_t ch)
+{
+	channel[ch]->countLowVoltage();
+}
+
+void Screen::clearLowVoltage(uint8_t ch)
+{
+	channel[ch]->clearLowVoltage();
 }
