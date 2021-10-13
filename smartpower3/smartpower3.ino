@@ -4,7 +4,7 @@
 uint32_t ctime1 = 0;
 
 void setup(void) {
-	Serial.begin(500000);
+	Serial.begin(115200);
 
 	I2CA.begin(15, 4, 10000);
 	I2CB.begin(21, 22, 400000);
