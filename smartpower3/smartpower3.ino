@@ -3,9 +3,6 @@
 
 uint32_t ctime1 = 0;
 
-#define LED2	13
-#define LED1	2
-
 void setup(void) {
 	Serial.begin(500000);
 
@@ -23,14 +20,6 @@ void setup(void) {
 	pinMode(26, INPUT_PULLUP);
 	attachInterrupt(digitalPinToInterrupt(25), isr_stpd01_ch0, FALLING);
 	attachInterrupt(digitalPinToInterrupt(26), isr_stpd01_ch1, FALLING);
-
-	ledcSetup(0, FREQ, RESOLUTION);
-	ledcSetup(1, FREQ, RESOLUTION);
-	ledcAttachPin(LED2, 0);
-	ledcAttachPin(LED1, 1);
-
-	ledcWrite(0, 50);
-	ledcWrite(1, 50);
 }
 
 void isr_stpd01_ch0()
@@ -138,10 +127,17 @@ void loop() {
 		for (int i = 1; i < 3; i++)
 			screen.pushPower(volt[i], amp[i], watt[i], i-1);
 
-		if ((cur_time/1000)%2)
-			ledcWrite(0, 50);
-		else
-			ledcWrite(0, 0);
+		if (!screen.getShutdown()) {
+			if ((cur_time/1000)%2)
+				screen.writeSysLED(50);
+			else
+				screen.writeSysLED(0);
+			screen.writePowerLED(50);
+		}
+	}
+
+	if (screen.getShutdown()) {
+		screen.dimmingLED(1);
 	}
 }
 

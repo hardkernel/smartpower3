@@ -40,7 +40,19 @@ void Screen::begin(TwoWire *theWire)
 
 	tft.fillRect(0, 0, 480, 320, TFT_BLACK);
 	initScreen();
+	initLED();
 	header->init(5, 8);
+}
+
+void Screen::initLED()
+{
+	ledcSetup(0, FREQ, RESOLUTION);
+	ledcSetup(1, FREQ, RESOLUTION);
+	ledcAttachPin(LED2, 0);
+	ledcAttachPin(LED1, 1);
+
+	ledcWrite(0, 50);
+	ledcWrite(1, 50);
 }
 
 int8_t* Screen::getOnOff()
@@ -51,15 +63,17 @@ int8_t* Screen::getOnOff()
 void Screen::run()
 {
 	checkOnOff();
-	drawScreen();
+	if (!shutdown) {
+		drawScreen();
 
-	if (!header->getLowInput()) {
-		for (int i = 0; i < 2; i++) {
-			if (!enabled_stpd01[i])
-				continue;
-			channel[i]->isr();
+		if (!header->getLowInput()) {
+			for (int i = 0; i < 2; i++) {
+				if (!enabled_stpd01[i])
+					continue;
+				channel[i]->isr();
+			}
 		}
-	}
+	};
 }
 
 void Screen::setIntFlag(uint8_t ch)
@@ -69,8 +83,7 @@ void Screen::setIntFlag(uint8_t ch)
 
 void Screen::initScreen(void)
 {
-	tft.fillRect(0, 50, 480, 285, TFT_BLACK);
-
+	tft.fillRect(0, 52, 480, 285, TFT_BLACK);
 	for (int i = 0; i < 2; i++) {
 		tft.drawLine(0, 50 + i, 480, 50 + i, TFT_DARKGREY);
 		tft.drawLine(0, 274 + i, 480, 274 + i, TFT_DARKGREY);
@@ -145,6 +158,39 @@ void Screen::checkOnOff()
 		}
 	}
 
+	if (btn_pressed[4]) {
+		btn_pressed[2] = false;
+		btn_pressed[4] = false;
+		if (!shutdown) {
+			shutdown = true;
+			onoff[0] = 0;
+			onoff[1] = 0;
+			channel[0]->off();
+			channel[1]->off();
+			tft.fillRect(0, 0, 480, 320, TFT_BLACK);
+			setting->setBacklightLevel(0);
+			writeSysLED(0);
+			setting->setLogIntervalValue(0);
+			setting->setFanLevel(0);
+		} else {
+			shutdown = false;
+			tft.fillRect(0, 0, 480, 320, TFT_BLACK);
+			setting->setLogInterval();
+			setting->setFanLevel();
+			setting->setBacklightLevel();
+
+			header->init(5, 8);
+			if (mode >= SETTING) {
+				setting->init(10, 100);
+				for (int i = 0; i < 2; i++)
+					tft.drawLine(0, 50 + i, 480, 50 + i, TFT_DARKGREY);
+				activated = dial_cnt = dial_cnt_old = STATE_NONE;
+			} else {
+				initScreen();
+			}
+		}
+	}
+
 	if (state_power != old_state_power)
 		old_state_power = state_power;
 }
@@ -169,7 +215,7 @@ void Screen::deActivateSetting()
 {
 	setting->deActivateBLLevel();
 	setting->deActivateFanLevel();
-	setting->deActivateLogInterval();
+	setting->deActivateSerialLogging();
 }
 
 void Screen::activate()
@@ -230,7 +276,7 @@ void Screen::activate_setting()
 			setting->activateFanLevel();
 			break;
 		case STATE_LOG:
-			setting->activateLogInterval();
+			setting->activateSerialLogging();
 			break;
 	}
 }
@@ -261,13 +307,13 @@ void Screen::drawBase()
 		enableBtn();
 	}
 
-#ifdef DEBUG_STPD01
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
+#ifdef DEBUG_STPD01
 		channel[0]->clearDebug();
 		channel[1]->clearDebug();
-	}
 #endif
+	}
 }
 
 void Screen::drawBaseMove()
@@ -278,7 +324,8 @@ void Screen::drawBaseMove()
 		deActivate();
 		activated = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
-	if (btn_pressed[2] == true) {
+	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
+		flag_long_press = 3;
 		mode = BASE;
 		btn_pressed[2] = false;
 		deActivate();
@@ -331,7 +378,8 @@ void Screen::drawBaseEdit()
 		channel[0]->clearCompColor();
 		channel[1]->clearCompColor();
 	}
-	if (btn_pressed[2] == true) {
+	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
+		flag_long_press = 3;
 		mode = BASE_MOVE;
 		dial_cnt = dial_cnt_old = dial_state;
 		channel[0]->clearCompColor();
@@ -365,6 +413,7 @@ void Screen::drawSetting()
 		dial_cnt = 0;
 		dial_cnt_old = 0;
 		deActivateSetting();
+		activated = STATE_NONE;
 	}
 	if (btn_pressed[2] == true) {
 		btn_pressed[2] = false;
@@ -380,15 +429,16 @@ void Screen::drawSetting()
 		activated = dial_cnt =  STATE_NONE;
 		enableBtn();
 	}
+	if (btn_pressed[1] == true) {
+		disableBtn();
+		btn_pressed[1] = false;
+		setting->debug();
+		enableBtn();
+	}
 	if (btn_pressed[3] == true) {
+		disableBtn();
 		btn_pressed[3] = false;
-		if (activated == STATE_SETTING) {
-			channel[0]->clearHide();
-			channel[1]->clearHide();
-			initScreen();
-			mode = BASE_MOVE;
-			activated = dial_cnt = 0;
-		} else if (activated == STATE_BL) {
+		if (activated == STATE_BL) {
 			mode = SETTING_BL;
 			dial_cnt = setting->getBacklightLevel();
 			setting->activateBLLevel(TFT_GREEN);
@@ -398,9 +448,11 @@ void Screen::drawSetting()
 			setting->activateFanLevel(TFT_GREEN);
 		} else if (activated == STATE_LOG) {
 			mode = SETTING_LOG;
-			dial_cnt = setting->getLogInterval();
-			setting->activateLogInterval(TFT_GREEN);
+			dial_cnt = setting->getSerialBaudLevel();
+			setting->activateSerialLogging(TFT_GREEN);
+			setting->activateSerialBaud(TFT_YELLOW);
 		}
+		enableBtn();
 	}
 	if (dial_cnt != dial_cnt_old) {
 		dial_cnt_old = dial_cnt;
@@ -417,21 +469,26 @@ void Screen::drawSettingBL()
 		setting->changeBacklight();
 		setting->deActivateBLLevel();
 	}
-	if (btn_pressed[2] == true) {
+	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
+		flag_long_press = 3;
 		btn_pressed[2] = false;
+		disableBtn();
 		mode = SETTING;
 		activated = dial_cnt = dial_cnt_old = STATE_BL;
 		deActivateSetting();
 		setting->changeBacklight();
 		setting->activateBLLevel();
+		enableBtn();
 		return;
 	}
 	if (btn_pressed[3] == true) {
+		disableBtn();
 		btn_pressed[3] = false;
 		mode = SETTING;
 		setSysParam("backlight_level", String(setting->setBacklightLevel()));
 		setting->activateBLLevel();
 		activated = dial_cnt = STATE_BL;
+		enableBtn();
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -454,21 +511,28 @@ void Screen::drawSettingFAN()
 		setting->changeFan();
 		setting->deActivateFanLevel();
 	}
-	if (btn_pressed[2] == true) {
+	if ((btn_pressed[2] == true) || (flag_long_press == 2)) {
+		flag_long_press = 3;
 		btn_pressed[2] = false;
+		disableBtn();
 		mode = SETTING;
 		activated = dial_cnt = dial_cnt_old = STATE_FAN;
 		deActivateSetting();
 		setting->changeFan();
 		setting->activateFanLevel();
+
+		enableBtn();
 		return;
 	}
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
+		disableBtn();
 		mode = SETTING;
+		activated = dial_cnt = dial_cnt_old = STATE_FAN;
 		setSysParam("fan_level", String(setting->setFanLevel()));
 		setting->activateFanLevel();
-		activated = dial_cnt = dial_cnt_old = STATE_FAN;
+
+		enableBtn();
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -488,33 +552,63 @@ void Screen::drawSettingLOG()
 		deActivateSetting();
 		activated = dial_cnt = dial_cnt_old = STATE_NONE;
 		dial_cnt_old = STATE_NONE;
-		setting->changeLogInterval();
-		setting->deActivateLogInterval();
+		setting->deActivateSerialBaud(TFT_WHITE);
+		setting->restoreSerialBaud();
+		setting->deActivateLogInterval(TFT_WHITE);
+		setting->restoreLogInterval();
+		setting->deActivateSerialLogging(TFT_YELLOW);
 	}
-	if (btn_pressed[2] == true) {
+	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
+		flag_long_press = 3;
 		btn_pressed[2] = false;
+		disableBtn();
 		mode = SETTING;
 		activated = dial_cnt = dial_cnt_old = STATE_LOG;
-		deActivateSetting();
-		setting->changeLogInterval();
-		setting->activateLogInterval();
+		setting->deActivateSerialBaud(TFT_WHITE);
+		setting->restoreSerialBaud();
+		setting->deActivateLogInterval(TFT_WHITE);
+		setting->restoreLogInterval();
+		setting->deActivateSerialLogging(TFT_YELLOW);
+		enableBtn();
 		return;
 	}
 	if (btn_pressed[3] == true) {
+		disableBtn();
 		btn_pressed[3] = false;
-		mode = SETTING;
-		setting->setLogInterval();
-		setting->activateLogInterval();
-		activated = dial_cnt = dial_cnt_old = STATE_LOG;
+		Serial.println(setting->getSerialBaud());
+		if (activated == 5) {
+			mode = SETTING;
+			setSysParam("serial_baud", String(setting->setSerialBaud()));
+			setSysParam("log_interval", String(setting->setLogInterval()));
+			activated = dial_cnt = dial_cnt_old = STATE_LOG;
+			setting->deActivateLogInterval(TFT_WHITE);
+			setting->deActivateSerialLogging(TFT_YELLOW);
+		} else {
+			setting->deActivateSerialBaud(TFT_WHITE);
+			setting->activateLogInterval();
+			dial_cnt = 0;
+			dial_cnt_old = 1;
+			activated = 5;
+		}
+		enableBtn();
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
-		if (dial_cnt < 0)
-			dial_cnt = 0;
-		else if (dial_cnt > 6)
-			dial_cnt = 6;
+		if (activated == 5) {
+			if (dial_cnt < 0)
+				dial_cnt = 0;
+			else if (dial_cnt > 6)
+				dial_cnt = 6;
+			setting->changeLogInterval(dial_cnt);
+		} else {
+			if (dial_cnt < 0)
+				dial_cnt = 0;
+			else if (dial_cnt > 9)
+				dial_cnt = 9;
+			setting->changeSerialBaud(dial_cnt);
+		}
 		dial_cnt_old = dial_cnt;
-		setting->changeLogInterval(dial_cnt);
+		Serial.println(setting->getSerialBaud());
 	}
 }
 
@@ -557,19 +651,19 @@ void Screen::drawScreen()
 		drawSettingLOG();
 		break;
 	}
-	if (mode < SETTING) {
-		if ((cur_time - fnd_time) > 300) {
-			fnd_time = cur_time;
+	if ((cur_time - fnd_time) > 300) {
+		fnd_time = cur_time;
+		if (mode < SETTING) {
 			if (onoff[0])
 				channel[0]->drawChannel();
 			if (onoff[1])
 				channel[1]->drawChannel();
+			isrSTPD01();
 		}
-		channel[0]->drawVoltSet();
-		channel[1]->drawVoltSet();
-		isrSTPD01();
+		header->draw();
 	}
-	header->draw();
+			channel[0]->drawVoltSet();
+			channel[1]->drawVoltSet();
 }
 
 void Screen::changeVolt(screen_mode_t mode)
@@ -622,7 +716,7 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[1]->setCurrentLimit(dial_cnt);
 			if (dial_cnt != 0) {
-				setSysParam("current_limit1", channel[1]->getCurrentLimit()/10.0);
+				setSysParam("current_limit1", String(channel[1]->getCurrentLimit()/10.0));
 			}
 		} else {
 			channel[1]->editCurrentLimit(dial_cnt);
@@ -655,6 +749,21 @@ void Screen::countDial(int8_t dial_cnt, int8_t direct, uint8_t step, uint32_t mi
 
 void Screen::setTime(uint32_t milisec)
 {
+	if (flag_long_press) {
+		if (digitalRead(36) == 0) {
+			if ((milisec - count_long_press) > 1000) {
+				btn_pressed[4] = true;
+				flag_long_press = 0;
+			}
+		} else {
+			if (flag_long_press != 3)
+				btn_pressed[2] = true;
+			flag_long_press = 0;
+		}
+		if (flag_long_press == 1) {
+			flag_long_press = 2;
+		}
+	}
 	this->cur_time = milisec;
 }
 
@@ -666,22 +775,29 @@ void Screen::clearBtnEvent(void)
 
 void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 {
-	btn_pressed[idx] = true;
 	switch (idx) {
 	case 0: /* Channel0 ON/OFF */
 	case 1: /* Channel1 ON/OFF */
+		if (shutdown)
+			break;
 		if (mode > BASE_EDIT)
 			break;
 		if (onoff[idx] == 1)
 			onoff[idx] = 2;
 		else if (onoff[idx] == 0)
 			onoff[idx] = 3;
+		btn_pressed[idx] = true;
 		break;
 	case 2:  /* MENU/CANCEL */
 		dial_time = cur_time;
+		flag_long_press = 1;
+		count_long_press = cur_time;
 		break;
 	case 3: /* Set value */
+		if (shutdown)
+			break;
 		dial_time = cur_time;
+		btn_pressed[idx] = true;
 		break;
 	}
 }
@@ -864,14 +980,22 @@ void Screen::fsInit(void)
 		f.findUntil("fan_level", "\n\r");
 		f.seek(1, SeekCur);
 		fan_level = f.readStringUntil('\n').toInt();
+		f.findUntil("serial_baud", "\n\r");
+		f.seek(1, SeekCur);
+		serial_baud = f.readStringUntil('\n').toInt();
+		f.findUntil("log_interval", "\n\r");
+		f.seek(1, SeekCur);
+		log_interval = f.readStringUntil('\n').toInt();
 		f.close();
 	}
 	channel[0]->setVolt(volt_set0, 1);
 	channel[0]->setCurrentLimit(current_limit0, 1);
 	channel[1]->setVolt(volt_set1, 1);
 	channel[1]->setCurrentLimit(current_limit1, 1);
-	setting->setBacklightLevel(backlight_level);
+	setting->setBacklightLevel(backlight_level, true);
 	setting->setFanLevel(fan_level);
+	setting->setSerialBaud(serial_baud);
+	setting->setLogIntervalValue(log_interval);
 	readFile("/setting.txt");
 }
 
@@ -890,11 +1014,11 @@ bool Screen::isFirstBoot()
 		return false;
 }
 
-void Screen::setSysParam(char *key, float value)
+void Screen::setSysParam(const char *key, float value)
 {
-#if 1
 	char str[5];
 	sprintf(str, "%04.1f", value);
+	disableBtn();
 	File f = fs->open("/setting.txt", "r+");
 	f.seek(0, SeekSet);
 	f.findUntil(key, "\n\r");
@@ -902,12 +1026,12 @@ void Screen::setSysParam(char *key, float value)
 	f.print(str);
 	f.flush();
 	f.close();
-#endif
+	enableBtn();
 }
 
-void Screen::setSysParam(char *key, String value)
+void Screen::setSysParam(const char *key, String value)
 {
-#if 1
+	disableBtn();
 	File f = fs->open("/setting.txt", "r+");
 	f.seek(0, SeekSet);
 	f.findUntil(key, "\n\r");
@@ -915,7 +1039,7 @@ void Screen::setSysParam(char *key, String value)
 	f.print(value);
 	f.flush();
 	f.close();
-#endif
+	enableBtn();
 }
 
 void Screen::debug()
@@ -931,4 +1055,31 @@ void Screen::countLowVoltage(uint8_t ch)
 void Screen::clearLowVoltage(uint8_t ch)
 {
 	channel[ch]->clearLowVoltage();
+}
+
+bool Screen::getShutdown(void)
+{
+	return shutdown;
+}
+
+void Screen::dimmingLED(uint8_t led)
+{
+	for (int i = 0; i < 150; i++) {
+		ledcWrite(led, i);
+		delay(10);
+	}
+	for (int i = 150; i > 0; i--) {
+		ledcWrite(led, i);
+		delay(10);
+	}
+}
+
+void Screen::writeSysLED(uint8_t val)
+{
+	ledcWrite(0, val);
+}
+
+void Screen::writePowerLED(uint8_t val)
+{
+	ledcWrite(1, val);
 }

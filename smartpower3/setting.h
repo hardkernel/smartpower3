@@ -19,6 +19,8 @@ public:
 
 	uint8_t setBacklightLevel(void);
 	void setBacklightLevel(uint8_t level);
+	void setBacklightLevel(uint8_t level, bool edit);
+	uint8_t _setBacklightLevel(uint8_t level);
 	uint8_t setFanLevel(void);
 	void setFanLevel(uint8_t level);
 	uint16_t setLogInterval(void);
@@ -34,6 +36,7 @@ public:
 	uint8_t getSerialBaudLevel(void);
 
 	void changeBacklight(uint8_t level=255);
+	void restoreBacklight();
 	void changeFan(uint8_t level=255);
 	void changeLogInterval(uint16_t log_interval);
 	void changeSerialBaud(uint8_t baud_level);
@@ -59,7 +62,6 @@ public:
 	void popUp(void);
 	
 	void activateSerialBaud(void);
-	void availableLogInterval(void);
 	void debug(void);
 private:
 	TFT_eSPI *tft;

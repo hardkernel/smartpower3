@@ -7,6 +7,9 @@
 #include "setting.h"
 #include <STPD01.h>
 
+#define LED2	13
+#define LED1	2
+
 enum screen_mode_t {
 	BASE = 0,
 	BASE_MOVE,
@@ -53,10 +56,13 @@ public:
 	static void isr_stp(void);
 	void listDir(const char * dirname, uint8_t levels);
 	void readFile(const char * path);
+	void drawBmp(const char *filename, int16_t x, int16_t y);
+	uint16_t read16(fs::File &f);
+	uint32_t read32(fs::File &f);
 	void changeVolt(screen_mode_t mode);
 	void fsInit(void);
-	void setSysParam(char *key, String value);
-	void setSysParam(char *key, float value);
+	void setSysParam(const char *key, String value);
+	void setSysParam(const char *key, float value);
 	bool isFirstBoot();
 	bool flag_int[2] = {0,};
 	void isrSTPD01();
@@ -71,6 +77,11 @@ public:
 	void enableBtn(void);
 	void countLowVoltage(uint8_t ch=0);
 	void clearLowVoltage(uint8_t ch=0);
+	bool getShutdown(void);
+	void writeSysLED(uint8_t val);
+	void writePowerLED(uint8_t val);
+	void initLED(void);
+	void dimmingLED(uint8_t led);
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
@@ -84,7 +95,7 @@ private:
 	uint32_t task_time = 0;
 	uint32_t time_print[2] = {0, 0};
 	int8_t onoff[2] = {2, 2};
-	bool btn_pressed[4] = {false,};
+	bool btn_pressed[5] = {false,};
 	int16_t dial_cnt = 0;
 	int16_t dial_cnt_old;
 	int8_t dial_direct;
@@ -117,4 +128,7 @@ private:
 	bool enabled_stpd01[2] = {0,};
 	uint8_t int_stat[2] = {0,};
 	bool flag_attach[4] = {0,};
+	uint8_t flag_long_press = false;
+	uint32_t count_long_press = 0;
+	bool shutdown = false;
 };

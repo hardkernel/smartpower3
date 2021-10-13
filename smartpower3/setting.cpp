@@ -68,19 +68,32 @@ void Setting::popUp(void)
 	popup->pushSprite(200, 200);
 }
 
-uint8_t Setting::setBacklightLevel(void)
-{
-	return backlight_level = backlight_level_edit;
-}
-
-void Setting::setBacklightLevel(uint8_t level)
+uint8_t Setting::_setBacklightLevel(uint8_t level)
 {
 	if (level > 6)
 		level = 6;
 	else if (level < 0)
 		level = 0;
-	backlight_level = level;
 	ledcWrite(2, bl_value[level]);
+	return level;
+}
+
+uint8_t Setting::setBacklightLevel(void)
+{
+	backlight_level = backlight_level_edit;
+	return _setBacklightLevel(backlight_level);
+}
+
+void Setting::setBacklightLevel(uint8_t level, bool edit)
+{
+	backlight_level = _setBacklightLevel(level);
+	if (edit)
+		backlight_level_edit = backlight_level;
+}
+
+void Setting::setBacklightLevel(uint8_t level)
+{
+	backlight_level = _setBacklightLevel(level);
 }
 
 uint8_t Setting::setFanLevel(void)
@@ -150,13 +163,18 @@ uint32_t Setting::getSerialBaud(void)
 
 uint8_t Setting::getSerialBaudLevel(void)
 {
-	uint8_t level = 0;
 	for (int i = 0; i < 10; i++) {
 		if (serial_value[i] >= serial_baud) {
 			serial_baud_edit = serial_baud;
 			return i;
 		}
 	}
+	return 0;
+}
+
+void Setting::restoreBacklight()
+{
+	backlight_level_edit = backlight_level;
 }
 
 void Setting::changeBacklight(uint8_t level)
@@ -214,19 +232,6 @@ void Setting::changeSerialBaud(uint8_t baud_level)
 {
 	drawSerialBaud(serial_value[baud_level]);
 	serial_baud_edit = serial_value[baud_level];
-}
-
-void Setting::availableLogInterval()
-{
-	double tmp, ms;
-	tmp = this->serial_baud_edit/78/10;
-	Serial.println(tmp);
-	ms = (1/tmp)*100;
-	/*
-	if (ms > log_value[log_interval]) {
-		com_log_interval->setTextColor(TFT_RED, TFT_BLACK);
-	}
-	*/
 }
 
 void Setting::activateBLLevel(uint16_t color)

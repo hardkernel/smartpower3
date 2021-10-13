@@ -121,11 +121,9 @@ void Header::draw(void)
 			icon_a->setIconColor(TFT_GREEN, BG_ENABLED_INT);
 			icon_a->unitsWrite(4);
 		}
-		String tmp_v = String(in_volt/1000.0, 1);
-		String tmp_a = String(in_ampere/1000.0, 1);
 		input_v->pushValue(in_volt);
 		input_v->fnd_update();
-		input_a->pushValue(in_ampere);
+		input_a->pushValue((in_ampere/100)*100);
 		input_a->fnd_update();
 	}
 #ifdef DEBUG_STPD01
