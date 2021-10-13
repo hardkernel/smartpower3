@@ -87,7 +87,7 @@ void IconWidget::unitsWrite(uint8_t nr_unit)
 {
 	uint16_t	w, h, h_end, i_pos;
 	uint8_t		ic_mask;
-	const uint8_t	*ic_img;
+	const uint8_t	*ic_img = NULL;
 
 	w     = ic->x;
 	h     = ic->y;

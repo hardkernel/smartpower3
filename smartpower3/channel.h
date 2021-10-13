@@ -11,7 +11,6 @@
 #define PIN_INT_CH1	26
 
 enum comp_t {
-	HEADER,
 	VOLT,
 	CURRENT,
 	WATT

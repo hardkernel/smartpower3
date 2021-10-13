@@ -110,8 +110,8 @@ bool Channel::isAvailableSTPD01()
 		debug_intr[i]->draw(String(count_intr[i]));
 	}
 
-	return 1;
 #endif
+	return 1;
 }
 
 void Channel::initScreen(uint8_t onoff)
@@ -218,7 +218,7 @@ void Channel::disabled(void)
 
 bool Channel::on(void)
 {
-	bool err;
+	bool err = 0;
 	if (stpd01->available()) {
 		stpd01->setVoltage(volt_set);
 		stpd01->setCurrentLimit(current_limit);
@@ -241,7 +241,7 @@ bool Channel::on(void)
 
 bool Channel::off(void)
 {
-	bool err;
+	bool err = 0;
 	if (stpd01->available()) {
 		err = stpd01->off();
 	}
@@ -458,7 +458,6 @@ void Channel::isr(void)
 	if (flag_int || !digitalRead(int_stpd01[channel])) {
 		if (stpd01->available()) {
 			latch = checkInterruptLatch();
-			Serial.println(latch);
 			for (int i = 0; i < 8; i++) {
 				if ((latch >> i) & 0x1) {
 					count_intr[i]++;
@@ -483,7 +482,6 @@ uint8_t Channel::checkInterruptLatch(void)
 	icon_tp->setInt(reg_latch & INT_OTP);
 	icon_tw->setInt(reg_latch & INT_OTW);
 	icon_ip->setInt(reg_latch & INT_IPCP);
-	Serial.println(reg_latch);
 
 	if (!hide) {
 		icon_op->update(channel);
@@ -527,10 +525,8 @@ uint8_t Channel::checkInterruptStat(uint8_t onoff)
 
 uint8_t Channel::checkInterrupt(void)
 {
-	uint8_t reg_stat, reg_latch, reg_mask;
+	uint8_t reg_latch;
 	reg_latch = stpd01->readIntLatch();
-	reg_stat = stpd01->readIntStatus();
-	reg_mask = stpd01->readIntMask();
 	
 	return reg_latch;
 }

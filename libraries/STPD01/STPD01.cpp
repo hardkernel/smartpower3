@@ -158,7 +158,6 @@ bool STPD01::readOnOff(void)
 
 bool STPD01::on(void)
 {
-	byte tmp;
 	write8(STPD01_REGISTER_6, 0x1);
 	if (readOnOff() != 1)
 		return 1;
@@ -167,7 +166,6 @@ bool STPD01::on(void)
 
 bool STPD01::off(void)
 {
-	byte tmp;
 	write8(STPD01_REGISTER_6, 0x0);
 	if (readOnOff() != 0)
 		return 1;

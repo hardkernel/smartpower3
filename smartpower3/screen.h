@@ -28,7 +28,6 @@ enum state_setting {
 	STATE_LOG = 0,
 	STATE_FAN,
 	STATE_BL,
-	STATE_SETTING,
 	STATE_NONE
 };
 

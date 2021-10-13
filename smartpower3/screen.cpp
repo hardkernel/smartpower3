@@ -22,13 +22,23 @@ void Screen::begin(TwoWire *theWire)
 		Serial.println("SPIFFS mount error");
 		return;
 	}
-
 	fs = &SPIFFS;
+	tft.setRotation(0);
+	drawBmp("/logo_hardkernel.bmp", 0, 0);
+	tft.setRotation(3);
+	tft.loadFont("NotoSans-Bold20");
+	tft.drawString("Build date : ", 80, 295, 2);
+	tft.drawString(String(__DATE__), 200, 295, 2);
+	tft.drawString(String(__TIME__), 320, 295, 2);
+	tft.unloadFont();
 
 	setting = new Setting(&tft);
 
 	fsInit();
+	delay(2000);
+	tft.setRotation(3);
 
+	tft.fillRect(0, 0, 480, 320, TFT_BLACK);
 	initScreen();
 	header->init(5, 8);
 }
@@ -692,7 +702,6 @@ void Screen::readFile(const char * path){
 			continue;
 		}
 		Serial.write(tmp);
-		//Serial.printf("%c : %d\n\r", file.read(), file.position());
     }
     file.close();
 }
@@ -728,12 +737,97 @@ void Screen::listDir(const char * dirname, uint8_t levels){
     }
 }
 
+void Screen::drawBmp(const char *filename, int16_t x, int16_t y)
+{
+	if ((x >= tft.width()) || (y >= tft.height()))
+		return;
+
+	File bmpFS= fs->open(filename, "r");
+	if (!bmpFS)
+	{
+		Serial.println("File not found");
+		return;
+	}
+
+  uint32_t seekOffset;
+  uint16_t w, h, row, col;
+  uint8_t  r, g, b;
+
+  uint32_t startTime = millis();
+
+  if (read16(bmpFS) == 0x4D42)
+  {
+    read32(bmpFS);
+    read32(bmpFS);
+    seekOffset = read32(bmpFS);
+    read32(bmpFS);
+    w = read32(bmpFS);
+    h = read32(bmpFS);
+
+    if ((read16(bmpFS) == 1) && (read16(bmpFS) == 24) && (read32(bmpFS) == 0))
+    {
+      y += h - 1;
+
+      bool oldSwapBytes = tft.getSwapBytes();
+      tft.setSwapBytes(true);
+      bmpFS.seek(seekOffset);
+
+      uint16_t padding = (4 - ((w * 3) & 3)) & 3;
+      uint8_t lineBuffer[w * 3 + padding];
+
+      for (row = 0; row < h; row++) {
+        bmpFS.read(lineBuffer, sizeof(lineBuffer));
+        uint8_t*  bptr = lineBuffer;
+        uint16_t* tptr = (uint16_t*)lineBuffer;
+        // Convert 24 to 16 bit colours
+        for (col = 0; col < w; col++)
+        {
+          b = *bptr++;
+          g = *bptr++;
+          r = *bptr++;
+          *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+        }
+
+        // Push the pixel row to screen, pushImage will crop the line if needed
+        // y is decremented as the BMP image is drawn bottom up
+        tft.pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
+      }
+      tft.setSwapBytes(oldSwapBytes);
+      Serial.print("Loaded in "); Serial.print(millis() - startTime);
+      Serial.println(" ms");
+    }
+    else Serial.println("BMP format not recognized.");
+  }
+  bmpFS.close();
+}
+
+uint16_t Screen::read16(fs::File &f) {
+  uint16_t result;
+  ((uint8_t *)&result)[0] = f.read(); // LSB
+  ((uint8_t *)&result)[1] = f.read(); // MSB
+  return result;
+}
+
+uint32_t Screen::read32(fs::File &f) {
+  uint32_t result;
+  ((uint8_t *)&result)[0] = f.read(); // LSB
+  ((uint8_t *)&result)[1] = f.read();
+  ((uint8_t *)&result)[2] = f.read();
+  ((uint8_t *)&result)[3] = f.read(); // MSB
+  return result;
+}
+
+
 void Screen::fsInit(void)
 {
-	float volt_set0, volt_set1;
-	float current_limit0, current_limit1;
-	uint8_t backlight_level = 0;
+	float volt_set0 = 5.0;
+	float volt_set1 = 5.0;
+	float current_limit0 = 3.0;
+	float current_limit1 = 3.0;
+	uint8_t backlight_level = 3;
 	uint8_t fan_level = 0;
+	uint8_t log_interval = 0;
+	uint32_t serial_baud = 115200;
 
 	if (isFirstBoot()) {
 		Serial.println("First boot!!!");
@@ -745,15 +839,10 @@ void Screen::fsInit(void)
 		f.print("current_limit1=03.0\n\r");
 		f.print("blacklight_level=3\n\r");
 		f.print("fan_level=0\n\r");
+		f.print("serial_baud=115200\n\r");
+		f.print("log_interval=0\n\r");
 		f.print("firstboot=0");
 		f.flush();
-		current_limit0 = 3.0;
-		current_limit1 = 3.0;
-		volt_set0 = 5.0;
-		volt_set1 = 5.0;
-		backlight_level = 3;
-		fan_level = 0;
-
 	} else {
 		File f = fs->open("/setting.txt", "r");
 		f.seek(0, SeekSet);
@@ -793,7 +882,6 @@ bool Screen::isFirstBoot()
 	f.findUntil("firstboot", "\n\r");
 	f.seek(1, SeekCur);
 	int value = f.readStringUntil('\n').toInt();
-	Serial.println(value);
 	f.close();
 
 	if (value)

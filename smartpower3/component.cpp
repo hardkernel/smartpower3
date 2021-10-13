@@ -60,12 +60,22 @@ void Component::clearOutLines(void)
 	}
 }
 
+void Component::loadFont(const char font[])
+{
+	img->loadFont(font);
+}
+
+void Component::unloadFont(void)
+{
+	img->unloadFont();
+}
+
 void Component::draw(const char s[])
 {
 	if (align == TR_DATUM)
 		img->drawString(s, width, 0, font);
 	else
-		img->drawString(s, 0, 0, font);
+		img->drawString(s, width/2, height/2, font);
 	img->pushSprite(x, y);
 	delay(WAIT);
 }
@@ -75,7 +85,7 @@ void Component::draw(String s)
 	if (align == TR_DATUM)
 		img->drawString(s, width, 0, font);
 	else
-		img->drawString(s, 0, 0, font);
+		img->drawString(s, width/2, height/2, font);
 	img->pushSprite(x, y);
 	delay(WAIT);
 }

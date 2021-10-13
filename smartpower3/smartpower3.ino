@@ -8,6 +8,7 @@ uint32_t ctime1 = 0;
 
 void setup(void) {
 	Serial.begin(500000);
+
 	I2CA.begin(15, 4, 10000);
 	I2CB.begin(21, 22, 400000);
 	PAC.begin(&I2CB);
@@ -56,11 +57,12 @@ void logTask(void *parameter)
 	char buffer_ch1[26];
 	uint16_t log_interval;
 	for (;;) {
+		cur_time = millis();
 		vTaskDelay(5);
 		log_interval = screen.getLogInterval();
 		if (log_interval > 0) {
 			vTaskDelay(log_interval-5);
-			sprintf(buffer_input, "%010d,%05d,%04d,%05d,%1d,", cur_time, volt[0], amp[0], watt[0], low_input);
+			sprintf(buffer_input, "%010lu,%05d,%04d,%05d,%1d,", cur_time, volt[0], amp[0], watt[0], low_input);
 			sprintf(buffer_ch0, "%05d,%04d,%05d,%d,%x,", volt[1], amp[1], watt[1], onoff[0], screen.getIntStat(0));
 			sprintf(buffer_ch1, "%05d,%04d,%05d,%d,%x\n\r", volt[2], amp[2], watt[2], onoff[1], screen.getIntStat(1));
 			Serial.printf(buffer_input);
@@ -81,7 +83,6 @@ void screenTask(void *parameter)
 void inputTask(void *parameter)
 {
 	for (;;) {
-		cur_time = millis();
 		for (int i = 0; i < 4; i++) {
 			if (screen.checkAttachBtn(i))
 				button[i].attachInt();
