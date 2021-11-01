@@ -88,7 +88,6 @@ void inputTask(void *parameter)
 }
 
 void loop() {
-	PAC.Refresh();
 	onoff = screen.getOnOff();
 	for (int i = 1; i < 3; i++) {
 		PAC.update(i);
@@ -103,6 +102,8 @@ void loop() {
 		}
 #endif
 	}
+
+	PAC.Refresh();
 
 	if ((millis() - ctime1) > 300) {
 		ctime1 = millis();
