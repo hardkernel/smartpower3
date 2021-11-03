@@ -7,8 +7,6 @@ class Meas_chan {
 	public:
 		Meas_chan(Microchip_PAC193x * mc, int n);
 
-		void sample();			// Fetch data from PAC
-
 		void update(float V, float A);	// Update externally
 
 		uint16_t V();
@@ -23,16 +21,13 @@ class Meas_chan {
 
 		float Current_buf[1000];	// Circular current samplex buffer			
 		int Current_buf_cnt = 0;
-
 };
-
 
 // An entity that samples data for all three channels using faster method
 class Meas_chans {
 	public:
 
 		Meas_chans(Microchip_PAC193x * mc, Meas_chan * Ch0, Meas_chan * Ch1, Meas_chan * Ch2, float rsense);
-
 		void sample();
 
 	private:

@@ -5,21 +5,6 @@ Meas_chan::Meas_chan(Microchip_PAC193x * mc, int n){
 	number = n;
 }
 
-void Meas_chan::sample() {
-        unsigned long delay;
-
-        // ensure that 1ms has already passed since last refresh
-        delay = (1000 - micros() + PAC->refresh_timestamp);
-        // do a delay if result is not nagtive (note it's an unsinged variable)
-        if (delay < 1000) delayMicroseconds(delay);
-
-	PAC->updateVoltage(PAC1934_VBUS1_AVG_ADDR + number);
-	PAC->updateCurrent(PAC1934_VSENSE1_AVG_ADDR + number);
-
-	update(PAC->Voltage, PAC->Current);
-
-}
-
 void Meas_chan::update(float V, float A) {
 
 	Voltage = V;
