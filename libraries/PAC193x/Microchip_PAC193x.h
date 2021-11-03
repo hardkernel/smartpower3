@@ -447,11 +447,13 @@ class Microchip_PAC193x {
 			uint8_t ManufacturerID;
 			uint8_t RevisionID;
 
+			uint32_t refresh_timestamp;
 			
+			void Read(uint8_t reg_address, int Nbytes, uint8_t *pBuffer);
+
 		private:
 //class private functions:		
 			TwoWire *_wire;
-			void Read(uint8_t reg_address, int Nbytes, uint8_t *pBuffer);
 			uint8_t Read8(uint8_t reg_address);
 			uint16_t Read16(uint8_t reg_address);
 			uint32_t Read32(uint8_t reg_address);
@@ -459,7 +461,6 @@ class Microchip_PAC193x {
 			void Write8(uint8_t reg_address, uint8_t data);
 //class private properties:
 			uint32_t rsense;
-			uint32_t refresh_timestamp;
 			
 /*	Property
 		errorCode

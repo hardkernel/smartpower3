@@ -395,15 +395,6 @@ uint16_t Channel::getValueWatt()
 
 void Channel::pushPower(uint16_t volt, uint16_t current, uint16_t watt)
 {
-	moving_avg[(cnt_mavg++)%5] = current;
-	if (cnt_mavg > 4) {
-		current = 0;
-		for (int i = 0; i < 5; i++) {
-			current += moving_avg[i];
-		}
-		current = current/5;
-	}
-
 	if (current < 10) {
 		current = 0;
 		watt = 0;

@@ -54,7 +54,7 @@ void Microchip_PAC193x::begin(TwoWire *_wire){
 		
 		Write8(PAC1934_NEG_PWR_ADDR, 0);
 		Write8(PAC1934_CTRL_ADDR, 2);
-		Write8(PAC1934_CHANNEL_DIS_ADDR, 0);
+		//Write8(PAC1934_CHANNEL_DIS_ADDR, 0);	// Use defaults
 		Write8(PAC1934_SLOW_ADDR, 20); //14h
 		
 		Refresh();
@@ -174,9 +174,23 @@ int16_t Microchip_PAC193x::UpdateRevisionID(){
 }
 
 void Microchip_PAC193x::Refresh(){
+
+	// Refesh needs only one byte with no data
 		
-	Write8(PAC1934_REFRESH_CMD_ADDR, 1); //refresh
+	_wire->beginTransmission(I2C_ADDRESS);
+#if (ARDUINO >= 100)
+	_wire->write(PAC1934_REFRESH_CMD_ADDR);
+#else
+	_wire->send(PAC1934_REFRESH_CMD_ADDR);
+#endif
+	errorCode = _wire->endTransmission();
+
+	if (errorCode != 0){
+		errorCode = (-2);
+	}
+
 	refresh_timestamp = micros();
+
 }
 
 void Microchip_PAC193x::update(uint8_t sense)

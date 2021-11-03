@@ -1,6 +1,7 @@
 #include <Microchip_PAC193x.h>
 #include "screen.h"
 #include "inputmanager.h"
+#include "meas_chan.h"
 
 #define BUTTON_MENU 36
 #define BUTTON_CH0 39
@@ -16,6 +17,11 @@ Button button[4] = {
 
 Screen screen;
 Microchip_PAC193x PAC = Microchip_PAC193x(15000);
+
+Meas_chan mCh0(&PAC, 0);
+Meas_chan mCh1(&PAC, 1);
+Meas_chan mCh2(&PAC, 2);
+Meas_chans mChs (&PAC, &mCh0, &mCh1, &mCh2, 15000);
 
 TwoWire I2CA = TwoWire(0);
 TwoWire I2CB = TwoWire(1);
