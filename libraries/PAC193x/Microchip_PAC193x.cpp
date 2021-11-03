@@ -176,19 +176,24 @@ int16_t Microchip_PAC193x::UpdateRevisionID(){
 void Microchip_PAC193x::Refresh(){
 		
 	Write8(PAC1934_REFRESH_CMD_ADDR, 1); //refresh
-	delayMicroseconds(1000);
+	refresh_timestamp = micros();
 }
 
 void Microchip_PAC193x::update(uint8_t sense)
 {
 	uint8_t reg;
+	unsigned long delay;
 
-	// voltage
+	// ensure that 1ms has already passed since last refresh
+	delay = (1000 - micros() + refresh_timestamp);
+	// do a delay if result is not nagtive (note it's an unsinged variable)
+	if (delay < 1000) delayMicroseconds(delay);
+	
 	
 	reg = PAC1934_VBUS1_ADDR + sense;
 	updateVoltage(reg);
 
-	reg = PAC1934_VSENSE1_ADDR + sense;
+	reg = PAC1934_VSENSE1_AVG_ADDR + sense;
 	updateCurrent(reg);
 
 	reg = PAC1934_VPOWER1_ADDR + sense;
@@ -358,7 +363,7 @@ int16_t Microchip_PAC193x::UpdatePowerRaw(uint8_t reg){
 }
 
 void Microchip_PAC193x::updatePower(uint8_t reg){
-
+/*
     uint32_t PowerRegScale = 0x10000000;
     double PowerFSR;
 
@@ -374,6 +379,8 @@ void Microchip_PAC193x::updatePower(uint8_t reg){
 	if (rsense <= 0){
 		errorCode = (-3);
 	}
+*/
+	Power = Current * Voltage / 1000000; 
 }
 
 int16_t Microchip_PAC193x::UpdatePower(uint8_t reg){

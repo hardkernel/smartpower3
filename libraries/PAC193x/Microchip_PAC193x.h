@@ -459,6 +459,7 @@ class Microchip_PAC193x {
 			void Write8(uint8_t reg_address, uint8_t data);
 //class private properties:
 			uint32_t rsense;
+			uint32_t refresh_timestamp;
 			
 /*	Property
 		errorCode
