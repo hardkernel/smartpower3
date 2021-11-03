@@ -7,9 +7,6 @@ Setting::Setting(TFT_eSPI *tft)
 	ledcSetup(2, FREQ, RESOLUTION);
 	ledcAttachPin(BL_LCD, 2);
 
-	ledcSetup(3, FREQ, RESOLUTION);
-	ledcAttachPin(FAN, 3);
-
 	popup = new TFT_eSprite(tft);
 	popup->createSprite(100, 100);
 
@@ -32,31 +29,25 @@ void Setting::init(uint16_t x, uint16_t y)
 
 	tft->loadFont("Chewy-Regular32");
 	tft->drawString("Backlight Level", x, y, 4);
-	tft->drawString("Fan Level", x, y + 50, 4);
-	tft->drawString("Serial Logging", x, y + 100, 4);
+	tft->drawString("Serial Logging", x, y + Y_SERIAL_LOGGING, 4);
 	tft->unloadFont();
 
 	tft->fillRect(x + X_BL_LEVEL, y, 135, 26, TFT_BLACK);
 	tft->drawRect(x + X_BL_LEVEL, y-1, 135, 28, TFT_YELLOW);
 	changeBacklight(backlight_level);
 
-	tft->fillRect(x + X_FAN_LEVEL, y + 50, 135, 26, TFT_BLACK);
-	tft->drawRect(x + X_FAN_LEVEL, y-1 + 50, 135, 28, TFT_YELLOW);
-	changeFan(fan_level);
-
 	com_serial_baud->init(TFT_WHITE, TFT_BLACK, 1, MC_DATUM);
-	com_serial_baud->setCoordinate(x + X_LOG_LEVEL-35, y + 130);
-	tft->loadFont("Chewy-Regular24");
-	tft->drawString("Baud Rate  /", x + X_LOG_LEVEL-25, y + 100);
-	tft->drawString("/", x + X_LOG_LEVEL+85, y + 130);
-	tft->unloadFont();
-	drawSerialBaud(this->serial_baud);
-
+	com_serial_baud->setCoordinate(x + X_LOG_LEVEL-35, y + 30 + Y_SERIAL_LOGGING);
 	com_log_interval->init(TFT_WHITE, TFT_BLACK, 1, MC_DATUM);
-	com_log_interval->setCoordinate(x + X_LOG_LEVEL+105, y + 130);
+	com_log_interval->setCoordinate(x + X_LOG_LEVEL+105, y + 30 + Y_SERIAL_LOGGING);
+
 	tft->loadFont("Chewy-Regular24");
-	tft->drawString(" Interval", x + X_LOG_LEVEL+100, y + 100);
+	tft->drawString("Baud Rate  /", x + X_LOG_LEVEL-25, y + Y_SERIAL_LOGGING);
+	tft->drawString("/", x + X_LOG_LEVEL+85, y + 30 + Y_SERIAL_LOGGING);
+	tft->drawString(" Interval", x + X_LOG_LEVEL+100, y + Y_SERIAL_LOGGING);
 	tft->unloadFont();
+
+	drawSerialBaud(this->serial_baud);
 	drawLogInterval(log_value[log_interval]);
 }
 
@@ -96,21 +87,6 @@ void Setting::setBacklightLevel(uint8_t level)
 	backlight_level = _setBacklightLevel(level);
 }
 
-uint8_t Setting::setFanLevel(void)
-{
-	return fan_level = fan_level_edit;
-}
-
-void Setting::setFanLevel(uint8_t level)
-{
-	if (level > 6)
-		level = 6;
-	else if (level < 0)
-		level = 0;
-	fan_level = level;
-	ledcWrite(3, fan_value[level]);
-}
-
 void Setting::setLogIntervalValue(uint16_t val)
 {
 	log_interval = val;
@@ -138,11 +114,6 @@ uint32_t Setting::setSerialBaud(uint32_t baud)
 uint8_t Setting::getBacklightLevel(void)
 {
 	return backlight_level;
-}
-
-uint8_t Setting::getFanLevel(void)
-{
-	return fan_level;
 }
 
 uint16_t Setting::getLogInterval(void)
@@ -185,16 +156,6 @@ void Setting::changeBacklight(uint8_t level)
 	drawBacklightLevel(level);
 	backlight_level_edit = level;
 	ledcWrite(2, bl_value[level]);
-}
-
-void Setting::changeFan(uint8_t level)
-{
-	if (level == 255) {
-		level = fan_level;
-	}
-	drawFanLevel(level);
-	fan_level_edit = level;
-	ledcWrite(3, fan_value[level]);
 }
 
 void Setting::restoreLogInterval()
@@ -240,16 +201,10 @@ void Setting::activateBLLevel(uint16_t color)
 		tft->drawRect(x + X_BL_LEVEL-i, y-1-i, 135+i*2, 28+i*2, color);
 }
 
-void Setting::activateFanLevel(uint16_t color)
-{
-	for (int i = 1; i < 4; i++)
-		tft->drawRect(x + X_FAN_LEVEL -i, y-1-i + 50, 135+i*2, 28+i*2, color);
-}
-
 void Setting::activateSerialLogging(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
-		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + 100-10, 135+i*2+120, 28+i*2+40, color);
+		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + Y_SERIAL_LOGGING -10, 135+i*2+120, 28+i*2+40, color);
 }
 
 void Setting::activateLogInterval(uint16_t color)
@@ -264,12 +219,6 @@ void Setting::deActivateBLLevel(uint16_t color)
 		tft->drawRect(x + X_BL_LEVEL -i, y-1-i, 135+i*2, 28+i*2, color);
 }
 
-void Setting::deActivateFanLevel(uint16_t color)
-{
-	for (int i = 1; i < 4; i++)
-		tft->drawRect(x + X_FAN_LEVEL -i, y-1-i + 50, 135+i*2, 28+i*2, color);
-}
-
 void Setting::deActivateLogInterval(uint16_t color)
 {
 	com_log_interval->setTextColor(color, TFT_BLACK);
@@ -280,7 +229,7 @@ void Setting::deActivateLogInterval(uint16_t color)
 void Setting::deActivateSerialLogging(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
-		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + 100-10, 135+i*2+120, 28+i*2+40, color);
+		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + Y_SERIAL_LOGGING -10, 135+i*2+120, 28+i*2+40, color);
 }
 
 
@@ -289,14 +238,6 @@ void Setting::drawBacklightLevel(uint8_t level)
 	tft->fillRect(x + X_BL_LEVEL + 2, y+1, 130, 24, TFT_BLACK);
 	for (int i = 0; i < level; i++) {
 		tft->fillRect(x + X_BL_LEVEL + 2 + (i*22), y + 1, 20, 24, TFT_YELLOW);
-	}
-}
-
-void Setting::drawFanLevel(uint8_t level)
-{
-	tft->fillRect(x + X_FAN_LEVEL + 2, y+1 + 50, 130, 24, TFT_BLACK);
-	for (int i = 0; i < level; i++) {
-		tft->fillRect(x + X_FAN_LEVEL + 2 + (i*22), y + 1 + 50, 20, 24, TFT_YELLOW);
 	}
 }
 
