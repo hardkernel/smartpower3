@@ -77,7 +77,7 @@ private:
 	Component *debug_intr[8];
 	FndWidget *current;
 	FndWidget *watt;
-	IconWidget *icon_op, *icon_sp, *icon_cc, *icon_tp, *icon_tw, *icon_ip;
+	IconWidget *icon_op, *icon_sp, *icon_tp, *icon_tw, *icon_ip;
 	IconWidget *icon_p, *icon_n, *icon_v, *icon_a, *icon_w;
 	STPD01 *stpd01;
 	uint8_t channel;
