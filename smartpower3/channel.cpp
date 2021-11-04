@@ -17,7 +17,6 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 
 	icon_op = new IconWidget(tft, channel);
 	icon_sp = new IconWidget(tft, channel);
-	icon_cc = new IconWidget(tft, channel);
 	icon_tp = new IconWidget(tft, channel);
 	icon_tw = new IconWidget(tft, channel);
 	icon_ip = new IconWidget(tft, channel);
@@ -39,13 +38,12 @@ Channel::Channel(TFT_eSPI *tft, TwoWire *theWire, uint16_t x, uint16_t y,
 	_current->fnd_init(2, 1, true, x + W_SEG+14, y+18+64, TFT_YELLOW, BG_COLOR, FND_FONT_16x32, 100);
 
 	uint16_t gap_int_icon = 25;
-	uint16_t base = 40;
+	uint16_t base = 52;
 	icon_op->init(0, x, y+base, FG_COLOR, BG_COLOR);
-	icon_cc->init(1, x, y+base + gap_int_icon, FG_COLOR, BG_COLOR);
-	icon_sp->init(2, x, y+base + gap_int_icon*2, FG_COLOR, BG_COLOR);
-	icon_tp->init(3, x, y+base + gap_int_icon*3, FG_COLOR, BG_COLOR);
-	icon_tw->init(4, x, y+base + gap_int_icon*4, FG_COLOR, BG_COLOR);
-	icon_ip->init(5, x, y+base + gap_int_icon*5, FG_COLOR, BG_COLOR);
+	icon_sp->init(2, x, y+base + gap_int_icon*1, FG_COLOR, BG_COLOR);
+	icon_tp->init(3, x, y+base + gap_int_icon*2, FG_COLOR, BG_COLOR);
+	icon_tw->init(4, x, y+base + gap_int_icon*3, FG_COLOR, BG_COLOR);
+	icon_ip->init(5, x, y+base + gap_int_icon*4, FG_COLOR, BG_COLOR);
 
 	icon_p->init(9, x + 26 + channel*(10), y+234, FG_COLOR, BG_COLOR);
 	icon_n->init(9, x + 156 + channel*(10), y+234, FG_COLOR, BG_COLOR);
@@ -178,7 +176,6 @@ void Channel::drawInterrupt(void)
 {
 	icon_op->update(true, channel);
 	icon_sp->update(true, channel);
-	icon_cc->update(true, channel);
 	icon_tp->update(true, channel);
 	icon_tw->update(true, channel);
 	icon_ip->update(true, channel);
@@ -493,13 +490,6 @@ uint8_t Channel::checkInterruptStat(uint8_t onoff)
 	if (onoff == 0)
 		reg_stat = 0x00;
 
-	if (reg_stat & INT_CC) {
-		icon_cc->setIconColor(TFT_RED, BG_ENABLED_INT);
-	} else {
-		icon_cc->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
-	}
-	icon_cc->update(channel);
-
 	if (flag_clear_debug == 1) {
 		flag_clear_debug++;
 		if (!hide) {
@@ -540,7 +530,6 @@ void Channel::clearDebug()
 	icon_tp->setInt(0);
 	icon_tw->setInt(0);
 	icon_ip->setInt(0);
-	icon_cc->setInt(0);
 	for (int i = 0; i < 8; i++)
 		count_intr[i] = 0;
 	flag_clear_debug = 0;
