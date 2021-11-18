@@ -109,6 +109,7 @@ uint32_t Setting::setSerialBaud()
 uint32_t Setting::setSerialBaud(uint32_t baud)
 {
 	Serial.flush();
+	Serial.end();
 	Serial.begin(baud);
 	return serial_baud = baud;
 }
@@ -130,7 +131,6 @@ uint16_t Setting::getLogIntervalValue(void)
 
 uint32_t Setting::getSerialBaud(void)
 {
-	Serial.println(serial_baud_edit);
 	return serial_baud;
 }
 

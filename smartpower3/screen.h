@@ -6,6 +6,7 @@
 #include "header.h"
 #include "setting.h"
 #include <STPD01.h>
+#include <ArduinoNvs.h>
 
 #define LED2	13
 #define LED1	2
@@ -59,8 +60,6 @@ public:
 	uint32_t read32(fs::File &f);
 	void changeVolt(screen_mode_t mode);
 	void fsInit(void);
-	void setSysParam(const char *key, String value);
-	void setSysParam(const char *key, float value);
 	bool isFirstBoot();
 	bool flag_int[2] = {0,};
 	void isrSTPD01();

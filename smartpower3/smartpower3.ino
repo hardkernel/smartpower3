@@ -6,6 +6,8 @@ uint32_t ctime1 = 0;
 void setup(void) {
 	Serial.begin(115200);
 
+	NVS.begin();
+
 	I2CA.begin(15, 4, 10000);
 	I2CB.begin(21, 22, 800000);
 	PAC.begin(&I2CB);

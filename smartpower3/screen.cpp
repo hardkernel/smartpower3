@@ -475,7 +475,7 @@ void Screen::drawSettingBL()
 		disableBtn();
 		btn_pressed[3] = false;
 		mode = SETTING;
-		setSysParam("backlight_level", String(setting->setBacklightLevel()));
+		NVS.setInt("bl_level", setting->setBacklightLevel());
 		setting->activateBLLevel();
 		activated = dial_cnt = STATE_BL;
 		enableBtn();
@@ -521,11 +521,10 @@ void Screen::drawSettingLOG()
 	if (btn_pressed[3] == true) {
 		disableBtn();
 		btn_pressed[3] = false;
-		Serial.println(setting->getSerialBaud());
 		if (activated == 5) {
 			mode = SETTING;
-			setSysParam("serial_baud", String(setting->setSerialBaud()));
-			setSysParam("log_interval", String(setting->setLogInterval()));
+			NVS.setInt("serial_baud", setting->setSerialBaud());
+			NVS.setInt("log_interval", setting->setLogInterval());
 			activated = dial_cnt = dial_cnt_old = STATE_LOG;
 			setting->deActivateLogInterval(TFT_WHITE);
 			setting->deActivateSerialLogging(TFT_YELLOW);
@@ -554,7 +553,6 @@ void Screen::drawSettingLOG()
 			setting->changeSerialBaud(dial_cnt);
 		}
 		dial_cnt_old = dial_cnt;
-		Serial.println(setting->getSerialBaud());
 	}
 }
 
@@ -619,7 +617,8 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[0]->setVolt(dial_cnt);
 			if (dial_cnt != 0) {
-				setSysParam("voltage0", channel[0]->getVolt()/1000.0);
+				NVS.setString("voltage0", String(channel[0]->getVolt()/1000.0));
+
 			}
 		} else {
 			channel[0]->editVolt(dial_cnt);
@@ -632,7 +631,7 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[0]->setCurrentLimit(dial_cnt);
 			if (dial_cnt != 0) {
-				setSysParam("current_limit0", channel[0]->getCurrentLimit()/10.0);
+				NVS.setString("current_limit0", String(channel[0]->getCurrentLimit()/10.0));
 			}
 		} else {
 			channel[0]->editCurrentLimit(dial_cnt);
@@ -646,7 +645,7 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[1]->setVolt(dial_cnt);
 			if (dial_cnt != 0) {
-				setSysParam("voltage1", channel[1]->getVolt()/1000.0);
+				NVS.setString("voltage1", String(channel[1]->getVolt()/1000.0));
 			}
 		} else {
 			channel[1]->editVolt(dial_cnt);
@@ -659,7 +658,7 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[1]->setCurrentLimit(dial_cnt);
 			if (dial_cnt != 0) {
-				setSysParam("current_limit1", String(channel[1]->getCurrentLimit()/10.0));
+				NVS.setString("current_limit1", String(channel[1]->getCurrentLimit()/10.0));
 			}
 		} else {
 			channel[1]->editCurrentLimit(dial_cnt);
@@ -884,53 +883,29 @@ void Screen::fsInit(void)
 	float current_limit0 = 3.0;
 	float current_limit1 = 3.0;
 	uint8_t backlight_level = 3;
-	uint8_t fan_level = 0;
 	uint8_t log_interval = 0;
 	uint32_t serial_baud = 115200;
 
 	if (isFirstBoot()) {
 		Serial.println("First boot!!!");
-		File f = fs->open("/setting.txt", "w");
-		f.print("autorun=0\n\r");
-		f.print("voltage0=05.0\n\r");
-		f.print("voltage1=05.0\n\r");
-		f.print("current_limit0=03.0\n\r");
-		f.print("current_limit1=03.0\n\r");
-		f.print("blacklight_level=3\n\r");
-		f.print("fan_level=0\n\r");
-		f.print("serial_baud=115200\n\r");
-		f.print("log_interval=0\n\r");
-		f.print("firstboot=0");
-		f.flush();
-	} else {
-		File f = fs->open("/setting.txt", "r");
-		f.seek(0, SeekSet);
-		f.findUntil("voltage0", "\n\r");
-		f.seek(1, SeekCur);
-		volt_set0 = f.readStringUntil('\n').toFloat()*1000;
-		f.findUntil("voltage1", "\n\r");
-		f.seek(1, SeekCur);
-		volt_set1 = f.readStringUntil('\n').toFloat()*1000;
-		f.findUntil("current_limit0", "\n\r");
-		f.seek(1, SeekCur);
-		current_limit0 = f.readStringUntil('\n').toFloat()*1000;
-		f.findUntil("current_limit1", "\n\r");
-		f.seek(1, SeekCur);
-		current_limit1 = f.readStringUntil('\n').toFloat()*1000;
-		f.findUntil("backlight_level", "\n\r");
-		f.seek(1, SeekCur);
-		backlight_level = f.readStringUntil('\n').toInt();
-		f.findUntil("fan_level", "\n\r");
-		f.seek(1, SeekCur);
-		fan_level = f.readStringUntil('\n').toInt();
-		f.findUntil("serial_baud", "\n\r");
-		f.seek(1, SeekCur);
-		serial_baud = f.readStringUntil('\n').toInt();
-		f.findUntil("log_interval", "\n\r");
-		f.seek(1, SeekCur);
-		log_interval = f.readStringUntil('\n').toInt();
-		f.close();
+		NVS.setInt("autorun", 0);
+		NVS.setInt("bl_level", 3);
+		NVS.setInt("serial_baud", 115200);
+		NVS.setInt("log_interval", 0);
+		NVS.setInt("firstboot", 1);
+		NVS.setString("voltage0", "5.0");
+		NVS.setString("voltage1", "5.0");
+		NVS.setString("current_limit0", "3.0");
+		NVS.setString("current_limit1", "3.0");
 	}
+	volt_set0 = NVS.getString("voltage0").toFloat()*1000;
+	volt_set1 = NVS.getString("voltage1").toFloat()*1000;
+	current_limit0 = NVS.getString("current_limit0").toFloat()*1000;
+	current_limit1 = NVS.getString("current_limit1").toFloat()*1000;
+	backlight_level = NVS.getInt("bl_level");
+	serial_baud = NVS.getInt("serial_baud");
+	log_interval = NVS.getInt("log_interval");
+
 	channel[0]->setVolt(volt_set0, 1);
 	channel[0]->setCurrentLimit(current_limit0, 1);
 	channel[1]->setVolt(volt_set1, 1);
@@ -938,50 +913,14 @@ void Screen::fsInit(void)
 	setting->setBacklightLevel(backlight_level, true);
 	setting->setSerialBaud(serial_baud);
 	setting->setLogIntervalValue(log_interval);
-	readFile("/setting.txt");
 }
 
 bool Screen::isFirstBoot()
 {
-	File f = fs->open("/setting.txt", "r");
-	f.seek(0, SeekSet);
-	f.findUntil("firstboot", "\n\r");
-	f.seek(1, SeekCur);
-	int value = f.readStringUntil('\n').toInt();
-	f.close();
-
-	if (value)
-		return true;
+	if (NVS.getInt("firstboot"))
+		return 0;
 	else
-		return false;
-}
-
-void Screen::setSysParam(const char *key, float value)
-{
-	char str[5];
-	sprintf(str, "%04.1f", value);
-	disableBtn();
-	File f = fs->open("/setting.txt", "r+");
-	f.seek(0, SeekSet);
-	f.findUntil(key, "\n\r");
-	f.seek(1, SeekCur);
-	f.print(str);
-	f.flush();
-	f.close();
-	enableBtn();
-}
-
-void Screen::setSysParam(const char *key, String value)
-{
-	disableBtn();
-	File f = fs->open("/setting.txt", "r+");
-	f.seek(0, SeekSet);
-	f.findUntil(key, "\n\r");
-	f.seek(1, SeekCur);
-	f.print(value);
-	f.flush();
-	f.close();
-	enableBtn();
+		return 1;
 }
 
 void Screen::debug()
