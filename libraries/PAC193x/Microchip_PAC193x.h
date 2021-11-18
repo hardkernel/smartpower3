@@ -78,199 +78,6 @@ class Microchip_PAC193x {
 		None.
 */	
 			void Refresh();
-			void update(uint8_t sense);
-
-
-/*
-    Function
-		UpdateVoltageRaw()
-	Summary
-        Obtains the current Vbus register value.
-    Description
-        This method obtains the most recent register value of a bus voltage sample.
-	Input
-		None.
-	Output
-		The bus voltage register value is assigned to VoltageRaw property of Microchip_PAC193x class.
-    Returns
-		In case of execution error, the returned value is an error code.
-*/			
-			int16_t UpdateVoltageRaw(uint8_t reg); //vbus
-
-
-/*
-    Function
-		UpdateVoltage()
-	Summary
-        Calculates the current real Vbus value.
-    Description
-        This method obtains the calculated value of a bus voltage sample.
-        The value unit is milli-Volt.
-	Input
-		None.
-	Output
-		The bus voltage value is assigned to Voltage property of Microchip_PAC193x class.
-    Returns
-		In case of execution error, the returned value is an error code.
-*/
-			void updateVoltage(uint8_t reg);
-			int16_t UpdateVoltage(uint8_t reg);
-
-		int16_t UpdateVoltageSense1(void);
-		int16_t UpdateVoltageSense2(void);
-		int16_t UpdateVoltageSense3(void);
-
-/*
-    Function
-		UpdateVsenseRaw()
-	Summary
-        Obtains the current Vsense register value.
-    Description
-        This method obtains the most recent register value of the sense voltage samples.
-	Input
-		None.
-	Output
-		The register value of current sense voltage is assigned to VsenseRaw property of Microchip_PAC193x class.
-    Returns
-		In case of execution error, the returned value is an error code.
-*/
-			int16_t UpdateVsenseRaw(uint8_t reg); //vsense
-
-
-/*
-    Function
-		UpdateVsense()
-	Summary
-        Calculates the current real Vsense value.
-    Description
-        This method obtains the most recent real value of the sense voltage samples.
-        The value unit is milli-Volt.
-	Input
-		None.
-	Output
-		The calculated sense voltage value is assigned to Vsense property of Microchip_PAC193x class.
-    Returns
-		In case of execution error, the returned value is an error code.
-*/
-			int16_t UpdateVsense(uint8_t reg);
-			void updateVsense(uint8_t reg);
-			int16_t UpdateCurrentSense1(void);
-			int16_t UpdateCurrentSense2(void);
-			int16_t UpdateCurrentSense3(void);
-
-			void updateCurrent(uint8_t reg);
-
-
-/*
-    Function
-		UpdateCurrent()
-	Summary
-        Calculates the current Isense value.
-    Description
-        This method obtains the most recent calculated value of the sense current samples.
-        The value unit is milli-Amp.
-	Input
-		None.
-	Output
-		The current value is assigned to Current property of Microchip_PAC193x class.
-    Returns
-		In case of execution error, the returned value is an error code.
-*/
-			int16_t UpdateCurrent(uint8_t reg); //isense
-
-
-/*
-    Function
-		UpdatePowerRaw()
-	Summary
-        Obtains the current VPower register value.
-    Description
-        This method obtains the register value of the proportional power.
-	Input
-		None.
-	Output
-		The register value of power is assigned to PowerRaw property of Microchip_PAC193x class.
-    Returns
-		In case of execution error, the returned value is an error code.
-*/			
-			int16_t UpdatePowerRaw(uint8_t reg);
-
-
-/*
-    Function
-		UpdatePower()
-	Summary
-        Calculates the current real VPower value.
-    Description
-        This method obtains the real value of the power.
-		The value unit is milli-Watt.
-	Input
-		None.
-	Output
-		The power value is assigned to Power property of Microchip_PAC193x class.
-    Returns
-		In case of execution error, the returned value is an error code.
-*/
-			int16_t UpdatePower(uint8_t reg);
-			void updatePower(uint8_t reg);
-			int16_t UpdatePowerSense1();
-			int16_t UpdatePowerSense2();
-			int16_t UpdatePowerSense3();
-
-
-/*
-    Function
-		UpdatePowerAccRaw()
-	Summary
-        Obtains the current register accumulated power.
-    Description
-        This method obtains the register value of the accumulator sum of Vpower samples.
-	Input
-		None.
-	Output
-		The power accumulator register value is assigned to PowerAccRaw property of Microchip_PAC193x class.
-    Returns
-		In case of execution error, the returned value is an error code.
-*/
-			int16_t UpdatePowerAccRaw();
-			void updatePowerAcc(uint8_t reg);
-
-
-/*
-    Function
-		UpdatePowerAcc()
-	Summary
-        Calculates the current real accumulated power.
-    Description
-        This method obtains the calculated value of the accumulator sum of Vpower samples.
-		The value unit is milli-Watt.
-	Input
-		None.
-	Output
-		The power accumulated value is assigned to PowerAcc property of Microchip_PAC193x class.
-    Returns
-		In case of execution error, the returned value is an error code.
-*/
-			int16_t UpdatePowerAcc();
-
-
-/*
-    Function
-		UpdateEnergy()
-	Summary
-        Calculates the current energy value.
-    Description
-        This method obtains the calculated energy value that corresponds with the accumulated power.
-		The value unit is milli-Watt-hour.
-	Input
-		None.
-	Output
-		The energy value is assigned to Energy property of Microchip_PAC193x class.
-    Returns
-		In case of execution error, the returned value is an error code.
-*/			
-			int16_t UpdateEnergy();
-
 
 /*
     Function
@@ -429,16 +236,6 @@ class Microchip_PAC193x {
 			int16_t UpdateRevisionID();
 
 //class public properties:		
-			uint16_t VoltageRaw; //vbus
-			float Voltage;
-			uint16_t VsenseRaw; //vsense
-			float Vsense;
-			float Current; //isense				
-			uint32_t PowerRaw;
-			double Power;
-			uint64_t PowerAccRaw;
-			double PowerAcc;	
-			float Energy;
 			uint8_t OverflowAlert;
 			uint8_t SlowStatus;
 			uint8_t PowerOnStatus;
@@ -447,11 +244,13 @@ class Microchip_PAC193x {
 			uint8_t ManufacturerID;
 			uint8_t RevisionID;
 
+			uint32_t refresh_timestamp;
 			
+			void Read(uint8_t reg_address, int Nbytes, uint8_t *pBuffer);
+
 		private:
 //class private functions:		
 			TwoWire *_wire;
-			void Read(uint8_t reg_address, int Nbytes, uint8_t *pBuffer);
 			uint8_t Read8(uint8_t reg_address);
 			uint16_t Read16(uint8_t reg_address);
 			uint32_t Read32(uint8_t reg_address);
@@ -459,7 +258,6 @@ class Microchip_PAC193x {
 			void Write8(uint8_t reg_address, uint8_t data);
 //class private properties:
 			uint32_t rsense;
-			uint32_t refresh_timestamp;
 			
 /*	Property
 		errorCode

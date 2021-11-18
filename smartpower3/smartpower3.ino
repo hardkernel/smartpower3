@@ -7,7 +7,7 @@ void setup(void) {
 	Serial.begin(115200);
 
 	I2CA.begin(15, 4, 10000);
-	I2CB.begin(21, 22, 400000);
+	I2CB.begin(21, 22, 800000);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
 
@@ -51,9 +51,9 @@ void logTask(void *parameter)
 		log_interval = screen.getLogInterval();
 		if (log_interval > 0) {
 			vTaskDelay(log_interval-5);
-			sprintf(buffer_input, "%010lu,%05d,%04d,%05d,%1d,", cur_time, volt[0], amp[0], watt[0], low_input);
-			sprintf(buffer_ch0, "%05d,%04d,%05d,%d,%x,", volt[1], amp[1], watt[1], onoff[0], screen.getIntStat(0));
-			sprintf(buffer_ch1, "%05d,%04d,%05d,%d,%x\n\r", volt[2], amp[2], watt[2], onoff[1], screen.getIntStat(1));
+			sprintf(buffer_input, "%010lu,%05d,%04d,%05d,%1d,", cur_time, mCh0.V(), mCh0.A(log_interval), mCh0.W(log_interval), low_input);
+			sprintf(buffer_ch0, "%05d,%04d,%05d,%d,%x,", mCh1.V(), mCh1.A(log_interval), mCh1.W(log_interval), onoff[0], screen.getIntStat(0));
+			sprintf(buffer_ch1, "%05d,%04d,%05d,%d,%x\n\r", mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval),onoff[1], screen.getIntStat(1));
 			Serial.printf(buffer_input);
 			Serial.printf(buffer_ch0);
 			Serial.printf(buffer_ch1);
@@ -89,34 +89,16 @@ void inputTask(void *parameter)
 
 void loop() {
 	onoff = screen.getOnOff();
-	for (int i = 1; i < 3; i++) {
-		PAC.update(i);
-		volt[i] = (uint16_t)(PAC.Voltage);
-		amp[i] = (uint16_t)(PAC.Current);
-		watt[i] = (uint16_t)(PAC.Power*1000);
 
-#ifdef DEBUG_STPD01
-		if (onoff[i-1]) {
-			if (volt[i] < 3000)
-				screen.countLowVoltage((uint8_t)(i-1));
-		}
-#endif
-	}
-
-	PAC.Refresh();
+	mChs.sample();
 
 	if ((millis() - ctime1) > 300) {
 		ctime1 = millis();
-		PAC.update(0);
-		volt[0] = (uint16_t)(PAC.Voltage);
-		amp[0] = (uint16_t)(PAC.Current);
-		if (volt[0] < 6000) {
+		if (mCh0.V() < 6000) {
 			screen.debug();
-			PAC.Refresh();
-			PAC.update(0);
-			volt[0] = (uint16_t)(PAC.Voltage);
 			for (int i = 0; i < 3; i++) {
-				if (volt[0] > 6000) {
+				mChs.sample();
+				if (mCh0.V() > 6000) {
 					break;
 				}
 				low_input = true;
@@ -124,9 +106,9 @@ void loop() {
 		} else {
 			low_input = false;
 		}
-		screen.pushInputPower(volt[0], amp[0], watt[0]);
-		for (int i = 1; i < 3; i++)
-			screen.pushPower(volt[i], amp[i], watt[i], i-1);
+		screen.pushInputPower(mCh0.V(), mCh0.A(300), mCh0.W(300));
+		screen.pushPower(mCh1.V(), mCh1.A(300), mCh1.W(300), 0);
+		screen.pushPower(mCh2.V(), mCh2.A(300), mCh2.W(300), 1);
 
 		if (!screen.getShutdown()) {
 			if ((cur_time/1000)%2)

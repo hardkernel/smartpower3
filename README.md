@@ -6,7 +6,7 @@
 
 ### Get a smartpower3 source code including submodules
 ```
-git clone --recursive https://github.com/leeseungcheol/smartpower3
+git clone --recursive https://github.com/hardkernel/smartpower3
 ```
 
 ### Check again the submodule repository
