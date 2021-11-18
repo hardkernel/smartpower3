@@ -1,4 +1,6 @@
 #include "setting.h"
+#include "ChewyRegular24.h"
+#include "ChewyRegular32.h"
 
 Setting::Setting(TFT_eSPI *tft)
 {
@@ -21,13 +23,13 @@ void Setting::init(uint16_t x, uint16_t y)
 	this->y = y;
 
 	tft->fillRect(0, 52, 480, 285, TFT_BLACK);
-	tft->loadFont("NotoSans-Bold20");
+	tft->loadFont(NotoSansBold20);
 	tft->drawString("Build date : ", x + 140, y + 195, 2);
 	tft->drawString(String(__DATE__), x + 260, y + 195, 2);
 	tft->drawString(String(__TIME__), x + 380, y + 195, 2);
 	tft->unloadFont();
 
-	tft->loadFont("Chewy-Regular32");
+	tft->loadFont(ChewyRegular32);
 	tft->drawString("Backlight Level", x, y, 4);
 	tft->drawString("Serial Logging", x, y + Y_SERIAL_LOGGING, 4);
 	tft->unloadFont();
@@ -41,7 +43,7 @@ void Setting::init(uint16_t x, uint16_t y)
 	com_log_interval->init(TFT_WHITE, TFT_BLACK, 1, MC_DATUM);
 	com_log_interval->setCoordinate(x + X_LOG_LEVEL+105, y + 30 + Y_SERIAL_LOGGING);
 
-	tft->loadFont("Chewy-Regular24");
+	tft->loadFont(ChewyRegular24);
 	tft->drawString("Baud Rate  /", x + X_LOG_LEVEL-25, y + Y_SERIAL_LOGGING);
 	tft->drawString("/", x + X_LOG_LEVEL+85, y + 30 + Y_SERIAL_LOGGING);
 	tft->drawString(" Interval", x + X_LOG_LEVEL+100, y + Y_SERIAL_LOGGING);
@@ -261,7 +263,7 @@ void Setting::drawLogInterval(uint16_t log_value)
 {
 	com_log_interval->clear();
 	//com_log_interval->loadFont("Chewy-Regular24");
-	com_log_interval->loadFont("NotoSans-Bold20");
+	com_log_interval->loadFont(NotoSansBold20);
 	if (log_value == 0)
 		com_log_interval->draw("OFF");
 	else
@@ -272,7 +274,7 @@ void Setting::drawLogInterval(uint16_t log_value)
 void Setting::drawSerialBaud(uint32_t baud)
 {
 	com_serial_baud->clear();
-	com_serial_baud->loadFont("NotoSans-Bold20");
+	com_serial_baud->loadFont(NotoSansBold20);
 	//com_serial_baud->loadFont("Chewy-Regular24");
 	com_serial_baud->draw(String(baud) + " bps");
 	com_serial_baud->unloadFont();

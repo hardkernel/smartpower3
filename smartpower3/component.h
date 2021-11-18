@@ -42,7 +42,7 @@ public:
 	void activate(void);
 	void deActivate(void);
 	void setTextColor(uint16_t fg_color, uint16_t bg_color);
-	void loadFont(const char[]);
+	void loadFont(const uint8_t font[]);
 	void unloadFont(void);
 private:
 	uint16_t width;

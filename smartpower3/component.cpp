@@ -60,7 +60,7 @@ void Component::clearOutLines(void)
 	}
 }
 
-void Component::loadFont(const char font[])
+void Component::loadFont(const uint8_t font[])
 {
 	img->loadFont(font);
 }
