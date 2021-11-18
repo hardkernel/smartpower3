@@ -48,7 +48,7 @@ public:
 	void countDial(int8_t mode_count, int8_t direct, uint8_t step, uint32_t milisec);
 	void deActivate();
 	void deActivateSetting();
-	void getBtnPress(uint8_t idx, uint32_t cur_time);
+	void getBtnPress(uint8_t idx, uint32_t cur_time, bool long_pressed = 0);
 	void setTime(uint32_t milisec);
 	void clearBtnEvent(void);
 	void checkOnOff();
@@ -69,9 +69,6 @@ public:
 	void setIntFlag(uint8_t channel);
 	uint16_t getLogInterval(void);
 	uint8_t getIntStat(uint8_t channel);
-	bool checkAttachBtn(uint8_t pin);
-	void disableBtn(void);
-	void enableBtn(void);
 	void countLowVoltage(uint8_t ch=0);
 	void clearLowVoltage(uint8_t ch=0);
 	bool getShutdown(void);
@@ -123,7 +120,6 @@ private:
 	uint32_t fnd_time = 0;
 	bool enabled_stpd01[2] = {0,};
 	uint8_t int_stat[2] = {0,};
-	bool flag_attach[4] = {0,};
 	uint8_t flag_long_press = false;
 	uint32_t count_long_press = 0;
 	bool shutdown = false;

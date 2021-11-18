@@ -275,15 +275,6 @@ void Screen::activate_setting()
 	}
 }
 
-bool Screen::checkAttachBtn(uint8_t pin)
-{
-	if (flag_attach[pin])
-		flag_attach[pin] = false;
-	else
-		return 0;
-	return 1;
-}
-
 void Screen::drawBase()
 {
 	if (dial_cnt != dial_cnt_old) {
@@ -292,13 +283,11 @@ void Screen::drawBase()
 	}
 	if (btn_pressed[2] == true) {
 		btn_pressed[2] = false;
-		disableBtn();
 		channel[0]->setHide();
 		channel[1]->setHide();
 		mode = SETTING;
 		setting->init(10, 100);
 		activated = dial_cnt = dial_cnt_old = STATE_NONE;
-		enableBtn();
 	}
 
 	if (btn_pressed[3] == true) {
@@ -350,19 +339,6 @@ void Screen::drawBaseMove()
 	}
 }
 
-void Screen::disableBtn()
-{
-	uint8_t list_btn[4] = {39, 34, 36, 35};
-	for (int i = 0; i < 4; i++)
-		detachInterrupt(digitalPinToInterrupt(list_btn[i]));
-}
-
-void Screen::enableBtn()
-{
-	for (int i = 0; i < 4; i++)
-		flag_attach[i] = true;
-}
-
 void Screen::drawBaseEdit()
 {
 	if ((cur_time - dial_time) > 10000) {
@@ -384,12 +360,10 @@ void Screen::drawBaseEdit()
 	if (btn_pressed[3] == true) {
 		mode = BASE_MOVE;
 		btn_pressed[3] = false;
-		disableBtn();
 		changeVolt(mode);
 		channel[0]->clearCompColor();
 		channel[1]->clearCompColor();
 		dial_cnt = dial_state;
-		enableBtn();
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -411,7 +385,6 @@ void Screen::drawSetting()
 	}
 	if (btn_pressed[2] == true) {
 		btn_pressed[2] = false;
-		disableBtn();
 		if (activated == STATE_NONE) {
 			channel[0]->clearHide();
 			channel[1]->clearHide();
@@ -421,16 +394,12 @@ void Screen::drawSetting()
 			deActivateSetting();
 		}
 		activated = dial_cnt =  STATE_NONE;
-		enableBtn();
 	}
 	if (btn_pressed[1] == true) {
-		disableBtn();
 		btn_pressed[1] = false;
 		setting->debug();
-		enableBtn();
 	}
 	if (btn_pressed[3] == true) {
-		disableBtn();
 		btn_pressed[3] = false;
 		if (activated == STATE_BL) {
 			mode = SETTING_BL;
@@ -442,7 +411,6 @@ void Screen::drawSetting()
 			setting->activateSerialLogging(TFT_GREEN);
 			setting->activateSerialBaud(TFT_YELLOW);
 		}
-		enableBtn();
 	}
 	if (dial_cnt != dial_cnt_old) {
 		dial_cnt_old = dial_cnt;
@@ -462,23 +430,19 @@ void Screen::drawSettingBL()
 	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
 		flag_long_press = 3;
 		btn_pressed[2] = false;
-		disableBtn();
 		mode = SETTING;
 		activated = dial_cnt = dial_cnt_old = STATE_BL;
 		deActivateSetting();
 		setting->changeBacklight();
 		setting->activateBLLevel();
-		enableBtn();
 		return;
 	}
 	if (btn_pressed[3] == true) {
-		disableBtn();
 		btn_pressed[3] = false;
 		mode = SETTING;
 		NVS.setInt("bl_level", setting->setBacklightLevel());
 		setting->activateBLLevel();
 		activated = dial_cnt = STATE_BL;
-		enableBtn();
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -507,7 +471,6 @@ void Screen::drawSettingLOG()
 	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
 		flag_long_press = 3;
 		btn_pressed[2] = false;
-		disableBtn();
 		mode = SETTING;
 		activated = dial_cnt = dial_cnt_old = STATE_LOG;
 		setting->deActivateSerialBaud(TFT_WHITE);
@@ -515,11 +478,9 @@ void Screen::drawSettingLOG()
 		setting->deActivateLogInterval(TFT_WHITE);
 		setting->restoreLogInterval();
 		setting->deActivateSerialLogging(TFT_YELLOW);
-		enableBtn();
 		return;
 	}
 	if (btn_pressed[3] == true) {
-		disableBtn();
 		btn_pressed[3] = false;
 		if (activated == 5) {
 			mode = SETTING;
@@ -535,7 +496,6 @@ void Screen::drawSettingLOG()
 			dial_cnt_old = 1;
 			activated = 5;
 		}
-		enableBtn();
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -693,7 +653,8 @@ void Screen::setTime(uint32_t milisec)
 {
 	if (flag_long_press) {
 		if (digitalRead(36) == 0) {
-			if ((milisec - count_long_press) > 1000) {
+			if (count_long_press) {
+				count_long_press = false;
 				btn_pressed[4] = true;
 				flag_long_press = 0;
 			}
@@ -715,7 +676,7 @@ void Screen::clearBtnEvent(void)
 		btn_pressed[i] = false;
 }
 
-void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
+void Screen::getBtnPress(uint8_t idx, uint32_t cur_time, bool long_pressed)
 {
 	switch (idx) {
 	case 0: /* Channel0 ON/OFF */
@@ -723,6 +684,8 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 		if (shutdown)
 			break;
 		if (mode > BASE_EDIT)
+			break;
+		if (long_pressed)
 			break;
 		if (onoff[idx] == 1)
 			onoff[idx] = 2;
@@ -733,7 +696,7 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time)
 	case 2:  /* MENU/CANCEL */
 		dial_time = cur_time;
 		flag_long_press = 1;
-		count_long_press = cur_time;
+		count_long_press = long_pressed;
 		break;
 	case 3: /* Set value */
 		if (shutdown)

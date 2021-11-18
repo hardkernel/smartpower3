@@ -13,20 +13,16 @@ struct dial_t {
 	uint8_t step = 1;
 };
 
+
 class Button
 {
 private:
 	const uint8_t PIN;
-    volatile uint8_t numberKeyPresses;
-    volatile bool pressed;
+    volatile uint8_t pressed;
 	volatile uint32_t debounceTimer;
 
 public:
 	Button(uint8_t pin);
-	~Button() {
-		detachInterrupt(PIN);
-	}
-	void IRAM_ATTR isr(void);
-	bool checkPressed(void);
-	void attachInt(void);
+	uint8_t checkPressed(void);
+	void isr_pol(void);
 };

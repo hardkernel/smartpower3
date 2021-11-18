@@ -18,6 +18,7 @@ void setup(void) {
 	xTaskCreate(screenTask, "Draw Screen", 3000, NULL, 1, NULL);
 	xTaskCreate(inputTask, "Input Task", 1500, NULL, 10, NULL);
 	xTaskCreate(logTask, "Log Task", 2000, NULL, 1, NULL);
+	xTaskCreate(btnTask, "Button Task", 4000, NULL, 1, NULL);
 	pinMode(25, INPUT_PULLUP);
 	pinMode(26, INPUT_PULLUP);
 	attachInterrupt(digitalPinToInterrupt(25), isr_stpd01_ch0, FALLING);
@@ -39,6 +40,15 @@ void initPAC1933(void)
 	PAC.UpdateProductID();
 	PAC.UpdateManufacturerID();
 	PAC.UpdateRevisionID();
+}
+
+void btnTask(void *parameter)
+{
+	for (;;) {
+		for (int i = 0; i < 4; i++)
+			button[i].isr_pol();
+		vTaskDelay(10);
+	}
 }
 
 void logTask(void *parameter)
@@ -73,12 +83,14 @@ void screenTask(void *parameter)
 
 void inputTask(void *parameter)
 {
+	uint8_t pressed;
 	for (;;) {
 		for (int i = 0; i < 4; i++) {
-			if (screen.checkAttachBtn(i))
-				button[i].attachInt();
-			if (button[i].checkPressed() == true)
+			pressed = button[i].checkPressed();
+			if (pressed == 1)
 				screen.getBtnPress(i, cur_time);
+			else if (pressed == 2)
+				screen.getBtnPress(i, cur_time, true);
 		}
 		if (dial.cnt != 0) {
 			screen.countDial(dial.cnt, dial.direct, dial.step, cur_time);

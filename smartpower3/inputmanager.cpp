@@ -5,30 +5,34 @@ ESP32Encoder encoder;
 Button::Button(uint8_t pin) : PIN(pin)
 {
 	pinMode(pin, INPUT_PULLUP);
-	attachInterrupt(digitalPinToInterrupt(pin), std::bind(&Button::isr, this), FALLING);
 }
 
-void Button::isr(void) {
-	debounceTimer = millis();
-	pressed = true;
+void Button::isr_pol(void) {
+	if (pressed == 0) {
+		if (digitalRead(PIN) == 0) {
+			debounceTimer = millis();
+			pressed = 1;
+		}
+	} else if (digitalRead(PIN) == 1) {
+		if (pressed == 2)
+			pressed = 0;
+	}
 }
 
-void Button::attachInt(void)
-{
-	pinMode(PIN, INPUT_PULLUP);
-	attachInterrupt(digitalPinToInterrupt(PIN), std::bind(&Button::isr, this), FALLING);
-}
-
-bool Button::checkPressed(void) {
-	if (pressed) {
+uint8_t Button::checkPressed(void) {
+	if (pressed == 1) {
 		if (millis() - debounceTimer >= DEBOUNCE_TIME) {
-			if (digitalRead(PIN) == 0) {
-				pressed = false;
-				return true;
+			if (digitalRead(PIN) == 1) {
+				pressed = 2;
+				return 1;
+			}
+			if (millis() - debounceTimer >= 3000) {
+				pressed = 2;
+				return 2;
 			}
 		}
 	}
-	return false;
+	return 0;
 }
 
 void initEncoder(void *dial)
