@@ -15,9 +15,9 @@ void setup(void) {
 
 	initEncoder(&dial);
 
-	xTaskCreate(screenTask, "Draw Screen", 3000, NULL, 1, NULL);
-	xTaskCreate(inputTask, "Input Task", 1500, NULL, 10, NULL);
-	xTaskCreate(logTask, "Log Task", 2000, NULL, 1, NULL);
+	xTaskCreate(screenTask, "Draw Screen", 6000, NULL, 1, NULL);
+	xTaskCreate(inputTask, "Input Task", 3000, NULL, 10, NULL);
+	xTaskCreate(logTask, "Log Task", 4000, NULL, 1, NULL);
 	xTaskCreate(btnTask, "Button Task", 4000, NULL, 1, NULL);
 	pinMode(25, INPUT_PULLUP);
 	pinMode(26, INPUT_PULLUP);
