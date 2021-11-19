@@ -217,20 +217,22 @@ void FndWidget::fnd_update(bool forced)
 	}
 
 	if (!forced) {
-		if (this->set_current_limit && diff) {
-			if (diff < value) {
-				setFGColor(TFT_YELLOW);
-			} else {
-				setFGColor(TFT_RED);
+		if (value != 0) {
+			if (this->set_current_limit && diff) {
+				if (diff < value) {
+					setFGColor(TFT_YELLOW);
+				} else {
+					setFGColor(TFT_RED);
+				}
 			}
-		}
 
-		if (this->set_monitor_voltage && diff) {
-			float diff_abs = abs(diff - value);
-			if (diff_abs/value > 0.05) {
-				setFGColor(TFT_YELLOW);
-			} else {
-				setFGColor(TFT_RED);
+			if (this->set_monitor_voltage && diff) {
+				float diff_abs = abs(diff - value);
+				if (diff_abs/value > 0.05) {
+					setFGColor(TFT_YELLOW);
+				} else {
+					setFGColor(TFT_RED);
+				}
 			}
 		}
 	}

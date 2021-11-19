@@ -121,12 +121,9 @@ void Screen::checkOnOff()
 {
 	if (state_power == 1) {
 		state_power = 2;
-#ifdef USE_SINGLE_IRQ_STPD01
 		channel[0]->off();
 		channel[1]->off();
-#else
 		disablePower();
-#endif
 		onoff[0] = 2;
 		onoff[1] = 2;
 	} else if (state_power == 3) {
