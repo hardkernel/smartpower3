@@ -200,7 +200,10 @@ uint8_t STPD01::setVoltage(uint16_t volt)
 		val = 0xc4 + (uint16_t)(volt - 11000)/200;
 	} else if (volt >= 20000) {
 		val = 0xf1;
+	} else {
+		val = 0x00;
 	}
+
 	write8(STPD01_REGISTER_0, val);
 	tmp = read8(STPD01_REGISTER_0);
 	if (tmp != val) {

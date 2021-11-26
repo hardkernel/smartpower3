@@ -441,7 +441,7 @@ void Channel::setIntFlag(void)
 	flag_int = true;
 }
 
-void Channel::isr(void)
+void Channel::isr(uint8_t onoff)
 {
 	if (flag_int || !digitalRead(int_stpd01[channel])) {
 		if (stpd01->available()) {
@@ -489,16 +489,22 @@ uint8_t Channel::checkInterruptStat(uint8_t onoff)
 
 	if (onoff == 0)
 		reg_stat = 0x00;
+	icon_op->setInt(reg_stat & INT_OVP);
+	icon_sp->setInt(reg_stat & INT_SCP);
+	icon_tp->setInt(reg_stat & INT_OTP);
+	icon_tw->setInt(reg_stat & INT_OTW);
+	icon_ip->setInt(reg_stat & INT_IPCP);
 
 	if (flag_clear_debug == 1) {
 		flag_clear_debug++;
-		if (!hide) {
-			icon_op->update(channel);
-			icon_sp->update(channel);
-			icon_tp->update(channel);
-			icon_tw->update(channel);
-			icon_ip->update(channel);
-		}
+	}
+
+	if (!hide) {
+		icon_op->update(channel);
+		icon_sp->update(channel);
+		icon_tp->update(channel);
+		icon_tw->update(channel);
+		icon_ip->update(channel);
 	}
 
 	return reg_stat;

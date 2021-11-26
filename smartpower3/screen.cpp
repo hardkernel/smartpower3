@@ -2,6 +2,8 @@
 
 bool Screen::_int = false;
 
+uint8_t baud_idx;
+
 Screen::Screen()
 {
 	tft.init();
@@ -34,6 +36,13 @@ void Screen::begin(TwoWire *theWire)
 
 	setting = new Setting(&tft);
 
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+    delay(100);
+ 	server = WiFiServer(WIFI_SERVER_PORT);
+    server.begin();
+	wifiManager = new WiFiManager(server, client);
+
 	fsInit();
 	delay(2000);
 	tft.setRotation(3);
@@ -55,7 +64,7 @@ void Screen::initLED()
 	ledcWrite(1, 50);
 }
 
-int8_t* Screen::getOnOff()
+uint8_t* Screen::getOnOff()
 {
 	return onoff;
 }
@@ -70,7 +79,7 @@ void Screen::run()
 			for (int i = 0; i < 2; i++) {
 				if (!enabled_stpd01[i])
 					continue;
-				channel[i]->isr();
+				channel[i]->isr(onoff[i]);
 			}
 		}
 	};
@@ -176,10 +185,12 @@ void Screen::checkOnOff()
 
 			header->init(5, 8);
 			if (mode >= SETTING) {
-				setting->init(10, 100);
+				setting->init(10, 80);
 				for (int i = 0; i < 2; i++)
 					tft.drawLine(0, 50 + i, 480, 50 + i, TFT_DARKGREY);
 				activated = dial_cnt = dial_cnt_old = STATE_NONE;
+				updated_wifi_info = true;
+				updated_wifi_icon = true;
 			} else {
 				initScreen();
 			}
@@ -283,7 +294,9 @@ void Screen::drawBase()
 		channel[0]->setHide();
 		channel[1]->setHide();
 		mode = SETTING;
-		setting->init(10, 100);
+		setting->init(10, 80);
+		updated_wifi_info = true;
+		updated_wifi_icon = true;
 		activated = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
 
@@ -527,6 +540,14 @@ uint16_t Screen::getLogInterval(void)
 	return tmp;
 }
 
+void Screen::setWiFiIcon(bool onoff)
+{
+	if (onoff)
+		header->onWiFi();
+	else
+		header->offWiFi();
+}
+
 void Screen::drawScreen()
 {
 	switch (mode) {
@@ -557,11 +578,29 @@ void Screen::drawScreen()
 			if (onoff[1])
 				channel[1]->drawChannel();
 			isrSTPD01();
+		} else {
+			if (updated_wifi_info) {
+				updated_wifi_info = false;
+				if (WiFi.status() == WL_CONNECTED) {
+					setting->drawSSID(WiFi.SSID());
+					setting->drawIpaddr(WiFi.localIP().toString());
+				} else {
+					setting->drawSSID("WiFi not connected");
+					setting->drawIpaddr("configure via serial");
+				}
+			}
+		}
+		if (updated_wifi_icon) {
+			updated_wifi_icon = false;
+			if (WiFi.status() == 3)
+				setWiFiIcon(true);
+			else
+				setWiFiIcon(false);
 		}
 		header->draw();
 	}
-			channel[0]->drawVoltSet();
-			channel[1]->drawVoltSet();
+	channel[0]->drawVoltSet();
+	channel[1]->drawVoltSet();
 }
 
 void Screen::changeVolt(screen_mode_t mode)
@@ -771,8 +810,6 @@ void Screen::drawBmp(const char *filename, int16_t x, int16_t y)
   uint16_t w, h, row, col;
   uint8_t  r, g, b;
 
-  uint32_t startTime = millis();
-
   if (read16(bmpFS) == 0x4D42)
   {
     read32(bmpFS);
@@ -811,8 +848,6 @@ void Screen::drawBmp(const char *filename, int16_t x, int16_t y)
         tft.pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
       }
       tft.setSwapBytes(oldSwapBytes);
-      Serial.print("Loaded in "); Serial.print(millis() - startTime);
-      Serial.println(" ms");
     }
     else Serial.println("BMP format not recognized.");
   }
@@ -850,7 +885,7 @@ void Screen::fsInit(void)
 		Serial.println("First boot!!!");
 		NVS.setInt("autorun", 0);
 		NVS.setInt("bl_level", 3);
-		NVS.setInt("serial_baud", 115200);
+		NVS.setInt("serial_baud", (uint32_t)115200, true);
 		NVS.setInt("log_interval", 0);
 		NVS.setInt("firstboot", 1);
 		NVS.setString("voltage0", "5.0");
@@ -865,6 +900,9 @@ void Screen::fsInit(void)
 	backlight_level = NVS.getInt("bl_level");
 	serial_baud = NVS.getInt("serial_baud");
 	log_interval = NVS.getInt("log_interval");
+
+	if (NVS.getString("wifi_conn_ok") != "true")
+		wifiManager->state = 1;
 
 	channel[0]->setVolt(volt_set0, 1);
 	channel[0]->setCurrentLimit(current_limit0, 1);
@@ -923,4 +961,24 @@ void Screen::writeSysLED(uint8_t val)
 void Screen::writePowerLED(uint8_t val)
 {
 	ledcWrite(1, val);
+}
+
+void Screen::runWiFiLogging(const char *buf0, const char *buf1, const char *buf2)
+{
+	if (!client.connected()) {
+		client = server.available();
+	} else {
+		if (client.available()) {
+			client.read();
+		}
+		client.write(buf0, SIZE_LOG_BUFFER0);
+		client.write(buf1, SIZE_LOG_BUFFER1);
+		client.write(buf2, SIZE_LOG_BUFFER2);
+	}
+}
+
+void Screen::updateWiFiInfo(void)
+{
+	this->updated_wifi_info = true;
+	this->updated_wifi_icon = true;
 }

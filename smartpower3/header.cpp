@@ -35,7 +35,7 @@ void Header::init(uint16_t x, uint16_t y)
 
 
 	icon_input->init(9, x, y, FG_COLOR, BG_COLOR);
-	//icon_wifi->icon_init(9, x + 440, y-3, FG_COLOR, BG_COLOR);
+	icon_wifi->init(9, x + 400, y, FG_COLOR, BG_COLOR);
 	icon_log->init(9, x + 440, y, FG_COLOR, BG_COLOR);
 
 	display_mode->init(TFT_BLACK, TFT_YELLOW, 1, TL_DATUM);
@@ -44,8 +44,9 @@ void Header::init(uint16_t x, uint16_t y)
 	mode->init(TFT_YELLOW, TFT_BLACK, 1, TL_DATUM);
 	mode->setCoordinate(x + 200, y);
 
-	//icon_wifi->setIconColor(TFT_GREEN, BG_ENABLED_INT);
-	//icon_wifi->icon_wifi_write();
+	icon_wifi->setIconColor(TFT_GREEN, BG_ENABLED_INT);
+	icon_wifi->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
+	icon_wifi->wifiWrite();
 	icon_log->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
 	icon_log->logWrite();
 }
@@ -62,6 +63,18 @@ void Header::offLogging(void)
 	update_logging_icon = true;
 }
 
+void Header::onWiFi(void)
+{
+	flag_wifi = true;
+	update_wifi_icon = true;
+}
+
+void Header::offWiFi(void)
+{
+	flag_wifi = false;
+	update_wifi_icon = true;
+}
+
 void Header::activate(void)
 {
 	mode->activate();
@@ -74,7 +87,6 @@ void Header::deActivate(void)
 
 void Header::drawMode(String str)
 {
-
 	display_mode->clear();
 	display_mode->draw(str);
 }
@@ -138,6 +150,17 @@ void Header::draw(void)
 		} else {
 			icon_log->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
 			icon_log->logWrite();
+		}
+	}
+
+	if (update_wifi_icon) {
+		update_wifi_icon = false;
+		if (flag_wifi) {
+			icon_wifi->setIconColor(TFT_GREEN, BG_ENABLED_INT);
+			icon_wifi->wifiWrite();
+		} else {
+			icon_wifi->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
+			icon_wifi->wifiWrite();
 		}
 	}
 }

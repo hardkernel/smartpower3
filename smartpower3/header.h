@@ -22,6 +22,8 @@ public:
 	void setDebug(void);
 	void onLogging(void);
 	void offLogging(void);
+	void onWiFi(void);
+	void offWiFi(void);
 	Component *display_mode;
 
 private:
@@ -42,6 +44,8 @@ private:
 	uint16_t debug = 0;
 	bool flag_logging = false;
 	bool update_logging_icon = false;
+	bool flag_wifi = false;
+	bool update_wifi_icon = false;
 };
 
 #endif

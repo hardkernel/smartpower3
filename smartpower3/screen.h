@@ -7,9 +7,14 @@
 #include "setting.h"
 #include <STPD01.h>
 #include <ArduinoNvs.h>
+#include "wifimanager.h"
 
 #define LED2	13
 #define LED1	2
+
+#define SIZE_LOG_BUFFER0	31
+#define SIZE_LOG_BUFFER1	23
+#define SIZE_LOG_BUFFER2	24
 
 enum screen_mode_t {
 	BASE = 0,
@@ -33,6 +38,8 @@ enum state_setting {
 	STATE_NONE
 };
 
+#define WIFI_SERVER_PORT    23
+
 class Screen
 {
 public:
@@ -40,7 +47,7 @@ public:
 	void begin(TwoWire *theWire = &Wire);
 	void pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch);
 	void pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt);
-	int8_t* getOnOff(void);
+	uint8_t* getOnOff(void);
 	void run(void);
 	void drawScreen(void);
 	void activate();
@@ -76,6 +83,12 @@ public:
 	void writePowerLED(uint8_t val);
 	void initLED(void);
 	void dimmingLED(uint8_t led);
+	void setWiFiIcon(bool onoff);
+	WiFiManager *wifiManager;
+	void runWiFiLogging(const char *buf0, const char *buf1, const char *buf2);
+	void updateWiFiInfo(void);
+	WiFiServer server;
+	WiFiClient client;
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
@@ -88,7 +101,7 @@ private:
 	uint32_t cur_time = 0;
 	uint32_t task_time = 0;
 	uint32_t time_print[2] = {0, 0};
-	int8_t onoff[2] = {2, 2};
+	uint8_t onoff[2] = {2, 2};
 	bool btn_pressed[5] = {false,};
 	int16_t dial_cnt = 0;
 	int16_t dial_cnt_old;
@@ -123,4 +136,6 @@ private:
 	uint8_t flag_long_press = false;
 	uint32_t count_long_press = 0;
 	bool shutdown = false;
+	bool updated_wifi_icon = false;
+	bool updated_wifi_info = false;
 };
