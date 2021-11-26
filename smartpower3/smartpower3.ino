@@ -3,26 +3,48 @@
 
 uint32_t ctime1 = 0;
 
+volatile int interruptFlag;
+
+hw_timer_t *timer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+
+void IRAM_ATTR onTimer()
+{
+	portENTER_CRITICAL_ISR(&timerMux);
+	interruptFlag++;
+	portEXIT_CRITICAL_ISR(&timerMux);
+}
+
 void setup(void) {
 	Serial.begin(115200);
 
 	NVS.begin();
 
-	I2CA.begin(15, 4, 10000);
-	I2CB.begin(21, 22, 800000);
+	I2CA.begin(15, 4, (uint32_t)10000);
+	I2CB.begin(21, 22, (uint32_t)800000);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
-
 	initEncoder(&dial);
 
-	xTaskCreate(screenTask, "Draw Screen", 6000, NULL, 1, NULL);
-	xTaskCreate(inputTask, "Input Task", 3000, NULL, 10, NULL);
-	xTaskCreate(logTask, "Log Task", 4000, NULL, 1, NULL);
+	//xTaskCreate(screenTask, "Draw Screen", 6000, NULL, 1, NULL);
+	//xTaskCreate(wifiTask, "WiFi Task", 5000, NULL, 1, NULL);
+	//xTaskCreate(logTask, "Log Task", 8000, NULL, 1, NULL);
+
+	xTaskCreatePinnedToCore(screenTask, "Draw Screen", 6000, NULL, 1, NULL, 1);
+	xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 5000, NULL, 1, NULL, 1);
+	xTaskCreatePinnedToCore(logTask, "Log Task", 8000, NULL, 1, NULL, 1);
+	xTaskCreate(inputTask, "Input Task", 8000, NULL, 1, NULL);
 	xTaskCreate(btnTask, "Button Task", 4000, NULL, 1, NULL);
+
 	pinMode(25, INPUT_PULLUP);
 	pinMode(26, INPUT_PULLUP);
 	attachInterrupt(digitalPinToInterrupt(25), isr_stpd01_ch0, FALLING);
 	attachInterrupt(digitalPinToInterrupt(26), isr_stpd01_ch1, FALLING);
+
+	timer = timerBegin(0, 80, true);
+	timerAttachInterrupt(timer, &onTimer, true);
+	timerAlarmWrite(timer, 10000, true);
+	timerAlarmEnable(timer);
 }
 
 void isr_stpd01_ch0()
@@ -53,29 +75,46 @@ void btnTask(void *parameter)
 
 void logTask(void *parameter)
 {
-	char buffer_input[30];
-	char buffer_ch0[26];
-	char buffer_ch1[26];
-	uint16_t log_interval;
+	char buffer_input[SIZE_LOG_BUFFER0];
+	char buffer_ch0[SIZE_LOG_BUFFER1];
+	char buffer_ch1[SIZE_LOG_BUFFER2];
+	uint32_t log_interval = 0;
 	for (;;) {
-		cur_time = millis();
-		vTaskDelay(5);
-		log_interval = screen.getLogInterval();
-		if (log_interval > 0) {
-			vTaskDelay(log_interval-5);
-			sprintf(buffer_input, "%010lu,%05d,%04d,%05d,%1d,", cur_time, mCh0.V(), mCh0.A(log_interval), mCh0.W(log_interval), low_input);
-			sprintf(buffer_ch0, "%05d,%04d,%05d,%d,%x,", mCh1.V(), mCh1.A(log_interval), mCh1.W(log_interval), onoff[0], screen.getIntStat(0));
-			sprintf(buffer_ch1, "%05d,%04d,%05d,%d,%x\n\r", mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval),onoff[1], screen.getIntStat(1));
-			Serial.printf(buffer_input);
-			Serial.printf(buffer_ch0);
-			Serial.printf(buffer_ch1);
+		if (interruptFlag > 0) {
+			portENTER_CRITICAL(&timerMux);
+			interruptFlag--;
+			portEXIT_CRITICAL(&timerMux);
+			if (log_interval != screen.getLogInterval()) {
+				log_interval = screen.getLogInterval();
+				if (log_interval == 0)
+					timerAlarmWrite(timer, 250000, true);
+				else
+					timerAlarmWrite(timer, 1000*log_interval, true);
+			}
+			if ((log_interval > 0) && !screen.wifiManager->isCommandMode()) {
+				sprintf(buffer_input, "%010lu,%05d,%04d,%05d,%1d,", millis(), mCh0.V(), mCh0.A(log_interval), mCh0.W(log_interval), low_input);
+				sprintf(buffer_ch0, "%05d,%04d,%05d,%1d,%02x,", mCh1.V(), mCh1.A(log_interval), mCh1.W(log_interval), onoff[0], screen.getIntStat(0));
+				sprintf(buffer_ch1, "%05d,%04d,%05d,%1d,%02x\n\r", mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval),onoff[1], screen.getIntStat(1));
+				Serial.printf(buffer_input);
+				Serial.printf(buffer_ch0);
+				Serial.printf(buffer_ch1);
+				screen.runWiFiLogging(buffer_input, buffer_ch0, buffer_ch1);
+			}
+		} else if (log_interval == 0) {
+			vTaskDelay(250);
 		}
 	}
 }
 
 void screenTask(void *parameter)
 {
+	uint8_t old_state = 0;
 	for (;;) {
+		if (old_state != WiFi.status()) {
+			old_state = WiFi.status();
+			screen.updateWiFiInfo();
+		}
+
 		screen.run();
 		vTaskDelay(10);
 	}
@@ -84,7 +123,9 @@ void screenTask(void *parameter)
 void inputTask(void *parameter)
 {
 	uint8_t pressed;
+	unsigned long cur_time;
 	for (;;) {
+		cur_time = millis();
 		for (int i = 0; i < 4; i++) {
 			pressed = button[i].checkPressed();
 			if (pressed == 1)
@@ -98,6 +139,34 @@ void inputTask(void *parameter)
 		}
 		screen.setTime(cur_time);
 		vTaskDelay(10);
+	}
+}
+
+void wifiTask(void *parameter)
+{
+	String ssid = "";
+	String passwd = "";
+	for (;;) {
+		if (screen.wifiManager->state == 0) {
+			ssid = NVS.getString("ssid");
+			passwd = NVS.getString("passwd");
+			if (!screen.wifiManager->ap_connect(ssid, passwd))
+				screen.wifiManager->state = 1;
+		}
+
+		if (Serial.available()) {
+			if (screen.wifiManager->isCommandMode())
+				screen.wifiManager->cmd_main(Serial.read());
+			else {
+				if (Serial.read() == SERIAL_CTRL_C) {
+					screen.wifiManager->setCommandMode();
+					screen.wifiManager->view_main_menu();
+				} else {
+					Serial.printf(">>> Unknown command <<<\n\r");
+				}
+			}
+		}
+		vTaskDelay(50);
 	}
 }
 
@@ -125,7 +194,7 @@ void loop() {
 		screen.pushPower(mCh2.V(), mCh2.A(300), mCh2.W(300), 1);
 
 		if (!screen.getShutdown()) {
-			if ((cur_time/1000)%2)
+			if ((millis()/1000)%2)
 				screen.writeSysLED(50);
 			else
 				screen.writeSysLED(0);
@@ -136,43 +205,4 @@ void loop() {
 	if (screen.getShutdown()) {
 		screen.dimmingLED(1);
 	}
-}
-
-void get_memory_info(void)
-{
-	Serial.printf("Heap : %d, Free Heap : %d\n\r", ESP.getHeapSize(), ESP.getFreeHeap());
-	Serial.printf("Stack High Water Mark %d\n\r", uxTaskGetStackHighWaterMark(NULL));
-	Serial.printf("Psram : %d, Free Psram : %d\n\r", ESP.getPsramSize(), ESP.getFreePsram());
-}
-
-void get_i2c_slaves(TwoWire *theWire)
-{
-	byte error, address;
-	int nDevices;
-
-	Serial.println("Scanning...");
-
-	nDevices = 0;
-	for (address = 1; address < 127; address++) {
-		theWire->beginTransmission(address);
-		error = theWire->endTransmission();
-
-		if (error == 0) {
-			Serial.print("I2C device found at address 0x");
-			if (address < 16)
-				Serial.print("0");
-			Serial.print(address, HEX);
-			Serial.println("  !");
-			nDevices++;
-		} else if (error == 4) {
-			Serial.println("Unknown error at address 0x");
-			if (address < 16)
-				Serial.print("0");
-			Serial.println(address, HEX);
-		}
-	}
-	if (nDevices == 0)
-		Serial.println("No I2C devices found");
-	else
-		Serial.println("done");
 }

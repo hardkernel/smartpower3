@@ -9,8 +9,17 @@
 
 #define X_BL_LEVEL 250
 #define Y_BL_LEVEL 20
+
+#define Y_LOGGING 60
+#define Y_PADDING_LOG 30
+
+#define Y_SERIAL 60
+#define X_BAUD_RATE 225
+
 #define X_LOG_LEVEL 250
-#define Y_SERIAL_LOGGING 60
+#define Y_WIFI_INFO	140
+#define X_IPADDR 220
+#define X_SSID 220
 
 class Setting
 {
@@ -56,6 +65,8 @@ public:
 	void popUp(void);
 	
 	void activateSerialBaud(void);
+	void drawIpaddr(String ipaddr);
+	void drawSSID(String ssid);
 	void debug(void);
 private:
 	TFT_eSPI *tft;
@@ -73,4 +84,6 @@ private:
 	uint32_t serial_baud_edit = 0;
 	Component *com_serial_baud;
 	Component *com_log_interval;
+	Component *com_ipaddr;
+	Component *com_ssid;
 };

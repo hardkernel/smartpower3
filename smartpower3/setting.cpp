@@ -9,11 +9,15 @@ Setting::Setting(TFT_eSPI *tft)
 	ledcSetup(2, FREQ, RESOLUTION);
 	ledcAttachPin(BL_LCD, 2);
 
+	/*
 	popup = new TFT_eSprite(tft);
 	popup->createSprite(100, 100);
+	*/
 
 	com_serial_baud = new Component(tft, 115, 20, 2);
 	com_log_interval = new Component(tft, 85, 20, 2);
+	com_ssid = new Component(tft, 220, 20, 2);
+	com_ipaddr = new Component(tft, 220, 20, 2);
 }
 
 
@@ -24,14 +28,19 @@ void Setting::init(uint16_t x, uint16_t y)
 
 	tft->fillRect(0, 52, 480, 285, TFT_BLACK);
 	tft->loadFont(NotoSansBold20);
-	tft->drawString("Build date : ", x + 140, y + 195, 2);
-	tft->drawString(String(__DATE__), x + 260, y + 195, 2);
-	tft->drawString(String(__TIME__), x + 380, y + 195, 2);
+	tft->drawString("Build date : ", x + 140, y + 215, 2);
+	tft->drawString(String(__DATE__), x + 260, y + 215, 2);
+	tft->drawString(String(__TIME__), x + 380, y + 215, 2);
 	tft->unloadFont();
 
 	tft->loadFont(ChewyRegular32);
 	tft->drawString("Backlight Level", x, y, 4);
-	tft->drawString("Serial Logging", x, y + Y_SERIAL_LOGGING, 4);
+
+	tft->drawString("Logging", x, y + Y_LOGGING, 4);
+
+	tft->drawString("Serial", x + 120, y + Y_LOGGING, 4);
+
+	tft->drawString("WiFi Info", x, y + Y_WIFI_INFO + 15, 4);
 	tft->unloadFont();
 
 	tft->fillRect(x + X_BL_LEVEL, y, 135, 26, TFT_BLACK);
@@ -39,14 +48,19 @@ void Setting::init(uint16_t x, uint16_t y)
 	changeBacklight(backlight_level);
 
 	com_serial_baud->init(TFT_WHITE, TFT_BLACK, 1, MC_DATUM);
-	com_serial_baud->setCoordinate(x + X_LOG_LEVEL-35, y + 30 + Y_SERIAL_LOGGING);
+	com_serial_baud->setCoordinate(x + X_BAUD_RATE-10, y + 30 + Y_SERIAL);
 	com_log_interval->init(TFT_WHITE, TFT_BLACK, 1, MC_DATUM);
-	com_log_interval->setCoordinate(x + X_LOG_LEVEL+105, y + 30 + Y_SERIAL_LOGGING);
+	com_log_interval->setCoordinate(x + X_BAUD_RATE + 130, y + 30 + Y_SERIAL);
+
+	com_ssid->init(TFT_WHITE, TFT_BLACK, 1, MC_DATUM);
+	com_ssid->setCoordinate(x + X_SSID, y + Y_WIFI_INFO);
+	com_ipaddr->init(TFT_WHITE, TFT_BLACK, 1, MC_DATUM);
+	com_ipaddr->setCoordinate(x + X_IPADDR, y + Y_WIFI_INFO + 30);
 
 	tft->loadFont(ChewyRegular24);
-	tft->drawString("Baud Rate  /", x + X_LOG_LEVEL-25, y + Y_SERIAL_LOGGING);
-	tft->drawString("/", x + X_LOG_LEVEL+85, y + 30 + Y_SERIAL_LOGGING);
-	tft->drawString(" Interval", x + X_LOG_LEVEL+100, y + Y_SERIAL_LOGGING);
+	tft->drawString("Baud Rate  /", x + X_BAUD_RATE, y + Y_SERIAL);
+	tft->drawString("/", x + X_BAUD_RATE + 110, y + Y_SERIAL + 30);
+	tft->drawString(" Interval", x + X_LOG_LEVEL+100, y + Y_SERIAL);
 	tft->unloadFont();
 
 	drawSerialBaud(this->serial_baud);
@@ -206,7 +220,7 @@ void Setting::activateBLLevel(uint16_t color)
 void Setting::activateSerialLogging(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
-		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + Y_SERIAL_LOGGING -10, 135+i*2+120, 28+i*2+40, color);
+		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + Y_SERIAL -10, 135+i*2+120, 28+i*2+40, color);
 }
 
 void Setting::activateLogInterval(uint16_t color)
@@ -231,7 +245,7 @@ void Setting::deActivateLogInterval(uint16_t color)
 void Setting::deActivateSerialLogging(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
-		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + Y_SERIAL_LOGGING -10, 135+i*2+120, 28+i*2+40, color);
+		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + Y_SERIAL -10, 135+i*2+120, 28+i*2+40, color);
 }
 
 
@@ -278,6 +292,22 @@ void Setting::drawSerialBaud(uint32_t baud)
 	//com_serial_baud->loadFont("Chewy-Regular24");
 	com_serial_baud->draw(String(baud) + " bps");
 	com_serial_baud->unloadFont();
+}
+
+void Setting::drawSSID(String ssid)
+{
+	com_ssid->clear();
+	com_ssid->loadFont(NotoSansBold20);
+	com_ssid->draw(ssid);
+	com_ssid->unloadFont();
+}
+
+void Setting::drawIpaddr(String ipaddr)
+{
+	com_ipaddr->clear();
+	com_ipaddr->loadFont(NotoSansBold20);
+	com_ipaddr->draw(ipaddr);
+	com_ipaddr->unloadFont();
 }
 
 void Setting::debug()

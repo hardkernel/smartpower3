@@ -53,7 +53,7 @@ public:
 	void clearHide();
 	void disabled();
 	void enable();
-	void isr(void);
+	void isr(uint8_t onoff);
 	void setIntFlag(void);
 	void drawInterrupt(void);
 	void drawPolarity(void);
@@ -93,6 +93,7 @@ private:
 #endif
 	bool flag_int = 0;
 	uint8_t latch = 0;
+	uint8_t stat = 0;
 	uint16_t low_volt = 0;
 	uint8_t count_intr[8] = {0,};
 	uint8_t flag_clear_debug = 0;
