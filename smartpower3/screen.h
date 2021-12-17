@@ -14,7 +14,8 @@
 
 #define SIZE_LOG_BUFFER0	31
 #define SIZE_LOG_BUFFER1	23
-#define SIZE_LOG_BUFFER2	24
+#define SIZE_LOG_BUFFER2	23
+#define SIZE_CHECKSUM_BUFFER	8
 
 enum screen_mode_t {
 	BASE = 0,
@@ -39,6 +40,7 @@ enum state_setting {
 };
 
 #define WIFI_SERVER_PORT    23
+#define WIFI_UDP_PORT    3333
 
 class Screen
 {
@@ -67,7 +69,7 @@ public:
 	uint32_t read32(fs::File &f);
 	void changeVolt(screen_mode_t mode);
 	void fsInit(void);
-	bool isFirstBoot();
+	bool checkFirstBoot();
 	bool flag_int[2] = {0,};
 	void isrSTPD01();
 	void initScreen();
@@ -85,9 +87,9 @@ public:
 	void dimmingLED(uint8_t led);
 	void setWiFiIcon(bool onoff);
 	WiFiManager *wifiManager;
-	void runWiFiLogging(const char *buf0, const char *buf1, const char *buf2);
+	void runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3);
 	void updateWiFiInfo(void);
-	WiFiServer server;
+	WiFiUDP udp;
 	WiFiClient client;
 private:
 	TFT_eSPI tft = TFT_eSPI();

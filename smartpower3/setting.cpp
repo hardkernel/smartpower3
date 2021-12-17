@@ -17,7 +17,9 @@ Setting::Setting(TFT_eSPI *tft)
 	com_serial_baud = new Component(tft, 115, 20, 2);
 	com_log_interval = new Component(tft, 85, 20, 2);
 	com_ssid = new Component(tft, 220, 20, 2);
-	com_ipaddr = new Component(tft, 220, 20, 2);
+	//com_ipaddr = new Component(tft, 220, 20, 2);
+	com_udp_ipaddr = new Component(tft, 170, 20, 2);
+	com_udp_port = new Component(tft, 60, 20, 2);
 }
 
 
@@ -40,7 +42,7 @@ void Setting::init(uint16_t x, uint16_t y)
 
 	tft->drawString("Serial", x + 120, y + Y_LOGGING, 4);
 
-	tft->drawString("WiFi Info", x, y + Y_WIFI_INFO + 15, 4);
+	tft->drawString("WiFi Info", x, y + Y_WIFI_INFO + 10, 4);
 	tft->unloadFont();
 
 	tft->fillRect(x + X_BL_LEVEL, y, 135, 26, TFT_BLACK);
@@ -54,17 +56,24 @@ void Setting::init(uint16_t x, uint16_t y)
 
 	com_ssid->init(TFT_WHITE, TFT_BLACK, 1, MC_DATUM);
 	com_ssid->setCoordinate(x + X_SSID, y + Y_WIFI_INFO);
+	/*
 	com_ipaddr->init(TFT_WHITE, TFT_BLACK, 1, MC_DATUM);
 	com_ipaddr->setCoordinate(x + X_IPADDR, y + Y_WIFI_INFO + 30);
+	*/
+	com_udp_ipaddr->init(TFT_WHITE, TFT_BLACK, 1, MC_DATUM);
+	com_udp_ipaddr->setCoordinate(x + X_IPADDR + 10, y + Y_WIFI_INFO + 30);
+	com_udp_port->init(TFT_WHITE, TFT_BLACK, 1, MC_DATUM);
+	com_udp_port->setCoordinate(x + X_IPADDR + 175, y + Y_WIFI_INFO + 30);
 
 	tft->loadFont(ChewyRegular24);
 	tft->drawString("Baud Rate  /", x + X_BAUD_RATE, y + Y_SERIAL);
 	tft->drawString("/", x + X_BAUD_RATE + 110, y + Y_SERIAL + 30);
 	tft->drawString(" Interval", x + X_LOG_LEVEL+100, y + Y_SERIAL);
+	tft->drawString("UDP ) ", x + 180, y + Y_WIFI_INFO + 28, 4);
 	tft->unloadFont();
 
 	drawSerialBaud(this->serial_baud);
-	drawLogInterval(log_value[log_interval]);
+	drawLogIntervalValue(log_value[log_interval]);
 }
 
 void Setting::popUp(void)
@@ -103,12 +112,12 @@ void Setting::setBacklightLevel(uint8_t level)
 	backlight_level = _setBacklightLevel(level);
 }
 
-void Setting::setLogIntervalValue(uint16_t val)
+void Setting::setLogInterval(uint8_t val)
 {
 	log_interval = val;
 }
 
-uint16_t Setting::setLogInterval(void)
+uint8_t Setting::setLogInterval(void)
 {
 	return log_interval = log_interval_edit;
 }
@@ -133,7 +142,7 @@ uint8_t Setting::getBacklightLevel(void)
 	return backlight_level;
 }
 
-uint16_t Setting::getLogInterval(void)
+uint8_t Setting::getLogInterval(void)
 {
 	return log_interval;
 }
@@ -174,13 +183,13 @@ void Setting::changeBacklight(uint8_t level)
 	ledcWrite(2, bl_value[level]);
 }
 
-void Setting::restoreLogInterval()
+void Setting::restoreLogIntervalValue()
 {
-	drawLogInterval(log_value[this->log_interval]);
+	drawLogIntervalValue(log_value[this->log_interval]);
 	log_interval_edit = this->log_interval;
 }
 
-void Setting::changeLogInterval(uint16_t log_interval)
+void Setting::changeLogInterval(uint8_t log_interval)
 {
 	double tmp, ms;
 	tmp = this->serial_baud_edit/780;
@@ -194,7 +203,7 @@ void Setting::changeLogInterval(uint16_t log_interval)
 			log_interval++;
 	}
 
-	drawLogInterval(log_value[log_interval]);
+	drawLogIntervalValue(log_value[log_interval]);
 	log_interval_edit = log_interval;
 }
 
@@ -238,7 +247,7 @@ void Setting::deActivateBLLevel(uint16_t color)
 void Setting::deActivateLogInterval(uint16_t color)
 {
 	com_log_interval->setTextColor(color, TFT_BLACK);
-	drawLogInterval(log_value[log_interval]);
+	drawLogIntervalValue(log_value[log_interval]);
 	com_log_interval->deActivate();
 }
 
@@ -273,7 +282,7 @@ void Setting::deActivateSerialBaud(uint16_t color)
 	com_serial_baud->deActivate();
 }
 
-void Setting::drawLogInterval(uint16_t log_value)
+void Setting::drawLogIntervalValue(uint16_t log_value)
 {
 	com_log_interval->clear();
 	//com_log_interval->loadFont("Chewy-Regular24");
@@ -308,6 +317,22 @@ void Setting::drawIpaddr(String ipaddr)
 	com_ipaddr->loadFont(NotoSansBold20);
 	com_ipaddr->draw(ipaddr);
 	com_ipaddr->unloadFont();
+}
+
+void Setting::drawUDPIpaddr(String ipaddr)
+{
+	com_udp_ipaddr->clear();
+	com_udp_ipaddr->loadFont(NotoSansBold20);
+	com_udp_ipaddr->draw(ipaddr);
+	com_udp_ipaddr->unloadFont();
+}
+
+void Setting::drawUDPport(uint16_t port)
+{
+	com_udp_port->clear();
+	com_udp_port->loadFont(NotoSansBold20);
+	com_udp_port->draw(" : " + String(port));
+	com_udp_port->unloadFont();
 }
 
 void Setting::debug()

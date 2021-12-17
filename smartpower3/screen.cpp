@@ -39,9 +39,8 @@ void Screen::begin(TwoWire *theWire)
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
     delay(100);
- 	server = WiFiServer(WIFI_SERVER_PORT);
-    server.begin();
-	wifiManager = new WiFiManager(server, client);
+	udp.begin(WIFI_UDP_PORT);
+	wifiManager = new WiFiManager(udp, client);
 
 	fsInit();
 	delay(2000);
@@ -176,7 +175,7 @@ void Screen::checkOnOff()
 			tft.fillRect(0, 0, 480, 320, TFT_BLACK);
 			setting->setBacklightLevel(0);
 			writeSysLED(0);
-			setting->setLogIntervalValue(0);
+			setting->setLogInterval(0);
 		} else {
 			shutdown = false;
 			tft.fillRect(0, 0, 480, 320, TFT_BLACK);
@@ -191,6 +190,7 @@ void Screen::checkOnOff()
 				activated = dial_cnt = dial_cnt_old = STATE_NONE;
 				updated_wifi_info = true;
 				updated_wifi_icon = true;
+				wifiManager->update_udp_info = true;
 			} else {
 				initScreen();
 			}
@@ -297,6 +297,7 @@ void Screen::drawBase()
 		setting->init(10, 80);
 		updated_wifi_info = true;
 		updated_wifi_icon = true;
+		wifiManager->update_udp_info = true;
 		activated = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
 
@@ -475,7 +476,7 @@ void Screen::drawSettingLOG()
 		setting->deActivateSerialBaud(TFT_WHITE);
 		setting->restoreSerialBaud();
 		setting->deActivateLogInterval(TFT_WHITE);
-		setting->restoreLogInterval();
+		setting->restoreLogIntervalValue();
 		setting->deActivateSerialLogging(TFT_YELLOW);
 	}
 	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
@@ -486,7 +487,7 @@ void Screen::drawSettingLOG()
 		setting->deActivateSerialBaud(TFT_WHITE);
 		setting->restoreSerialBaud();
 		setting->deActivateLogInterval(TFT_WHITE);
-		setting->restoreLogInterval();
+		setting->restoreLogIntervalValue();
 		setting->deActivateSerialLogging(TFT_YELLOW);
 		return;
 	}
@@ -581,13 +582,15 @@ void Screen::drawScreen()
 		} else {
 			if (updated_wifi_info) {
 				updated_wifi_info = false;
-				if (WiFi.status() == WL_CONNECTED) {
+				if (WiFi.status() == WL_CONNECTED)
 					setting->drawSSID(WiFi.SSID());
-					setting->drawIpaddr(WiFi.localIP().toString());
-				} else {
+				else
 					setting->drawSSID("WiFi not connected");
-					setting->drawIpaddr("configure via serial");
-				}
+			}
+			if (wifiManager->update_udp_info) {
+				setting->drawUDPIpaddr(wifiManager->ipaddr_udp.toString());
+				setting->drawUDPport(wifiManager->port_udp);
+				wifiManager->update_udp_info = false;
 			}
 		}
 		if (updated_wifi_icon) {
@@ -880,18 +883,22 @@ void Screen::fsInit(void)
 	uint8_t backlight_level = 3;
 	uint8_t log_interval = 0;
 	uint32_t serial_baud = 115200;
+	uint16_t port_udp = 0;
+	String ipaddr_udp = "0.0.0.0";
 
-	if (isFirstBoot()) {
+	if (checkFirstBoot()) {
 		Serial.println("First boot!!!");
 		NVS.setInt("autorun", 0);
-		NVS.setInt("bl_level", 3);
-		NVS.setInt("serial_baud", (uint32_t)115200, true);
-		NVS.setInt("log_interval", 0);
-		NVS.setInt("firstboot", 1);
-		NVS.setString("voltage0", "5.0");
-		NVS.setString("voltage1", "5.0");
-		NVS.setString("current_limit0", "3.0");
-		NVS.setString("current_limit1", "3.0");
+		NVS.setInt("bl_level", backlight_level);
+		NVS.setInt("serial_baud", serial_baud, true);
+		NVS.setInt("log_interval", log_interval);
+		NVS.setString("firstboot", "no");
+		NVS.setString("voltage0", String(volt_set0));
+		NVS.setString("voltage1", String(volt_set1));
+		NVS.setString("current_limit0", String(current_limit0));
+		NVS.setString("current_limit1", String(current_limit1));
+		NVS.setString("ipaddr_udp", ipaddr_udp);
+		NVS.setInt("port_udp", port_udp);
 	}
 	volt_set0 = NVS.getString("voltage0").toFloat()*1000;
 	volt_set1 = NVS.getString("voltage1").toFloat()*1000;
@@ -910,15 +917,17 @@ void Screen::fsInit(void)
 	channel[1]->setCurrentLimit(current_limit1, 1);
 	setting->setBacklightLevel(backlight_level, true);
 	setting->setSerialBaud(serial_baud);
-	setting->setLogIntervalValue(log_interval);
+	setting->setLogInterval(log_interval);
+	wifiManager->ipaddr_udp.fromString(NVS.getString("ipaddr_udp"));
+	wifiManager->port_udp = NVS.getInt("port_udp");
 }
 
-bool Screen::isFirstBoot()
+bool Screen::checkFirstBoot()
 {
-	if (NVS.getInt("firstboot"))
-		return 0;
-	else
+	if (NVS.getString("firstboot") != "no")
 		return 1;
+	else
+		return 0;
 }
 
 void Screen::debug()
@@ -963,18 +972,14 @@ void Screen::writePowerLED(uint8_t val)
 	ledcWrite(1, val);
 }
 
-void Screen::runWiFiLogging(const char *buf0, const char *buf1, const char *buf2)
+void Screen::runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3)
 {
-	if (!client.connected()) {
-		client = server.available();
-	} else {
-		if (client.available()) {
-			client.read();
-		}
-		client.write(buf0, SIZE_LOG_BUFFER0);
-		client.write(buf1, SIZE_LOG_BUFFER1);
-		client.write(buf2, SIZE_LOG_BUFFER2);
-	}
+	udp.beginPacket(wifiManager->ipaddr_udp, wifiManager->port_udp);
+	udp.write((uint8_t *)buf0, SIZE_LOG_BUFFER0);
+	udp.write((uint8_t *)buf1, SIZE_LOG_BUFFER1);
+	udp.write((uint8_t *)buf2, SIZE_LOG_BUFFER2);
+	udp.write((uint8_t *)buf3, SIZE_CHECKSUM_BUFFER);
+	udp.endPacket();
 }
 
 void Screen::updateWiFiInfo(void)

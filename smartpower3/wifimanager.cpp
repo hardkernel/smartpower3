@@ -1,15 +1,18 @@
 #include "wifimanager.h"
 
-const char *MSG_CMD_MODE_ENTERED = ">>> WIFI Command mode entered <<<";
-const char *MSG_CMD_MODE_EXITED = ">>> WIFI Command mode exited <<<";
+const char *MSG_CMD_MODE_ENTERED = ">>> WiFi command mode entered <<<";
+const char *MSG_CMD_MODE_EXITED = ">>> WiFi command mode exited <<<";
 const char *MSG_CMD_UNKNOWN = ">>> Unknown command <<<";
-const char *MSG_CMD_NO_NETWORK = ">>> No Networks found <<<";
-const char *MSG_CMD_SCANNING = ">>> AP Scanning <<<";
-const char *MSG_CMD_CONNECT = ">>> AP Connecting <<<";
-const char *MSG_CMD_SELECT = ">>> AP Select <<<";
-const char *MSG_CMD_CONNECT_INFO = ">>> AP Connection Info <<<";
+const char *MSG_CMD_NO_NETWORK = ">>> No networks found <<<";
+const char *MSG_CMD_SCANNING = ">>> AP scanning <<<";
+const char *MSG_CMD_CONNECT = ">>> AP connecting <<<";
+const char *MSG_CMD_SELECT = ">>> AP select <<<";
+const char *MSG_CMD_CONNECT_INFO = ">>> AP connection info <<<";
 const char *MSG_CMD_NO_CONNECT = ">>> AP no connnection <<<";
+const char *MSG_CMD_SET_UDP = ">>> Setting UDP <<<";
 const char *MSG_CMD = "Command : ";
+const char *MSG_CMD_UDP_INFO = ">>> UDP client connection info for logging <<<";
+const char *MSG_CMD_NO_UDP_INFO = ">>> No UDP client info <<<";
 
 const char *encryption_str(int encryption)
 {
@@ -24,9 +27,9 @@ const char *encryption_str(int encryption)
     }
 }
 
-WiFiManager::WiFiManager(WiFiServer &server, WiFiClient &client)
+WiFiManager::WiFiManager(WiFiUDP &udp, WiFiClient &client)
 {
-	this->server = server;
+	this->udp = udp;
 	this->client = client;
 }
 
@@ -275,6 +278,12 @@ void WiFiManager::ap_select(int ap_list_cnt)
     }
 }
 
+void WiFiManager::udp_client_info()
+{
+    Serial.printf("IP Address [%s]\n\r", ipaddr_udp.toString().c_str());
+    Serial.printf("Port [%d]\n\r", port_udp);
+}
+
 void WiFiManager::ap_info(int ap_number)
 {
 	String ip_addr, mac_addr, ssid;
@@ -284,10 +293,98 @@ void WiFiManager::ap_info(int ap_number)
 
     ssid = WiFi.SSID();
 
-    Serial.printf("%s (%d dbm))n\r", ssid.c_str(), WiFi.RSSI());
+    Serial.printf("%s (%d dbm))\n\r", ssid.c_str(), WiFi.RSSI());
         
     Serial.printf("IP Address [%s]\n\r", ip_addr.c_str());
     Serial.printf("MAC Address [%s]\n\r", mac_addr.c_str());
+}
+
+void WiFiManager::set_udp()
+{
+    char ipaddr[16], port[5], cmd;
+    uint8_t pos = 0;
+	bool idx = 0;
+
+
+	Serial.println("**************************************************");
+    Serial.println("*                                                *");
+    Serial.println("*           For exit press [Ctrl+c]...           *");
+    Serial.println("*                                                *");
+	Serial.println("**************************************************");
+
+	Serial.println("Input your IP address of UDP client ex) 192.168.0.5:");
+
+    memset(ipaddr, 0x00, sizeof(ipaddr));
+	memset(port, 0x00, sizeof(port));
+
+    while(true) {
+        if (Serial.available()) {
+            cmd = Serial.read();
+			if (cmd  == SERIAL_CTRL_C) {
+				return;
+			} else if ( cmd == SERIAL_ENTER ) {
+				if (idx == 0) {
+					Serial.printf("\n\r");
+					Serial.println(ipaddr_udp.fromString(ipaddr));
+					if (ipaddr_udp.fromString(ipaddr)) {
+						Serial.printf("IP address set ok: ");
+						Serial.println(ipaddr_udp.toString());
+						NVS.setString("ipaddr_udp", ipaddr);
+						Serial.printf("\n\rInput your port number of UDP client ex) 6000:\n\r");
+						idx = 1;
+						pos = 0;
+					} else {
+						pos = 16;
+					}
+				} else {
+					Serial.printf("\n\r");
+					Serial.println(port);
+					uint16_t _port = atoi(port);
+					if (_port > 0 and _port < 10000) {
+						Serial.printf("port set ok: ");
+						Serial.println(_port);
+						NVS.setInt("port_udp", _port);
+						port_udp = _port;
+						update_udp_info = true;
+						return;
+					} else {
+						pos = 5;
+					}
+				}
+            } else {
+                Serial.printf("%c", cmd);
+				if (idx == 0) {
+					if ((cmd > 47) && (cmd < 58))
+						ipaddr[pos++] = cmd;
+					else if (cmd == 46)
+						ipaddr[pos++] = cmd;
+					else
+						pos = 16;
+				} else {
+					if ((cmd > 47) && (cmd < 58))
+						port[pos++] = cmd;
+					else
+						pos = 5;
+				}
+            }
+			if (idx == 0) {
+				if (pos > 15) {
+					Serial.printf("Wrong IP address.\n\r");
+					Serial.println("Input your IP address of UDP client ex) 192.168.0.5:");
+					pos = 0;
+					memset(ipaddr, 0x00, sizeof(ipaddr));
+				}
+			} else {
+				if (pos > 4) {
+					Serial.printf("Wrong port number.\n\r");
+					Serial.println("Input your port number of UDP client ex) 6000:");
+					pos = 0;
+					memset(port, 0x00, sizeof(port));
+				}
+			}
+        }
+        delay(100);
+    }
 }
 
 void WiFiManager::cmd_main(char idata)
@@ -304,12 +401,20 @@ void WiFiManager::cmd_main(char idata)
                 Serial.printf("%s\n\r", MSG_CMD_NO_CONNECT);
         break;
         case    '2':
+			Serial.printf("%s\n\r", MSG_CMD_UDP_INFO);
+			udp_client_info();
+        break;
+        case    '3':
             ap_scanning();
             view_ap_list(APListCount);
             if (APListCount)
                 ap_select(APListCount);
         break;
-        case    '3':
+        case    '4':
+			Serial.printf("%s\n\r", MSG_CMD_SET_UDP);
+            set_udp();
+        break;
+        case    '5':
         case    SERIAL_CTRL_C:
             commandMode = false;
             Serial.printf("%s\n\r", MSG_CMD_MODE_EXITED);

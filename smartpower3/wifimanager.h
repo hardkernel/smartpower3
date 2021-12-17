@@ -3,6 +3,7 @@
 
 #include <ArduinoNvs.h>
 #include <WiFi.h>
+#include <WiFiUdp.h>
 
 #define SERIAL_CTRL_C       0x03
 #define SERIAL_ENTER        0x0D
@@ -33,11 +34,13 @@ const char *MSG_CMD = "Command : ";
 const char *TestSendData = "01234567890123456789012345678901234567890123456789012345678901234567890";
 */
 
-const char WIFI_CMD_MENU[][30] = {
+const char WIFI_CMD_MENU[][50] = {
     "[ WIFI Command mode menu ]",
     "1. Connection AP Info",
-    "2. Scan & Connection AP",
-    "3. WiFi Command mode exit"
+    "2. Connection UDP client Info",
+    "3. Scan & Connection AP",
+    "4. Set IP address of UDP client for data logging",
+    "5. WiFi Command mode exit"
 };
 
 #define WIFI_CMD_MENU_CNT   (sizeof(WIFI_CMD_MENU)/sizeof(WIFI_CMD_MENU[0]))
@@ -46,7 +49,7 @@ const char WIFI_CMD_MENU[][30] = {
 class WiFiManager
 {
 public:
-	WiFiManager(WiFiServer &server, WiFiClient &client);
+	WiFiManager(WiFiUDP &udp, WiFiClient &client);
 	void view_main_menu(void);
 	void view_ap_list(int ap_list_cnt);
 	void ap_scanning(void);
@@ -55,14 +58,20 @@ public:
 	void ap_set_passwd(int ap_number);
 	void ap_select(int ap_list_cnt);
 	void ap_info(int ap_number);
+	void udp_client_info();
 	void cmd_main(char idata);
 	bool isCommandMode(void);
 	void setCommandMode(void);
+	void set_udp();
 	uint8_t state = 0;
 	uint8_t nvs_state = 0;
 	//void setConnType(CONN_TYPE conn_type);
+	uint8_t state_udp = 0;
+	uint16_t port_udp = 0;
+	IPAddress ipaddr_udp;
+	bool update_udp_info = true;
 private:
-	WiFiServer server;
+	WiFiUDP udp;
 	WiFiClient client;
 	uint16_t    WiFiState = eSTATE_WIFI_IDEL;
 
