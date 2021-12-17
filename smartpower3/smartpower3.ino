@@ -26,10 +26,6 @@ void setup(void) {
 	screen.begin(&I2CA);
 	initEncoder(&dial);
 
-	//xTaskCreate(screenTask, "Draw Screen", 6000, NULL, 1, NULL);
-	//xTaskCreate(wifiTask, "WiFi Task", 5000, NULL, 1, NULL);
-	//xTaskCreate(logTask, "Log Task", 8000, NULL, 1, NULL);
-
 	xTaskCreatePinnedToCore(screenTask, "Draw Screen", 6000, NULL, 1, NULL, 1);
 	xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 5000, NULL, 1, NULL, 1);
 	xTaskCreatePinnedToCore(logTask, "Log Task", 8000, NULL, 1, NULL, 1);
@@ -43,7 +39,7 @@ void setup(void) {
 
 	timer = timerBegin(0, 80, true);
 	timerAttachInterrupt(timer, &onTimer, true);
-	timerAlarmWrite(timer, 10000, true);
+	timerAlarmWrite(timer, 1000000, true);
 	timerAlarmEnable(timer);
 }
 
@@ -78,7 +74,11 @@ void logTask(void *parameter)
 	char buffer_input[SIZE_LOG_BUFFER0];
 	char buffer_ch0[SIZE_LOG_BUFFER1];
 	char buffer_ch1[SIZE_LOG_BUFFER2];
+	char buffer_checksum[SIZE_CHECKSUM_BUFFER];
 	uint32_t log_interval = 0;
+	uint8_t checksum8 = 0;
+	uint8_t checksum8_xor = 0;
+
 	for (;;) {
 		if (interruptFlag > 0) {
 			portENTER_CRITICAL(&timerMux);
@@ -92,16 +92,38 @@ void logTask(void *parameter)
 					timerAlarmWrite(timer, 1000*log_interval, true);
 			}
 			if ((log_interval > 0) && !screen.wifiManager->isCommandMode()) {
-				sprintf(buffer_input, "%010lu,%05d,%04d,%05d,%1d,", millis(), mCh0.V(), mCh0.A(log_interval), mCh0.W(log_interval), low_input);
+				sprintf(buffer_input, "%010lu,%05d,%04d,%05d,%1d,", millis(), mCh0.V(),mCh0.A(log_interval), mCh0.W(log_interval), low_input);
 				sprintf(buffer_ch0, "%05d,%04d,%05d,%1d,%02x,", mCh1.V(), mCh1.A(log_interval), mCh1.W(log_interval), onoff[0], screen.getIntStat(0));
-				sprintf(buffer_ch1, "%05d,%04d,%05d,%1d,%02x\n\r", mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval),onoff[1], screen.getIntStat(1));
+				sprintf(buffer_ch1, "%05d,%04d,%05d,%1d,%02x,", mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval),onoff[1], screen.getIntStat(1));
+
+				checksum8 = 0;
+				checksum8_xor = 0;
+				for (int i = 0; i < SIZE_LOG_BUFFER0-1; i++) {
+					checksum8 += buffer_input[i];
+					checksum8_xor ^= buffer_input[i];
+				}
+				for (int i = 0; i < SIZE_LOG_BUFFER1-1; i++) {
+					checksum8 += buffer_ch0[i];
+					checksum8_xor ^= buffer_ch0[i];
+				}
+				for (int i = 0; i < SIZE_LOG_BUFFER2-1; i++) {
+					checksum8 += buffer_ch1[i];
+					checksum8_xor ^= buffer_ch1[i];
+				}
+				sprintf(buffer_checksum, "%02x,%02x\n\r", (byte)(~checksum8)+1, checksum8_xor);
+
 				Serial.printf(buffer_input);
 				Serial.printf(buffer_ch0);
 				Serial.printf(buffer_ch1);
-				screen.runWiFiLogging(buffer_input, buffer_ch0, buffer_ch1);
+				Serial.printf(buffer_checksum);
+				screen.runWiFiLogging(buffer_input, buffer_ch0, buffer_ch1, buffer_checksum);
+			} else {
+				vTaskDelay(10);
 			}
 		} else if (log_interval == 0) {
 			vTaskDelay(250);
+		} else if (log_interval > 5) {
+			vTaskDelay(1);
 		}
 	}
 }

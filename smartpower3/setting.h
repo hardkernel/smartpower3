@@ -31,23 +31,23 @@ public:
 	void setBacklightLevel(uint8_t level);
 	void setBacklightLevel(uint8_t level, bool edit);
 	uint8_t _setBacklightLevel(uint8_t level);
-	uint16_t setLogInterval(void);
-	void setLogIntervalValue(uint16_t val);
+	uint8_t setLogInterval(void);
+	void setLogInterval(uint8_t val);
 	uint32_t setSerialBaud(uint32_t baud);
 	uint32_t setSerialBaud();
 
 	uint8_t getBacklightLevel(void);
-	uint16_t getLogInterval(void);
+	uint8_t getLogInterval(void);
 	uint16_t getLogIntervalValue(void);
 	uint32_t getSerialBaud(void);
 	uint8_t getSerialBaudLevel(void);
 
 	void changeBacklight(uint8_t level=255);
 	void restoreBacklight();
-	void changeLogInterval(uint16_t log_interval);
+	void changeLogInterval(uint8_t log_interval);
 	void changeSerialBaud(uint8_t baud_level);
 	void restoreSerialBaud(void);
-	void restoreLogInterval(void);
+	void restoreLogIntervalValue(void);
 
 	void activateBLLevel(uint16_t color=TFT_YELLOW);
 	void activateLogInterval(uint16_t color=TFT_YELLOW);
@@ -60,12 +60,14 @@ public:
 	void deActivateSerialLogging(uint16_t color=TFT_BLACK);
 
 	void drawBacklightLevel(uint8_t level);
-	void drawLogInterval(uint16_t log_interval);
+	void drawLogIntervalValue(uint16_t log_interval);
 	void drawSerialBaud(uint32_t serial_baud);
 	void popUp(void);
 	
 	void activateSerialBaud(void);
 	void drawIpaddr(String ipaddr);
+	void drawUDPIpaddr(String ipaddr);
+	void drawUDPport(uint16_t port);
 	void drawSSID(String ssid);
 	void debug(void);
 private:
@@ -86,4 +88,6 @@ private:
 	Component *com_log_interval;
 	Component *com_ipaddr;
 	Component *com_ssid;
+	Component *com_udp_ipaddr;
+	Component *com_udp_port;
 };
