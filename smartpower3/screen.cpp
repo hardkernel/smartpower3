@@ -975,10 +975,10 @@ void Screen::writePowerLED(uint8_t val)
 void Screen::runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3)
 {
 	udp.beginPacket(wifiManager->ipaddr_udp, wifiManager->port_udp);
-	udp.write((uint8_t *)buf0, SIZE_LOG_BUFFER0);
-	udp.write((uint8_t *)buf1, SIZE_LOG_BUFFER1);
-	udp.write((uint8_t *)buf2, SIZE_LOG_BUFFER2);
-	udp.write((uint8_t *)buf3, SIZE_CHECKSUM_BUFFER);
+	udp.write((uint8_t *)buf0, SIZE_LOG_BUFFER0-1);
+	udp.write((uint8_t *)buf1, SIZE_LOG_BUFFER1-1);
+	udp.write((uint8_t *)buf2, SIZE_LOG_BUFFER2-1);
+	udp.write((uint8_t *)buf3, SIZE_CHECKSUM_BUFFER-2);
 	udp.endPacket();
 }
 
