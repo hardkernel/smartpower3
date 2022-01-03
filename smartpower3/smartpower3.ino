@@ -110,7 +110,7 @@ void logTask(void *parameter)
 					checksum8 += buffer_ch1[i];
 					checksum8_xor ^= buffer_ch1[i];
 				}
-				sprintf(buffer_checksum, "%02x,%02x\n\r", (byte)(~checksum8)+1, checksum8_xor);
+				sprintf(buffer_checksum, "%02x,%02x\r\n", (byte)(~checksum8)+1, checksum8_xor);
 
 				Serial.printf(buffer_input);
 				Serial.printf(buffer_ch0);
