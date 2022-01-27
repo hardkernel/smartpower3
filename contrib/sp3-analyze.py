@@ -4,6 +4,11 @@
 #
 # The script expects a csv-file with the data logged via serial or udp.
 #
+# This script is user-contributed and not maintained by Hardkernel
+#
+# Please create pull requests against
+#   https://github.com/bablokb/smartpower3
+#
 # Author: Bernhard Bablok
 # License: GPL3
 #

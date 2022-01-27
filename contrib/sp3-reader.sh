@@ -9,6 +9,11 @@
 # The tee-command will output the data to a csv-file for later analysis
 # and pipe it to the screen for further processing or viewing.
 #
+# This script is user-contributed and not maintained by Hardkernel
+#
+# Please create pull requests against
+#   https://github.com/bablokb/smartpower3
+#
 # Author: Bernhard Bablok
 # License: GPL3
 #
