@@ -978,7 +978,7 @@ void Screen::runWiFiLogging(const char *buf0, const char *buf1, const char *buf2
 	udp.write((uint8_t *)buf0, SIZE_LOG_BUFFER0-1);
 	udp.write((uint8_t *)buf1, SIZE_LOG_BUFFER1-1);
 	udp.write((uint8_t *)buf2, SIZE_LOG_BUFFER2-1);
-	udp.write((uint8_t *)buf3, SIZE_CHECKSUM_BUFFER-2);
+	udp.write((uint8_t *)buf3, SIZE_CHECKSUM_BUFFER-1);
 	udp.endPacket();
 }
 
