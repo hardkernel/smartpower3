@@ -11,8 +11,8 @@ const char *MSG_CMD_CONNECT_INFO = ">>> AP connection info <<<";
 const char *MSG_CMD_NO_CONNECT = ">>> AP no connnection <<<";
 const char *MSG_CMD_SET_UDP = ">>> Setting UDP <<<";
 const char *MSG_CMD = "Command : ";
-const char *MSG_CMD_UDP_INFO = ">>> UDP client connection info for logging <<<";
-const char *MSG_CMD_NO_UDP_INFO = ">>> No UDP client info <<<";
+const char *MSG_CMD_UDP_INFO = ">>> UDP server connection info for logging <<<";
+const char *MSG_CMD_NO_UDP_INFO = ">>> No UDP server info <<<";
 
 const char *encryption_str(int encryption)
 {
@@ -278,7 +278,7 @@ void WiFiManager::ap_select(int ap_list_cnt)
     }
 }
 
-void WiFiManager::udp_client_info()
+void WiFiManager::udp_server_info()
 {
     Serial.printf("IP Address [%s]\n\r", ipaddr_udp.toString().c_str());
     Serial.printf("Port [%d]\n\r", port_udp);
@@ -312,7 +312,7 @@ void WiFiManager::set_udp()
     Serial.println("*                                                *");
 	Serial.println("**************************************************");
 
-	Serial.println("Input your IP address of UDP client ex) 192.168.0.5:");
+	Serial.println("Input your IP address of UDP server ex) 192.168.0.5:");
 
     memset(ipaddr, 0x00, sizeof(ipaddr));
 	memset(port, 0x00, sizeof(port));
@@ -330,7 +330,7 @@ void WiFiManager::set_udp()
 						Serial.printf("IP address set ok: ");
 						Serial.println(ipaddr_udp.toString());
 						NVS.setString("ipaddr_udp", ipaddr);
-						Serial.printf("\n\rInput your port number of UDP client ex) 6000:\n\r");
+						Serial.printf("\n\rInput your port number of UDP server ex) 6000:\n\r");
 						idx = 1;
 						pos = 0;
 					} else {
@@ -370,14 +370,14 @@ void WiFiManager::set_udp()
 			if (idx == 0) {
 				if (pos > 15) {
 					Serial.printf("Wrong IP address.\n\r");
-					Serial.println("Input your IP address of UDP client ex) 192.168.0.5:");
+					Serial.println("Input your IP address of UDP server ex) 192.168.0.5:");
 					pos = 0;
 					memset(ipaddr, 0x00, sizeof(ipaddr));
 				}
 			} else {
 				if (pos > 4) {
 					Serial.printf("Wrong port number.\n\r");
-					Serial.println("Input your port number of UDP client ex) 6000:");
+					Serial.println("Input your port number of UDP server ex) 6000:");
 					pos = 0;
 					memset(port, 0x00, sizeof(port));
 				}
@@ -402,7 +402,7 @@ void WiFiManager::cmd_main(char idata)
         break;
         case    '2':
 			Serial.printf("%s\n\r", MSG_CMD_UDP_INFO);
-			udp_client_info();
+			udp_server_info();
         break;
         case    '3':
             ap_scanning();

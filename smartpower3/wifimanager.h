@@ -37,9 +37,9 @@ const char *TestSendData = "0123456789012345678901234567890123456789012345678901
 const char WIFI_CMD_MENU[][50] = {
     "[ WIFI Command mode menu ]",
     "1. Connection AP Info",
-    "2. Connection UDP client Info",
+    "2. Connection UDP server Info",
     "3. Scan & Connection AP",
-    "4. Set IP address of UDP client for data logging",
+    "4. Set IP address of UDP server for data logging",
     "5. WiFi Command mode exit"
 };
 
@@ -58,7 +58,7 @@ public:
 	void ap_set_passwd(int ap_number);
 	void ap_select(int ap_list_cnt);
 	void ap_info(int ap_number);
-	void udp_client_info();
+	void udp_server_info();
 	void cmd_main(char idata);
 	bool isCommandMode(void);
 	void setCommandMode(void);
