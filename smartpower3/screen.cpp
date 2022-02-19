@@ -81,6 +81,21 @@ void Screen::run()
 				channel[i]->isr(onoff[i]);
 			}
 		}
+
+#ifdef SCREEN_CAPTURE
+		if (Serial.available()) {
+			if (Serial.readString() == "S") {
+				uint8_t color[2*8];
+				for (uint32_t y = 0; y < 320; y++) {
+					for (uint32_t x = 0; x < 480; x+=8) {
+						tft.readRect(x, y, 8, 1, (uint16_t *)color);
+						Serial.write(color, 2*8);
+					}
+				}
+				Serial.flush();
+			}
+		}
+#endif
 	};
 }
 
