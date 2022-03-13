@@ -98,13 +98,15 @@ class Reader(object):
     parser.add_argument('-V', '--volt-filter', metavar='volt',
       dest='volt', type=int, default=Reader.V_MIN,
       help='lower filter-limit for voltage (mV, default: %d)' % Reader.V_MIN)
-
     parser.add_argument('-C', '--channel-filter', metavar='ch_state',
       dest='ch_state', type=int, default=1,
       help='lower filter-limit for channel-state (default: 1)')
     parser.add_argument('-X', '--checksum-filter', action='store_true',
       dest='verify', default=False,
       help="verify checksum and filter invalid data")
+    parser.add_argument('-D', '--duration', metavar='duration',
+      dest='duration', type=int, default=None,
+      help='limit measurment to given duration in seconds (default: no limit)')
 
     parser.add_argument('-t', '--time-stamp', metavar='ts-format',
       dest='ts_format', default=None, const='i', nargs='?',
@@ -241,12 +243,10 @@ class Reader(object):
       sock.bind((self.net,self.port))
       sock.settimeout(Reader.TIMEOUT)
 
-    # take some timings for the report at start
-    self._start_dt = datetime.datetime.now()
-    start = time.perf_counter()
-
     # note that this is not (yet) a robust implementation, because sp3 sends
     # three packages and we might just start in the middle.
+    first = True
+    start = sys.float_info.max
     while True:
       # check for interruption
       if self._stop_event.is_set():
@@ -270,8 +270,18 @@ class Reader(object):
           break
 
       #pstart = time.perf_counter()
-      self._process_msg(data[:Reader.MSG_LENGTH-2].decode(errors='ignore'))
+      success = self._process_msg(
+                             data[:Reader.MSG_LENGTH-2].decode(errors='ignore'))
+      if first and success:
+        # take some timings for the report at start
+        self._start_dt = datetime.datetime.now()
+        start = time.perf_counter()
+        first = False
       #print("elapsed: %f" % (time.perf_counter()-pstart),file=sys.stderr)
+
+      #exit if measurement duration is reached
+      if self.duration and time.perf_counter()-start > self.duration:
+        break
 
     # take some timings for the report ant end
     self._ttime = time.perf_counter()-start
@@ -286,17 +296,17 @@ class Reader(object):
     if len(words) != Reader.MSG_COLUMNS:
       self.msg("Reader: ignoring incomplete message: %s" % data)
       self._incomplete += 1
-      return
+      return False
     if self.volt or self.ch_state or self.verify:
       try:
         if self._filter(words):
           self._filtered += 1
-          return
+          return False
       except Exception as ex:
         self._failed += 1
         self.msg("Reader: failed message: %s" % data)
         self.msg("Reader: exception: %s" % ex)
-        return
+        return False
 
     self._success += 1
     if self.ts_format:
@@ -315,6 +325,8 @@ class Reader(object):
       print(value,flush=True)
     if self._file:
       print(value,file=self._file)
+
+    return True
 
   # --- filter the given message   -------------------------------------------
 
