@@ -8,23 +8,36 @@ const char *MSG_CMD_SCANNING = ">>> AP scanning <<<";
 const char *MSG_CMD_CONNECT = ">>> AP connecting <<<";
 const char *MSG_CMD_SELECT = ">>> AP select <<<";
 const char *MSG_CMD_CONNECT_INFO = ">>> AP connection info <<<";
-const char *MSG_CMD_NO_CONNECT = ">>> AP no connnection <<<";
+const char *MSG_CMD_NO_CONNECT = ">>> AP no connection <<<";
 const char *MSG_CMD_SET_UDP = ">>> Setting UDP <<<";
 const char *MSG_CMD = "Command : ";
 const char *MSG_CMD_UDP_INFO = ">>> UDP server connection info for logging <<<";
 const char *MSG_CMD_NO_UDP_INFO = ">>> No UDP server info <<<";
+const char *MSG_CMD_FORGET_CONNECTION = ">>> Forget connection AP <<<";
+const char *MSG_CMD_FORGET_UDP_SERVER_INFO = ">>> Forget UDP server <<<";
+// yes/no selections
+// common
+const char *MSG_YN_REDO_SELECTION_REQUEST = "\n\rPlease enter \"y\" or \"n\" & Enter or press Ctrl+C: ";
+// UDP server forget
+const char *MSG_YN_UDP_FORGET_CONFIRMATION = "Do you really want to forget the UDP server settings?(y/n & Enter): ";
+const char *MSG_YN_UDP_FORGET_SUCCESS = "\n\rUDP server settings have been erased.";
+const char *MSG_YN_UDP_FORGET_FAILURE = "\n\rUDP server settings have NOT been erased.";
+// WiFi AP forget
+const char *MSG_YN_AP_FORGET_CONFIRMATION = "Do you really want to forget the network settings?(y/n & Enter): ";
+const char *MSG_YN_AP_FORGET_SUCCESS = "\n\rWiFi access point data have been erased.";
+const char *MSG_YN_AP_FORGET_FAILURE = "\n\rWiFi access point data have NOT been erased.";
 
 const char *encryption_str(int encryption)
 {
-    switch(encryption) {
-        case    WIFI_AUTH_OPEN:             return  "Open";
-        case    WIFI_AUTH_WEP:              return  "WEP";
-        case    WIFI_AUTH_WPA_PSK:          return  "WPA PSK";
-        case    WIFI_AUTH_WPA2_PSK:         return  "WPA2 PSK";
-        case    WIFI_AUTH_WPA_WPA2_PSK:     return  "WPA WPA2 PSK";
-        case    WIFI_AUTH_WPA2_ENTERPRISE:  return  "WPA2 Enterprise";
-        default:                            return  "Unknown";
-    }
+	switch(encryption) {
+		case    WIFI_AUTH_OPEN:             return  "Open";
+		case    WIFI_AUTH_WEP:              return  "WEP";
+		case    WIFI_AUTH_WPA_PSK:          return  "WPA PSK";
+		case    WIFI_AUTH_WPA2_PSK:         return  "WPA2 PSK";
+		case    WIFI_AUTH_WPA_WPA2_PSK:     return  "WPA WPA2 PSK";
+		case    WIFI_AUTH_WPA2_ENTERPRISE:  return  "WPA2 Enterprise";
+		default:                            return  "Unknown";
+	}
 }
 
 WiFiManager::WiFiManager(WiFiUDP &udp, WiFiClient &client)
@@ -33,62 +46,95 @@ WiFiManager::WiFiManager(WiFiUDP &udp, WiFiClient &client)
 	this->client = client;
 }
 
+void WiFiManager::do_yes_no_selection(void (WiFiManager::*func)(), const char *confirmation_string, const char *approval_string, const char *denial_string)
+{
+	char buf, cmd;
+
+	Serial.printf("%s", confirmation_string);
+
+	while (true) {
+		if (Serial.available()) {
+			cmd = Serial.read();
+			switch (cmd) {
+				case SERIAL_CTRL_C:
+					return;
+				case SERIAL_ENTER:
+					switch (buf) {
+						case SERIAL_Y:
+							(this->* func) ();
+							Serial.println(approval_string);
+							return;
+						case SERIAL_N:
+							Serial.println(denial_string);
+							return;
+						default:
+							Serial.printf(MSG_YN_REDO_SELECTION_REQUEST);
+					}
+					break;
+				default:
+					Serial.printf("%c", cmd);
+					buf = cmd;
+			}
+		}
+	}
+}
+
 void WiFiManager::view_main_menu(void)
 {
-    int i;
+	int i;
 
-    Serial.printf("\n\r");
-    for(i = 0; i < WIFI_CMD_MENU_CNT; i++)
-        Serial.printf("%s\n\r", &WIFI_CMD_MENU[i][0]);
+	Serial.printf("\n\r");
+	for(i = 0; i < WIFI_CMD_MENU_CNT; i++)
+		Serial.printf("%s\n\r", &WIFI_CMD_MENU[i][0]);
 
-    Serial.printf("%s", MSG_CMD);
+	Serial.printf("%s", MSG_CMD);
 }
 
 void WiFiManager::view_ap_list(int ap_list_cnt)
 {
-    char ap_name[64], i;
+	char ap_name[64], i;
 
-    if (ap_list_cnt) {
-        Serial.printf("[ Networks found(%d) ]\n\r", ap_list_cnt);
-        for (i = 0; i < ap_list_cnt; i++) {
-            memset(ap_name, 0x00, sizeof(ap_name));
-            WiFi.SSID(i).toCharArray(ap_name, sizeof(ap_name));
-            Serial.printf("%d - %s (%d dbm), Encryption (%s)\n\r",
-                            i,
-                            &ap_name[0], 
-                            WiFi.RSSI(i),
-                            encryption_str(WiFi.encryptionType(i)));
-        }
-    }
-    else
-        Serial.printf("%s\n\r", MSG_CMD_NO_NETWORK);
+	if (ap_list_cnt) {
+		Serial.printf("[ Networks found(%d) ]\n\r", ap_list_cnt);
+		for (i = 0; i < ap_list_cnt; i++) {
+			memset(ap_name, 0x00, sizeof(ap_name));
+			WiFi.SSID(i).toCharArray(ap_name, sizeof(ap_name));
+			Serial.printf("%d - %s (%d dbm), Encryption (%s)\n\r",
+							i,
+							&ap_name[0],
+							WiFi.RSSI(i),
+							encryption_str(WiFi.encryptionType(i)));
+		}
+	}
+	else
+		Serial.printf("%s\n\r", MSG_CMD_NO_NETWORK);
 }
 
 void WiFiManager::ap_scanning(void)
 {
-    Serial.printf("%s\n\r", MSG_CMD_SCANNING);
-    APListCount = WiFi.scanNetworks();
+	Serial.printf("%s\n\r", MSG_CMD_SCANNING);
+	APListCount = WiFi.scanNetworks();
 }
 
 bool WiFiManager::ap_connect(String ssid, String passwd)
 {
-    char ap_name[64], ap_passwd[64];
+	char ap_name[64], ap_passwd[64];
 	uint8_t i = 0;
 	char cmd;
 
-    WiFi.disconnect();
-    ssid.toCharArray(ap_name, sizeof(ap_name));
-    passwd.toCharArray(ap_passwd, sizeof(ap_passwd));
+	WiFi.disconnect();
+	ssid.toCharArray(ap_name, sizeof(ap_name));
+	passwd.toCharArray(ap_passwd, sizeof(ap_passwd));
 
-    WiFi.begin(ap_name, ap_passwd);
+	WiFi.begin(ap_name, ap_passwd);
 
 	Serial.println("**************************************************");
-    Serial.println("*                                                *");
-    Serial.println("*           For exit press [Ctrl+c]...           *");
-    Serial.println("*                                                *");
+	Serial.println("*                                                *");
+	Serial.println("*           For exit press [Ctrl+c]...           *");
+	Serial.println("*                                                *");
 	Serial.println("**************************************************");
-    Serial.printf("Connecting... %s\n\r", ap_name);
-    while((i++ < CONNECT_RETRY_CNT)) {
+	Serial.printf("Connecting... %s\n\r", ap_name);
+	while((i++ < CONNECT_RETRY_CNT)) {
 		if (WiFi.status() == WL_CONNECTED) {
 			Serial.printf("[[[ Connection Okay ]]]\n\r");
 			Serial.printf("Connected AP : %s(%d dbm), local IP : %s\n\r",
@@ -102,51 +148,51 @@ bool WiFiManager::ap_connect(String ssid, String passwd)
 			return true;
 		}
 		Serial.printf("\nConnecting wait(%d)...\n\r", CONNECT_RETRY_CNT - i);
-        if (Serial.available()) {
-            cmd = Serial.read();
+		if (Serial.available()) {
+			cmd = Serial.read();
 			if (cmd  == SERIAL_CTRL_C) {
 				//NVS.setString("wifi_conn_ok", "false");
 				WiFi.disconnect();
 				return false;
 			}
 		}
-        delay(1000);
-    }
+		delay(1000);
+	}
 
 	if (NVS.getString("wifi_conn_ok")) {
 		state = 0;
-        Serial.printf("\nConnect other AP\n\r");
+		Serial.printf("\nConnect other AP\n\r");
 	} else {
 		state = 2;
-        Serial.printf("\n%s Connect failed\n\r", ap_name);
+		Serial.printf("\n%s Connect failed\n\r", ap_name);
 	}
 	passwd = NVS.setString("wifi_conn_ok", "false");
 
-    return false;
+	return false;
 }
 
 bool WiFiManager::ap_connect(int ap_number, char *passwd)
 {
-    char ap_name[64], i = 0;
+	char ap_name[64], i = 0;
 	char cmd;
 
-    WiFi.disconnect();
-    WiFi.SSID(ap_number).toCharArray(ap_name, sizeof(ap_name));
-    Serial.printf("%s\n\r", MSG_CMD_CONNECT);
-    Serial.printf("%s (%d dbm) %s\n\r",
-        ap_name,
-        WiFi.RSSI(ap_number),
-        encryption_str(WiFi.encryptionType(ap_number)));
+	WiFi.disconnect();
+	WiFi.SSID(ap_number).toCharArray(ap_name, sizeof(ap_name));
+	Serial.printf("%s\n\r", MSG_CMD_CONNECT);
+	Serial.printf("%s (%d dbm) %s\n\r",
+		ap_name,
+		WiFi.RSSI(ap_number),
+		encryption_str(WiFi.encryptionType(ap_number)));
 
-    WiFi.begin(ap_name, passwd);
+	WiFi.begin(ap_name, passwd);
 
 	Serial.println("**************************************************");
-    Serial.println("*                                                *");
-    Serial.println("*           For exit press [Ctrl+c]...           *");
-    Serial.println("*                                                *");
+	Serial.println("*                                                *");
+	Serial.println("*           For exit press [Ctrl+c]...           *");
+	Serial.println("*                                                *");
 	Serial.println("**************************************************");
-    Serial.printf("Connecting... %s\n\r", ap_name);
-    while(i++ < CONNECT_RETRY_CNT) {
+	Serial.printf("Connecting... %s\n\r", ap_name);
+	while(i++ < CONNECT_RETRY_CNT) {
 		if (WiFi.status() == WL_CONNECTED) {
 			Serial.printf("[[[ Connection Okay ]]]\n\r");
 			Serial.printf("Connected AP : %s(%d dbm), local IP : %s\n\r",
@@ -161,165 +207,182 @@ bool WiFiManager::ap_connect(int ap_number, char *passwd)
 		}
 		Serial.printf("\nConnecting wait(%d)...\n\r", CONNECT_RETRY_CNT - i);
 
-        if (Serial.available()) {
-            cmd = Serial.read();
-			if (cmd  == SERIAL_CTRL_C) {
+		if (Serial.available()) {
+			cmd = Serial.read();
+			if (cmd == SERIAL_CTRL_C) {
 				//NVS.setString("wifi_conn_ok", "false");
 				WiFi.disconnect();
 				return false;
 			}
 		}
 
-        delay(1000);
-    }
+		delay(1000);
+	}
 
 	if (NVS.getString("wifi_conn_ok") == "true") {
-        Serial.printf("\nConnect other AP\n\r");
+		Serial.printf("\nConnect other AP\n\r");
 		state = 0;
 	} else {
-        Serial.printf("\n%s Connect failed\n\r", ap_name);
+		Serial.printf("\n%s Connect failed\n\r", ap_name);
 		state = 2;
 	}
 	NVS.setString("wifi_conn_ok", "false");
 
-    return false;
+	return false;
 }
 
 void WiFiManager::ap_set_passwd(int ap_number)
 {
-    char passwd[64], cmd;
-    int pos = 0;
+	char passwd[64], cmd;
+	int pos = 0;
 
-    memset(passwd, 0x00, sizeof(passwd));
+	memset(passwd, 0x00, sizeof(passwd));
 
-    while(true) {
-        if (WiFi.encryptionType(ap_number) == WIFI_AUTH_OPEN) {
-            isConnectedAP = ap_connect(ap_number, passwd);
-            return;
-        } 
-        if (Serial.available()) {
-            cmd = Serial.read();
+	while(true) {
+		if (WiFi.encryptionType(ap_number) == WIFI_AUTH_OPEN) {
+			isConnectedAP = ap_connect(ap_number, passwd);
+			return;
+		}
+		if (Serial.available()) {
+			cmd = Serial.read();
 			if (cmd  == SERIAL_CTRL_C) {
 				return;
 			} else if ( cmd == SERIAL_ENTER ) {
-                Serial.printf("\n\r");
-                isConnectedAP = ap_connect(ap_number, passwd);
+				Serial.printf("\n\r");
+				isConnectedAP = ap_connect(ap_number, passwd);
 				if (isConnectedAP) {
-                    char buf[64];
-                    memset(buf, 0x00, sizeof(buf));
-                    WiFi.SSID(ap_number).toCharArray(buf, sizeof(buf));
+					char buf[64];
+					memset(buf, 0x00, sizeof(buf));
+					WiFi.SSID(ap_number).toCharArray(buf, sizeof(buf));
 					nvs_ssid = String(buf);
 					nvs_passwd = String(passwd);
 				}
-                return;
-            }
-            else {
-                Serial.printf("*");
-                passwd[pos++] = cmd;
-            }
-        }
-        delay(100);
-    }
+				return;
+			}
+			else {
+				Serial.printf("*");
+				passwd[pos++] = cmd;
+			}
+		}
+		delay(100);
+	}
 }
 
 void WiFiManager::ap_select(int ap_list_cnt)
 {
-    char cmd, sel_ap_number[5];
-    int pos = 0;
-    memset(sel_ap_number, 0x00, sizeof(sel_ap_number));
+	char cmd, sel_ap_number[5];
+	int pos = 0;
+	memset(sel_ap_number, 0x00, sizeof(sel_ap_number));
 
 	Serial.println("**************************************************");
-    Serial.println("*                                                *");
-    Serial.println("*           For exit press [Ctrl+c]...           *");
-    Serial.println("*                                                *");
+	Serial.println("*                                                *");
+	Serial.println("*           For exit press [Ctrl+c]...           *");
+	Serial.println("*                                                *");
 	Serial.println("**************************************************");
-    Serial.printf("%s\n\r", MSG_CMD_SELECT);
-    Serial.printf("Select AP Number (0 - %d) & Enter : ", ap_list_cnt-1);
+	Serial.printf("%s\n\r", MSG_CMD_SELECT);
+	Serial.printf("Select AP Number (0 - %d) & Enter : ", ap_list_cnt-1);
 
-    while(true) {
-        if (Serial.available()) {
-            cmd = Serial.read();
+	while(true) {
+		if (Serial.available()) {
+			cmd = Serial.read();
 			if (cmd  == SERIAL_CTRL_C) {
 				return;
 			} else if ( cmd >= '0' || cmd < '9' ) {
-                if (pos < sizeof(sel_ap_number) -1)
-                    sel_ap_number[pos++] = cmd;
-                Serial.printf("%c", cmd);
-            } else {
-                Serial.printf("%s\n\r", MSG_CMD_UNKNOWN);
-                return;
-            }
+				if (pos < sizeof(sel_ap_number) -1)
+					sel_ap_number[pos++] = cmd;
+				Serial.printf("%c", cmd);
+			} else {
+				Serial.printf("%s\n\r", MSG_CMD_UNKNOWN);
+				return;
+			}
 
-            if ( cmd == SERIAL_ENTER ) {
-                Serial.printf("\n\r");
+			if (cmd == SERIAL_ENTER) {
+				Serial.printf("\n\r");
 
-                ConnectAP_Number = strtoul(&sel_ap_number[0], NULL, 10);
-                Serial.printf("Select number : %d \n\r", ConnectAP_Number);
+				ConnectAP_Number = strtoul(&sel_ap_number[0], NULL, 10);
+				Serial.printf("Select number : %d \n\r", ConnectAP_Number);
 
-                if (ConnectAP_Number > ap_list_cnt-1) {
-                    Serial.printf(">>> Error ap select number <<<\n\r");
-                    Serial.printf("Select AP Number (0 - %d) & Enter : ", ap_list_cnt-1);
-                    pos = 0;
-                    memset(sel_ap_number, 0x00, sizeof(sel_ap_number));
-                } else {
-                    char buf[64];
-                    // ap select & passwd read
-                    memset(buf, 0x00, sizeof(buf));
-                    WiFi.SSID(ConnectAP_Number).toCharArray(buf, sizeof(buf));
-                    Serial.printf("\nAP(%s, %d dbm) Password & Enter : ",
-                        &buf[0],
-                        WiFi.RSSI(ConnectAP_Number));
-                    ap_set_passwd(ConnectAP_Number);
-                    return;
-                }
-            }
-        }
-        delay(100);
-    }
+				if (ConnectAP_Number > ap_list_cnt-1) {
+					Serial.printf(">>> Error ap select number <<<\n\r");
+					Serial.printf("Select AP Number (0 - %d) & Enter : ", ap_list_cnt-1);
+					pos = 0;
+					memset(sel_ap_number, 0x00, sizeof(sel_ap_number));
+				} else {
+					char buf[64];
+					// ap select & passwd read
+					memset(buf, 0x00, sizeof(buf));
+					WiFi.SSID(ConnectAP_Number).toCharArray(buf, sizeof(buf));
+					Serial.printf("\nAP(%s, %d dbm) Password & Enter : ",
+						&buf[0],
+						WiFi.RSSI(ConnectAP_Number));
+					ap_set_passwd(ConnectAP_Number);
+					return;
+				}
+			}
+		}
+		delay(100);
+	}
+}
+
+void WiFiManager::do_ap_forget()
+{
+	WiFi.disconnect(true, true);
+	NVS.setString("ssid", "");
+	NVS.setString("passwd", "");
+	NVS.setString("wifi_conn_ok", "false");
+}
+
+void WiFiManager::ap_forget()
+{
+	do_yes_no_selection(
+			&WiFiManager::do_ap_forget,
+			MSG_YN_AP_FORGET_CONFIRMATION,
+			MSG_YN_AP_FORGET_SUCCESS,
+			MSG_YN_AP_FORGET_FAILURE
+	);
 }
 
 void WiFiManager::udp_server_info()
 {
-    Serial.printf("IP Address [%s]\n\r", ipaddr_udp.toString().c_str());
-    Serial.printf("Port [%d]\n\r", port_udp);
+	Serial.printf("IP Address [%s]\n\r", ipaddr_udp.toString().c_str());
+	Serial.printf("Port [%d]\n\r", port_udp);
 }
 
 void WiFiManager::ap_info(int ap_number)
 {
 	String ip_addr, mac_addr, ssid;
-        
-    ip_addr = WiFi.localIP().toString();
-    mac_addr = WiFi.macAddress();
 
-    ssid = WiFi.SSID();
+	ip_addr = WiFi.localIP().toString();
+	mac_addr = WiFi.macAddress();
 
-    Serial.printf("%s (%d dbm))\n\r", ssid.c_str(), WiFi.RSSI());
-        
-    Serial.printf("IP Address [%s]\n\r", ip_addr.c_str());
-    Serial.printf("MAC Address [%s]\n\r", mac_addr.c_str());
+	ssid = WiFi.SSID();
+
+	Serial.printf("%s (%d dbm))\n\r", ssid.c_str(), WiFi.RSSI());
+
+	Serial.printf("IP Address [%s]\n\r", ip_addr.c_str());
+	Serial.printf("MAC Address [%s]\n\r", mac_addr.c_str());
 }
 
 void WiFiManager::set_udp()
 {
-    char ipaddr[16], port[5], cmd;
-    uint8_t pos = 0;
+	char ipaddr[16], port[5], cmd;
+	uint8_t pos = 0;
 	bool idx = 0;
 
-
 	Serial.println("**************************************************");
-    Serial.println("*                                                *");
-    Serial.println("*           For exit press [Ctrl+c]...           *");
-    Serial.println("*                                                *");
+	Serial.println("*                                                *");
+	Serial.println("*           For exit press [Ctrl+c]...           *");
+	Serial.println("*                                                *");
 	Serial.println("**************************************************");
 
 	Serial.println("Input your IP address of UDP server ex) 192.168.0.5:");
 
-    memset(ipaddr, 0x00, sizeof(ipaddr));
+	memset(ipaddr, 0x00, sizeof(ipaddr));
 	memset(port, 0x00, sizeof(port));
 
-    while(true) {
-        if (Serial.available()) {
-            cmd = Serial.read();
+	while(true) {
+		if (Serial.available()) {
+			cmd = Serial.read();
 			if (cmd  == SERIAL_CTRL_C) {
 				return;
 			} else if ( cmd == SERIAL_ENTER ) {
@@ -351,8 +414,8 @@ void WiFiManager::set_udp()
 						pos = 5;
 					}
 				}
-            } else {
-                Serial.printf("%c", cmd);
+			} else {
+				Serial.printf("%c", cmd);
 				if (idx == 0) {
 					if ((cmd > 47) && (cmd < 58))
 						ipaddr[pos++] = cmd;
@@ -366,7 +429,7 @@ void WiFiManager::set_udp()
 					else
 						pos = 5;
 				}
-            }
+			}
 			if (idx == 0) {
 				if (pos > 15) {
 					Serial.printf("Wrong IP address.\n\r");
@@ -382,51 +445,81 @@ void WiFiManager::set_udp()
 					memset(port, 0x00, sizeof(port));
 				}
 			}
-        }
-        delay(100);
-    }
+		}
+		delay(100);
+	}
+}
+
+void WiFiManager::do_udp_server_forget()
+{
+	const String ipaddr = "0.0.0.0";
+	const uint16_t port = 0;
+
+	NVS.setString("ipaddr_udp", ipaddr);
+	NVS.setInt("port_udp", port);
+	port_udp = port;
+	ipaddr_udp.fromString(ipaddr);
+	update_udp_info = true;
+}
+
+void WiFiManager::udp_server_forget()
+{
+	this->do_yes_no_selection(
+			&WiFiManager::do_udp_server_forget,
+			MSG_YN_UDP_FORGET_CONFIRMATION,
+			MSG_YN_UDP_FORGET_SUCCESS,
+			MSG_YN_UDP_FORGET_FAILURE
+	);
 }
 
 void WiFiManager::cmd_main(char idata)
 {
-    Serial.println(idata);
+	Serial.println(idata);
 
-    switch(idata) {
-        case    '1':
-            if (WiFi.status() == 3) {
-                Serial.printf("%s\n\r", MSG_CMD_CONNECT_INFO);
-                ap_info(ConnectAP_Number);
-            } 
-            else
-                Serial.printf("%s\n\r", MSG_CMD_NO_CONNECT);
-        break;
-        case    '2':
+	switch(idata) {
+		case    '1':
+			if (WiFi.status() == 3) {
+				Serial.printf("%s\n\r", MSG_CMD_CONNECT_INFO);
+				ap_info(ConnectAP_Number);
+			}
+			else
+				Serial.printf("%s\n\r", MSG_CMD_NO_CONNECT);
+			break;
+		case    '2':
 			Serial.printf("%s\n\r", MSG_CMD_UDP_INFO);
 			udp_server_info();
-        break;
-        case    '3':
-            ap_scanning();
-            view_ap_list(APListCount);
-            if (APListCount)
-                ap_select(APListCount);
-        break;
-        case    '4':
+			break;
+		case    '3':
+			ap_scanning();
+			view_ap_list(APListCount);
+			if (APListCount)
+				ap_select(APListCount);
+			break;
+		case    '4':
 			Serial.printf("%s\n\r", MSG_CMD_SET_UDP);
-            set_udp();
-        break;
-        case    '5':
-        case    SERIAL_CTRL_C:
-            commandMode = false;
-            Serial.printf("%s\n\r", MSG_CMD_MODE_EXITED);
-        return;
-        default :
-            Serial.printf("%s\n\r", MSG_CMD_UNKNOWN);
-        break;
-    }
+			set_udp();
+			break;
+		case    '5':
+			Serial.printf("%s\n\r", MSG_CMD_FORGET_CONNECTION);
+			ap_forget();
+			break;
+		case    '6':
+			Serial.printf("%s\n\r", MSG_CMD_FORGET_UDP_SERVER_INFO);
+			udp_server_forget();
+			break;
+		case    '7':
+		case    SERIAL_CTRL_C:
+			commandMode = false;
+			Serial.printf("%s\n\r", MSG_CMD_MODE_EXITED);
+			return;
+		default :
+			Serial.printf("%s\n\r", MSG_CMD_UNKNOWN);
+			break;
+	}
 
-    view_main_menu();
-    while(Serial.available())
-        Serial.read();
+	view_main_menu();
+	while (Serial.available())
+		Serial.read();
 }
 
 bool WiFiManager::isCommandMode(void)

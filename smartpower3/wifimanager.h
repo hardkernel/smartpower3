@@ -7,6 +7,8 @@
 
 #define SERIAL_CTRL_C       0x03
 #define SERIAL_ENTER        0x0D
+#define SERIAL_Y            0x79
+#define SERIAL_N            0x6E
 #define CONNECT_RETRY_CNT   20
 
 
@@ -40,7 +42,9 @@ const char WIFI_CMD_MENU[][50] = {
     "2. Connection UDP server Info",
     "3. Scan & Connection AP",
     "4. Set IP address of UDP server for data logging",
-    "5. WiFi Command mode exit"
+    "5. Forget Connection AP",
+    "6. Forget UDP server IP address",
+    "7. WiFi Command mode exit"
 };
 
 #define WIFI_CMD_MENU_CNT   (sizeof(WIFI_CMD_MENU)/sizeof(WIFI_CMD_MENU[0]))
@@ -57,8 +61,10 @@ public:
 	bool ap_connect(String ssid, String passwd);
 	void ap_set_passwd(int ap_number);
 	void ap_select(int ap_list_cnt);
+	void ap_forget(void);
 	void ap_info(int ap_number);
 	void udp_server_info();
+	void udp_server_forget(void);
 	void cmd_main(char idata);
 	bool isCommandMode(void);
 	void setCommandMode(void);
@@ -66,14 +72,13 @@ public:
 	uint8_t state = 0;
 	uint8_t nvs_state = 0;
 	//void setConnType(CONN_TYPE conn_type);
-	uint8_t state_udp = 0;
 	uint16_t port_udp = 0;
 	IPAddress ipaddr_udp;
 	bool update_udp_info = true;
 private:
 	WiFiUDP udp;
 	WiFiClient client;
-	uint16_t    WiFiState = eSTATE_WIFI_IDEL;
+	uint16_t WiFiState = eSTATE_WIFI_IDEL;
 
 	int ConnectAP_Number = 0, ConnectAP_RSSI = 0, APListCount = 0, TCPTestCount = 0;
 	char ConnectAP_Passwd[64] = {0,};
@@ -81,6 +86,14 @@ private:
 	bool commandMode = false;
 	String nvs_ssid = "";
 	String nvs_passwd = "";
+	void do_ap_forget();
+	void do_udp_server_forget();
+	void do_yes_no_selection(
+			void (WiFiManager::*func)(),
+			const char *confirmation_string,
+			const char *approval_string,
+			const char *denial_string
+	);
 	//uint8_t wifi_conn_type = CONN_NONE;
 };
 

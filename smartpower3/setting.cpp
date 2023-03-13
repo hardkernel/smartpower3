@@ -69,7 +69,7 @@ void Setting::init(uint16_t x, uint16_t y)
 	tft->drawString("Baud Rate  /", x + X_BAUD_RATE, y + Y_SERIAL);
 	tft->drawString("/", x + X_BAUD_RATE + 110, y + Y_SERIAL + 30);
 	tft->drawString(" Interval", x + X_LOG_LEVEL+100, y + Y_SERIAL);
-	tft->drawString("UDP ) ", x + 180, y + Y_WIFI_INFO + 28, 4);
+	tft->drawString("UDP : ", x + 180, y + Y_WIFI_INFO + 28, 4);
 	tft->unloadFont();
 
 	drawSerialBaud(this->serial_baud);
