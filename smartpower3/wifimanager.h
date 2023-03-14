@@ -11,30 +11,16 @@
 #define SERIAL_N            0x6E
 #define CONNECT_RETRY_CNT   20
 
+#define EMPTY_IPADDRESS "0.0.0.0"
+#define EMPTY_PORT 0
 
-enum {
-    eSTATE_WIFI_IDEL,
-    eSTATE_WIFI_INIT,
-    eSTATE_WIFI_MAIN,
-    eSTATE_WIFI_SELECT,
-    eSTATE_WIFI_CONNECT,
-    eSTATE_WIFI_SCAN,
-    eSTATE_WIFI_TEST,
+#define WIFI_CMD_MENU_CNT   (sizeof(WIFI_CMD_MENU)/sizeof(WIFI_CMD_MENU[0]))
+
+enum wifi_credentials_state {
+	STATE_CREDENTIALS_OK = 0,
+	STATE_CREDENTIALS_INVALID = 1,
+	STATE_CREDENTIALS_NOT_CHECKED = 2,
 };
-
-/*
-const char *MSG_CMD_MODE_ENTERED = ">>> WIFI Command mode entered <<<";
-const char *MSG_CMD_MODE_EXITED = ">>> WIFI Command mode exited <<<";
-const char *MSG_CMD_UNKNOWN = ">>> Unknown command <<<";
-const char *MSG_CMD_NO_NETWORK = ">>> No Networks found <<<";
-const char *MSG_CMD_SCANNING = ">>> AP Scanning <<<";
-const char *MSG_CMD_CONNECT = ">>> AP Connecting <<<";
-const char *MSG_CMD_SELECT = ">>> AP Select <<<";
-const char *MSG_CMD_CONNECT_INFO = ">>> AP Connection Info <<<";
-const char *MSG_CMD_NO_CONNECT = ">>> AP no connnection <<<";
-const char *MSG_CMD = "Command : ";
-const char *TestSendData = "01234567890123456789012345678901234567890123456789012345678901234567890";
-*/
 
 const char WIFI_CMD_MENU[][50] = {
     "[ WIFI Command mode menu ]",
@@ -47,54 +33,56 @@ const char WIFI_CMD_MENU[][50] = {
     "7. WiFi Command mode exit"
 };
 
-#define WIFI_CMD_MENU_CNT   (sizeof(WIFI_CMD_MENU)/sizeof(WIFI_CMD_MENU[0]))
-
-
 class WiFiManager
 {
 public:
 	WiFiManager(WiFiUDP &udp, WiFiClient &client);
 	void view_main_menu(void);
-	void view_ap_list(int ap_list_cnt);
-	void ap_scanning(void);
-	bool ap_connect(int ap_number, char *passwd);
-	bool ap_connect(String ssid, String passwd);
-	void ap_set_passwd(int ap_number);
-	void ap_select(int ap_list_cnt);
+	void view_ap_list(int16_t ap_list_cnt);
+	int16_t ap_scanning(void);
+	bool ap_connect(uint8_t ap_number, char *passwd);
+	bool ap_connect(String ssid, String passwd, bool show_ctrl_c_info = false);
+	void ap_set_passwd(uint8_t ap_number);
+	void ap_select(int16_t ap_list_cnt);
+	void ap_select_and_connect(void);
 	void ap_forget(void);
-	void ap_info(int ap_number);
+	void ap_info(void);
 	void udp_server_info();
 	void udp_server_forget(void);
 	void cmd_main(char idata);
 	bool isCommandMode(void);
 	void setCommandMode(void);
 	void set_udp();
-	uint8_t state = 0;
-	uint8_t nvs_state = 0;
-	//void setConnType(CONN_TYPE conn_type);
+	wifi_credentials_state credentials_state = STATE_CREDENTIALS_OK;
 	uint16_t port_udp = 0;
 	IPAddress ipaddr_udp;
 	bool update_udp_info = true;
 private:
 	WiFiUDP udp;
 	WiFiClient client;
-	uint16_t WiFiState = eSTATE_WIFI_IDEL;
-
-	int ConnectAP_Number = 0, ConnectAP_RSSI = 0, APListCount = 0, TCPTestCount = 0;
-	char ConnectAP_Passwd[64] = {0,};
-	bool isConnectedAP = false, isTCPTest = false;
 	bool commandMode = false;
-	String nvs_ssid = "";
-	String nvs_passwd = "";
 	void do_ap_forget();
 	void do_udp_server_forget();
+	void serialPrintCtrlCNotice(void);
+	IPAddress serial_get_udp_server_address(void);
+	uint16_t serial_get_udp_server_port(void);
+	void set_udp_server_port_and_address(String ipaddr, uint16_t port);
+protected:
+	void checkAndResetIndexAndValue(
+			uint8_t& index_variable,
+			char& indexed_variable,
+			int indexed_variable_length,
+			const char *error_message,
+			const char *prompt_message
+	);
 	void do_yes_no_selection(
 			void (WiFiManager::*func)(),
 			const char *confirmation_string,
 			const char *approval_string,
 			const char *denial_string
 	);
-	//uint8_t wifi_conn_type = CONN_NONE;
+	bool isDigitChar(char input_char);
+	void setNVSAPConnectionInfo(String ssid, String password, String wifi_conn_ok);
 };
 
 #endif
