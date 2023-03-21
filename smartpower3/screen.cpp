@@ -96,7 +96,7 @@ void Screen::run()
 			}
 		}
 #endif
-	};
+	}
 }
 
 void Screen::setIntFlag(uint8_t ch)
