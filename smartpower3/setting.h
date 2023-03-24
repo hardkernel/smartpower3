@@ -75,7 +75,7 @@ private:
 	TFT_eSprite *popup;
 	uint16_t x;
 	uint16_t y;
-	uint8_t backlight_level = 0;
+	uint8_t backlight_level_preset = 0;
 	uint8_t backlight_level_edit = 0;
 	uint16_t log_interval = 0;
 	uint16_t log_interval_edit = 0;
