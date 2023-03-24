@@ -27,10 +27,10 @@ public:
 	Setting(TFT_eSPI *tft);
 	void init(uint16_t x, uint16_t y);
 
-	uint8_t setBacklightLevel(void);
+	uint8_t setBacklightLevelPreset(void);
+	void setBacklightLevelPreset(uint8_t level_preset, bool edit);
 	void setBacklightLevel(uint8_t level);
-	void setBacklightLevel(uint8_t level, bool edit);
-	uint8_t _setBacklightLevel(uint8_t level);
+	void turnOffBacklight(void);
 	uint8_t setLogInterval(void);
 	void setLogInterval(uint8_t val);
 	uint32_t setSerialBaud(uint32_t baud);
@@ -79,7 +79,7 @@ private:
 	uint8_t backlight_level_edit = 0;
 	uint16_t log_interval = 0;
 	uint16_t log_interval_edit = 0;
-	uint8_t bl_value[7] = {10, 25, 50, 75, 100, 125, 150};
+	uint8_t bl_value_preset[7] = {10, 25, 50, 75, 100, 125, 150};
 	uint16_t log_value[7] = {0, 5, 10, 50, 100, 500, 1000};
 	uint32_t serial_value[10] = {9600, 19200, 38400, 57600, 115200, 230400, 460800, 500000, 576000, 921600};
 	uint32_t serial_baud = 0;
@@ -90,4 +90,5 @@ private:
 	Component *com_ssid;
 	Component *com_udp_ipaddr;
 	Component *com_udp_port;
+	uint8_t _setBacklightLevelPreset(uint8_t level_preset);
 };

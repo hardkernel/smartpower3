@@ -84,32 +84,42 @@ void Setting::popUp(void)
 	popup->pushSprite(200, 200);
 }
 
-uint8_t Setting::_setBacklightLevel(uint8_t level)
+uint8_t Setting::_setBacklightLevelPreset(uint8_t level_preset)
 {
-	if (level > 6)
-		level = 6;
-	else if (level < 0)
-		level = 0;
-	ledcWrite(2, bl_value[level]);
-	return level;
+	if (level_preset > 6)
+		level_preset = 6;
+	else if (level_preset < 0)
+		level_preset = 0;
+	this->setBacklightLevel(bl_value_preset[level_preset]);
+	return level_preset;
 }
 
-uint8_t Setting::setBacklightLevel(void)
+uint8_t Setting::setBacklightLevelPreset(void)
 {
 	backlight_level_preset = backlight_level_edit;
-	return _setBacklightLevel(backlight_level_preset);
+	return _setBacklightLevelPreset(backlight_level_preset);
 }
 
-void Setting::setBacklightLevel(uint8_t level, bool edit)
+void Setting::setBacklightLevelPreset(uint8_t level_preset, bool edit)
 {
-	backlight_level_preset = _setBacklightLevel(level);
+	backlight_level_preset = _setBacklightLevelPreset(level_preset);
 	if (edit)
 		backlight_level_edit = backlight_level_preset;
 }
 
 void Setting::setBacklightLevel(uint8_t level)
 {
-	backlight_level_preset = _setBacklightLevel(level);
+	if (level > 255) {
+		level = 255;
+	} else if (level < 0) {
+		level = 0;
+	}
+	ledcWrite(2, level);
+}
+
+void Setting::turnOffBacklight(void)
+{
+	this->setBacklightLevel(0);
 }
 
 void Setting::setLogInterval(uint8_t val)
@@ -180,7 +190,7 @@ void Setting::changeBacklight(uint8_t level)
 	}
 	drawBacklightLevel(level);
 	backlight_level_edit = level;
-	ledcWrite(2, bl_value[level]);
+	ledcWrite(2, bl_value_preset[level]);
 }
 
 void Setting::restoreLogIntervalValue()
