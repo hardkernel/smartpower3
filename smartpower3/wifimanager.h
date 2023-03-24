@@ -82,7 +82,7 @@ protected:
 			const char *denial_string
 	);
 	bool isDigitChar(char input_char);
-	void setNVSAPConnectionInfo(String ssid, String password, String wifi_conn_ok);
+	void setNVSAPConnectionInfo(String ssid, String password, bool wifi_conn_ok);
 };
 
 #endif

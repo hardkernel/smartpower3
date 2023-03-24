@@ -123,7 +123,7 @@ bool WiFiManager::ap_connect(String ssid, String passwd, bool show_ctrl_c_info)
 		if (Serial.available()) {
 			cmd = Serial.read();
 			if (cmd  == SERIAL_CTRL_C) {
-				NVS.setString("wifi_conn_ok", "false");
+				NVS.setInt("wifi_conn_ok", false);
 				WiFi.disconnect();
 				return false;
 			}
@@ -131,14 +131,14 @@ bool WiFiManager::ap_connect(String ssid, String passwd, bool show_ctrl_c_info)
 		delay(1000);
 	}
 
-	if (NVS.getString("wifi_conn_ok") == "true") {
+	if (NVS.getInt("wifi_conn_ok")) {
 		credentials_state = STATE_CREDENTIALS_OK;
 		Serial.printf("\nConnecting to previous AP\n\r");
 	} else {
 		credentials_state = STATE_CREDENTIALS_NOT_CHECKED;
 		Serial.printf("\n%s Connect failed\n\r", ssid.c_str());
 	}
-	passwd = NVS.setString("wifi_conn_ok", "false");
+	passwd = NVS.setInt("wifi_conn_ok", false);
 
 	return false;
 }
@@ -507,9 +507,9 @@ void WiFiManager::do_yes_no_selection(void (WiFiManager::*func)(), const char *c
 	}
 }
 
-void WiFiManager::setNVSAPConnectionInfo(String ssid, String password, String wifi_conn_ok)
+void WiFiManager::setNVSAPConnectionInfo(String ssid, String password, bool wifi_conn_ok)
 {
 	NVS.setString("ssid", ssid);
 	NVS.setString("passwd", password);
-	NVS.setString("wifi_conn_ok", wifi_conn_ok);
+	NVS.setInt("wifi_conn_ok", wifi_conn_ok);
 }

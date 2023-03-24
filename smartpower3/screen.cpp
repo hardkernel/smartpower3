@@ -924,7 +924,7 @@ void Screen::fsInit(void)
 	serial_baud = NVS.getInt("serial_baud");
 	log_interval = NVS.getInt("log_interval");
 
-	if (NVS.getString("wifi_conn_ok") != "true")
+	if (!NVS.getInt("wifi_conn_ok"))
 		wifiManager->credentials_state = STATE_CREDENTIALS_INVALID;
 
 	channel[0]->setVolt(volt_set0, 1);
