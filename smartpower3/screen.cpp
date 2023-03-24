@@ -7,6 +7,7 @@ uint8_t baud_idx;
 Screen::Screen()
 {
 	tft.init();
+	tft.invertDisplay(true);
 	tft.setRotation(3);
 	tft.fillScreen(TFT_BLACK);
 	tft.fillScreen(TFT_BLACK);
@@ -96,7 +97,7 @@ void Screen::run()
 			}
 		}
 #endif
-	};
+	}
 }
 
 void Screen::setIntFlag(uint8_t ch)

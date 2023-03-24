@@ -56,7 +56,10 @@ void Microchip_PAC193x::begin(TwoWire *_wire){
 		Write8(PAC1934_CTRL_ADDR, 2);
 		//Write8(PAC1934_CHANNEL_DIS_ADDR, 0);	// Use defaults
 		Write8(PAC1934_SLOW_ADDR, 20); //14h
-		
+
+		// update slow status affecting default sampling speed
+		UpdateSlowStatus();
+
 		Refresh();
 		delay(125);
 }
@@ -74,8 +77,6 @@ void Microchip_PAC193x::Read(uint8_t reg_address, int Nbytes, uint8_t *pBuffer) 
 	if (errorCode != 0){
 		errorCode = (-1);
 	}
-  
-	_wire->beginTransmission(I2C_ADDRESS); 
 	_wire->requestFrom(I2C_ADDRESS, Nbytes); 
 #if (ARDUINO >= 100)
 	while(_wire->available() && (byteCount > 0))    // slave may send less than requested
@@ -196,7 +197,7 @@ void Microchip_PAC193x::Refresh(){
 int16_t Microchip_PAC193x::UpdateSampleRateLat(){
 	uint16_t sampleRateVal;
 	uint8_t sampleRateBits;
-	
+
 	errorCode = 0;
 	sampleRateBits = Read8(PAC1934_CTRL_LAT_ADDR);
 	sampleRateBits = ((sampleRateBits & 0xC0) >> 6);
@@ -213,6 +214,9 @@ int16_t Microchip_PAC193x::UpdateSampleRateLat(){
         case 3:
             sampleRateVal = 8;
             break;
+        // This should not happen but compiler requirements
+        default:
+            sampleRateVal = (SlowStatus) ? 8 : 1024;
     }
 	
 	SampleRateLat = sampleRateVal;
