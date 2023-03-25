@@ -94,7 +94,7 @@ void logTask(void *parameter)
 			if ((log_interval > 0) && !screen.wifiManager->isCommandMode()) {
 				sprintf(buffer_input, "%010lu,%05d,%04d,%05d,%1d,", millis(), mCh0.V(),mCh0.A(log_interval), mCh0.W(log_interval), low_input);
 				sprintf(buffer_ch0, "%05d,%04d,%05d,%1d,%02x,", mCh1.V(), mCh1.A(log_interval), mCh1.W(log_interval), onoff[0], screen.getIntStat(0));
-				sprintf(buffer_ch1, "%05d,%04d,%05d,%1d,%02x,", mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval),onoff[1], screen.getIntStat(1));
+				sprintf(buffer_ch1, "%05d,%04d,%05d,%1d,%02x,", mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval), onoff[1], screen.getIntStat(1));
 
 				checksum8 = 0;
 				checksum8_xor = 0;
@@ -110,7 +110,7 @@ void logTask(void *parameter)
 					checksum8 += buffer_ch1[i];
 					checksum8_xor ^= buffer_ch1[i];
 				}
-				sprintf(buffer_checksum, "%02x,%02x\r\n", (byte)(~checksum8)+1, checksum8_xor);
+				sprintf(buffer_checksum, "%02x,%02x\r\n", (byte)((~checksum8)+1), checksum8_xor);
 
 				Serial.printf(buffer_input);
 				Serial.printf(buffer_ch0);
