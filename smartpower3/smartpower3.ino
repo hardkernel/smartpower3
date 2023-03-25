@@ -24,13 +24,13 @@ void setup(void) {
 	I2CB.begin(21, 22, (uint32_t)800000);
 	PAC.begin(&I2CB);
 	screen.begin(&I2CA);
-	initEncoder(&dial);
+	initEncoder(&dial);  // this also starts a task, without specified core
 
-	xTaskCreatePinnedToCore(screenTask, "Draw Screen", 6000, NULL, 1, NULL, 1);
-	xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 5000, NULL, 1, NULL, 1);
-	xTaskCreatePinnedToCore(logTask, "Log Task", 8000, NULL, 1, NULL, 1);
-	xTaskCreate(inputTask, "Input Task", 8000, NULL, 1, NULL);
-	xTaskCreate(btnTask, "Button Task", 4000, NULL, 1, NULL);
+	xTaskCreatePinnedToCore(screenTask, "Draw Screen", 6000, NULL, 1, NULL, 1);  // delay 10
+	xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 5000, NULL, 1, NULL, 1);  // delay 50
+	xTaskCreatePinnedToCore(logTask, "Log Task", 8000, NULL, 1, NULL, 1);  // delay 10, 250 or 1 depending on logging interval and interrupt count
+	xTaskCreate(inputTask, "Input Task", 8000, NULL, 1, NULL);  // delay 10, also counts for screen
+	xTaskCreate(btnTask, "Button Task", 4000, NULL, 1, NULL);  // delay 10
 
 	pinMode(25, INPUT_PULLUP);
 	pinMode(26, INPUT_PULLUP);
