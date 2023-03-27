@@ -46,9 +46,15 @@ public:
 	virtual const uint8_t* iconCharArray(void);
 	void clearAll(void);
 	void setIconColor(uint16_t fg_color, uint16_t bg_color);
+	virtual void select(void);
+	virtual void deselect(void);
+	virtual bool getSelected(void);
+	virtual void drawOutLines(void);
+	virtual void clearOutLines(void);
 protected:
 	struct icon *ic;
 	TFT_eSPI *tft;
+	bool selected = false;
 };
 
 #endif

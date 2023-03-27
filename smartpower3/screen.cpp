@@ -41,7 +41,7 @@ void Screen::begin(TwoWire *theWire)
     WiFi.disconnect();
     delay(100);
 	udp.begin(WIFI_UDP_PORT);
-	wifiManager = new WiFiManager(udp, client);
+	wifiManager = new WiFiManager(udp, client, setting);
 
 	fsInit();
 	delay(2000);
@@ -206,6 +206,7 @@ void Screen::checkOnOff()
 				selected = dial_cnt = dial_cnt_old = STATE_NONE;
 				updated_wifi_info = true;
 				updated_wifi_icon = true;
+				wifiManager->update_wifi_info = true;
 				wifiManager->update_udp_info = true;
 			} else {
 				initScreen();
@@ -231,12 +232,16 @@ void Screen::deSelect()
 	channel[0]->deSelect(CURRENT);
 	channel[1]->deSelect(VOLT);
 	channel[1]->deSelect(CURRENT);
+	header->deSelect(LOGGING);
+	header->deSelect(WIFI);
 }
 
 void Screen::deSelectSetting()
 {
 	setting->deSelectBLLevel();
 	setting->deSelectSerialLogging();
+	header->deSelect(LOGGING);
+	header->deSelect(WIFI);
 }
 
 void Screen::select()
@@ -244,14 +249,14 @@ void Screen::select()
 	if (dial_cnt == dial_cnt_old)
 		return;
 	dial_cnt_old = dial_cnt;
-	if (dial_cnt > 3) {
-		dial_cnt = 3;
+	if (dial_cnt > 5) {  // count of screen_state_base enum elements
+		dial_cnt = 5;
 		if (dial_direct == 1)
 			dial_cnt = 0;
 	} else if (dial_cnt < 0) {
 		dial_cnt = 0;
 		if (dial_direct == -1)
-			dial_cnt = 3;
+			dial_cnt = 5;
 	}
 
 	deSelect();
@@ -269,6 +274,12 @@ void Screen::select()
 		case STATE_VOLT1:
 			channel[1]->select(VOLT);
 			break;
+		case STATE_WIFI:
+			header->select(WIFI);
+			break;
+		case STATE_LOGGING:
+			header->select(LOGGING);
+			break;
 	}
 }
 
@@ -277,14 +288,14 @@ void Screen::select_setting()
 	if (dial_cnt == dial_cnt_old)
 		return;
 	dial_cnt_old = dial_cnt;
-	if (dial_cnt > 2) {
-		dial_cnt = 2;
+	if (dial_cnt > 3) {  // count of screen_state_setting enum elements
+		dial_cnt = 3;
 		if (dial_direct == 1)
 			dial_cnt = 0;
 	} else if (dial_cnt < 0) {
 		dial_cnt = 0;
 		if (dial_direct == -1)
-			dial_cnt = 2;
+			dial_cnt = 3;
 	}
 
 	deSelectSetting();
@@ -295,6 +306,12 @@ void Screen::select_setting()
 			break;
 		case STATE_LOG:
 			setting->selectSerialLogging();
+			break;
+		case STATE_SETTING_WIFI:
+			header->select(WIFI);
+			break;
+		case STATE_SETTING_LOGGING:
+			header->select(LOGGING);
 			break;
 	}
 }
@@ -313,6 +330,7 @@ void Screen::drawBase()
 		setting->init(10, 80);
 		updated_wifi_info = true;
 		updated_wifi_icon = true;
+		wifiManager->update_wifi_info = true;
 		wifiManager->update_udp_info = true;
 		selected = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
@@ -359,6 +377,20 @@ void Screen::drawBaseMove()
 			mode = BASE_EDIT;
 			channel[1]->setCompColor(CURRENT);
 			current_limit = channel[1]->getCurrentLimit();
+		} else if (selected == STATE_LOGGING) {
+			mode = BASE_MOVE;  // same as current state, but redraw will check selection timeout
+			if (setting->isLoggingEnabled()) {
+				setting->disableLogging();
+			} else {
+				setting->enableLogging();
+			}
+		} else if (selected == STATE_WIFI) {
+			mode = BASE_MOVE;  // same as current state, but redraw will check selection timeout
+			if (wifiManager->isWiFiEnabled()) {
+				wifiManager->disableWiFi();
+			} else {
+				wifiManager->enableWiFi();
+			}
 		}
 		dial_state = dial_cnt;
 		dial_cnt = 0;
@@ -420,7 +452,7 @@ void Screen::drawSetting()
 		} else {
 			deSelectSetting();
 		}
-		selected = dial_cnt =  STATE_NONE;
+		selected = dial_cnt = STATE_NONE;
 	}
 	if (btn_pressed[1] == true) {
 		btn_pressed[1] = false;
@@ -437,6 +469,18 @@ void Screen::drawSetting()
 			dial_cnt = setting->getSerialBaudLevel();
 			setting->selectSerialLogging(TFT_GREEN);
 			setting->selectSerialBaud(TFT_YELLOW);
+		} else if (selected == STATE_SETTING_LOGGING) {
+			if (setting->isLoggingEnabled()) {
+				setting->disableLogging();
+			} else {
+				setting->enableLogging();
+			}
+		} else if (selected == STATE_SETTING_WIFI) {
+			if (wifiManager->isWiFiEnabled()) {
+				wifiManager->disableWiFi();
+			} else {
+				wifiManager->enableWiFi();
+			}
 		}
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -449,8 +493,7 @@ void Screen::drawSettingBL()
 	if ((cur_time - dial_time) > 10000) {
 		mode = SETTING;
 		deSelectSetting();
-		selected = dial_cnt = STATE_NONE;
-		dial_cnt_old = STATE_NONE;
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
 		setting->changeBacklight();
 		setting->deSelectBLLevel();
 	}
@@ -487,8 +530,7 @@ void Screen::drawSettingLOG()
 	if ((cur_time - dial_time) > 10000) {
 		mode = SETTING;
 		deSelectSetting();
-		selected = dial_cnt = dial_cnt_old = STATE_NONE;
-		dial_cnt_old = STATE_NONE;
+		selected = dial_cnt = dial_cnt_old = dial_cnt_old = STATE_NONE;
 		setting->deSelectSerialBaud(TFT_WHITE);
 		setting->restoreSerialBaud();
 		setting->deSelectLogInterval(TFT_WHITE);
@@ -519,8 +561,7 @@ void Screen::drawSettingLOG()
 		} else {
 			setting->deSelectSerialBaud(TFT_WHITE);
 			setting->selectLogInterval();
-			dial_cnt = 0;
-			dial_cnt_old = 1;
+			dial_cnt = dial_cnt_old = setting->getLogInterval();
 			selected = 5;
 		}
 		return;
@@ -543,26 +584,30 @@ void Screen::drawSettingLOG()
 	}
 }
 
-uint16_t Screen::getLogInterval(void)
+uint16_t Screen::getEnabledLogInterval(void)
 {
-	uint16_t tmp;
+	uint16_t tmp = setting->getLogIntervalValue();
 
-	tmp = setting->getLogIntervalValue();
-	if (tmp > 0) {
+	if (tmp > 0 and setting->isLoggingEnabled()) {
 		header->onLogging();
+		return tmp;
+	} else if (tmp > 0) {
+		header->possibleLogging();
 	} else {
 		header->offLogging();
 	}
-
-	return tmp;
+	return 0;
 }
 
-void Screen::setWiFiIcon(bool onoff)
+void Screen::setWiFiIconState()
 {
-	if (onoff)
+	if (WiFi.status() == WL_CONNECTED) {
 		header->onWiFi();
-	else
+	} else if (wifiManager->can_connect()) {
+		header->possibleWiFi();
+	} else {
 		header->offWiFi();
+	}
 }
 
 void Screen::drawScreen()
@@ -596,25 +641,21 @@ void Screen::drawScreen()
 				channel[1]->drawChannel();
 			isrSTPD01();
 		} else {
-			if (updated_wifi_info) {
-				updated_wifi_info = false;
-				if (WiFi.status() == WL_CONNECTED)
-					setting->drawSSID(WiFi.SSID());
-				else
-					setting->drawSSID("WiFi not connected");
+			if (updated_wifi_info || wifiManager->update_wifi_info) {
+				updated_wifi_info = wifiManager->update_wifi_info = false;
+				if (WiFi.status() == WL_CONNECTED) {
+					setting->drawSSID(wifiManager->ap_info_connected());
+				} else if (wifiManager->hasSavedConnectionInfo()) {
+					setting->drawSSID(wifiManager->ap_info_saved());
+				} else {
+					setting->drawSSID("WiFi not saved");
+				}
 			}
 			if (wifiManager->update_udp_info) {
 				setting->drawUDPIpaddr(wifiManager->ipaddr_udp.toString());
 				setting->drawUDPport(wifiManager->port_udp);
 				wifiManager->update_udp_info = false;
 			}
-		}
-		if (updated_wifi_icon) {
-			updated_wifi_icon = false;
-			if (WiFi.status() == 3)
-				setWiFiIcon(true);
-			else
-				setWiFiIcon(false);
 		}
 		header->draw();
 	}
@@ -1002,4 +1043,16 @@ void Screen::updateWiFiInfo(void)
 {
 	this->updated_wifi_info = true;
 	this->updated_wifi_icon = true;
+}
+
+bool Screen::isWiFiEnabled(void) {
+	return wifiManager->isWiFiEnabled();
+}
+
+void Screen::enableWiFi(void) {
+	wifiManager->enableWiFi();
+}
+
+void Screen::disableWiFi(void) {
+	wifiManager->disableWiFi();
 }

@@ -4,7 +4,6 @@
 #include <TFT_eSPI.h>
 #include "channel.h"
 #include "header.h"
-#include "setting.h"
 #include <STPD01.h>
 #include <ArduinoNvs.h>
 #include "wifimanager.h"
@@ -26,21 +25,24 @@ enum screen_mode_t {
 	SETTING_LOG,
 };
 
-enum state {
+enum screen_state_base {
 	STATE_VOLT1 = 0,
 	STATE_CURRENT1,
 	STATE_CURRENT0,
-	STATE_VOLT0
+	STATE_VOLT0,
+	STATE_WIFI,
+	STATE_LOGGING
 };
 
-enum state_setting {
-	STATE_LOG = 0,
+enum screen_state_setting {
+	STATE_SETTING_WIFI = 0,
+	STATE_SETTING_LOGGING,
+	STATE_LOG,
 	STATE_BL,
-	STATE_NONE
 };
 
-#define WIFI_SERVER_PORT    23
-#define WIFI_UDP_PORT    3333
+#define STATE_NONE 0
+#define WIFI_UDP_PORT 3333
 
 class Screen
 {
@@ -77,6 +79,7 @@ public:
 	void disablePower();
 	void setIntFlag(uint8_t channel);
 	uint16_t getLogInterval(void);
+	uint16_t getEnabledLogInterval(void);
 	uint8_t getIntStat(uint8_t channel);
 	void countLowVoltage(uint8_t ch=0);
 	void clearLowVoltage(uint8_t ch=0);
@@ -85,10 +88,13 @@ public:
 	void writePowerLED(uint8_t val);
 	void initLED(void);
 	void dimmingLED(uint8_t led);
-	void setWiFiIcon(bool onoff);
+	void setWiFiIconState(void);
 	WiFiManager *wifiManager;
 	void runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3);
 	void updateWiFiInfo(void);
+	bool isWiFiEnabled(void);
+	void enableWiFi(void);
+	void disableWiFi(void);
 	WiFiUDP udp;
 	WiFiClient client;
 private:

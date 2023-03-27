@@ -464,11 +464,11 @@ uint8_t Channel::checkInterruptLatch(void)
 	uint8_t reg_latch;
 
 	reg_latch = stpd01->readIntLatch();
-	icon_op->setInt(reg_latch & INT_OVP);
-	icon_sp->setInt(reg_latch & INT_SCP);
-	icon_tp->setInt(reg_latch & INT_OTP);
-	icon_tw->setInt(reg_latch & INT_OTW);
-	icon_ip->setInt(reg_latch & INT_IPCP);
+	icon_op->setProtection(reg_latch & INT_OVP);
+	icon_sp->setProtection(reg_latch & INT_SCP);
+	icon_tp->setProtection(reg_latch & INT_OTP);
+	icon_tw->setProtection(reg_latch & INT_OTW);
+	icon_ip->setProtection(reg_latch & INT_IPCP);
 
 	if (!hide) {
 		icon_op->update();
@@ -488,11 +488,11 @@ uint8_t Channel::checkInterruptStat(uint8_t onoff)
 
 	if (onoff == 0)
 		reg_stat = 0x00;
-	icon_op->setInt(reg_stat & INT_OVP);
-	icon_sp->setInt(reg_stat & INT_SCP);
-	icon_tp->setInt(reg_stat & INT_OTP);
-	icon_tw->setInt(reg_stat & INT_OTW);
-	icon_ip->setInt(reg_stat & INT_IPCP);
+	icon_op->setProtection(reg_stat & INT_OVP);
+	icon_sp->setProtection(reg_stat & INT_SCP);
+	icon_tp->setProtection(reg_stat & INT_OTP);
+	icon_tw->setProtection(reg_stat & INT_OTW);
+	icon_ip->setProtection(reg_stat & INT_IPCP);
 
 	if (flag_clear_debug == 1) {
 		flag_clear_debug++;
@@ -530,11 +530,11 @@ void Channel::clearLowVoltage()
 void Channel::clearDebug()
 {
 	clearLowVoltage();
-	icon_op->setInt(0);
-	icon_sp->setInt(0);
-	icon_tp->setInt(0);
-	icon_tw->setInt(0);
-	icon_ip->setInt(0);
+	icon_op->setProtection(0);
+	icon_sp->setProtection(0);
+	icon_tp->setProtection(0);
+	icon_tw->setProtection(0);
+	icon_ip->setProtection(0);
 	for (int i = 0; i < 8; i++)
 		count_intr[i] = 0;
 	flag_clear_debug = 0;

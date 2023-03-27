@@ -25,6 +25,26 @@ const uint8_t* ProtectionChannelIconWidget::iconCharArray(void)
 	return &IMG_ICON_TABLE[this->icon_image][0];
 }
 
+void ProtectionChannelIconWidget::clearProtection(void)
+{
+	this->protection = false;
+}
+
+void ProtectionChannelIconWidget::setProtection(bool val)
+{
+	if (val) {
+		this->setIconColor(TFT_RED, BG_ENABLED_INT);
+	} else {
+		this->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
+	}
+
+	this->protection = val;
+}
+
+bool ProtectionChannelIconWidget::getProtection(void)
+{
+	return this->protection;
+}
 
 void ProtectionChannelIconWidget::update(bool forced)
 {

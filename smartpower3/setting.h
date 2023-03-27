@@ -19,7 +19,7 @@
 #define X_LOG_LEVEL 250
 #define Y_WIFI_INFO	140
 #define X_IPADDR 220
-#define X_SSID 220
+#define X_SSID 180
 
 class Setting
 {
@@ -33,6 +33,9 @@ public:
 	void turnOffBacklight(void);
 	uint8_t setLogInterval(void);
 	void setLogInterval(uint8_t val);
+	bool isLoggingEnabled(void);
+	void enableLogging(void);
+	void disableLogging(void);
 	uint32_t setSerialBaud(uint32_t baud);
 	uint32_t setSerialBaud();
 
@@ -78,6 +81,7 @@ private:
 	uint8_t backlight_level_edit = 0;
 	uint16_t log_interval = 0;
 	uint16_t log_interval_edit = 0;
+	bool logging_enabled = false;
 	uint8_t bl_value_preset[7] = {10, 25, 50, 75, 100, 125, 150};
 	uint16_t log_value[7] = {0, 5, 10, 50, 100, 500, 1000};
 	uint32_t serial_value[10] = {9600, 19200, 38400, 57600, 115200, 230400, 460800, 500000, 576000, 921600};

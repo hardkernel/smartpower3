@@ -16,7 +16,7 @@ Setting::Setting(TFT_eSPI *tft)
 
 	com_serial_baud = new Component(tft, 115, 20, 2);
 	com_log_interval = new Component(tft, 85, 20, 2);
-	com_ssid = new Component(tft, 220, 20, 2);
+	com_ssid = new Component(tft, 284, 22, 2);
 	//com_ipaddr = new Component(tft, 220, 20, 2);
 	com_udp_ipaddr = new Component(tft, 170, 20, 2);
 	com_udp_port = new Component(tft, 60, 20, 2);
@@ -127,6 +127,21 @@ void Setting::setLogInterval(uint8_t val)
 	log_interval = val;
 }
 
+bool Setting::isLoggingEnabled()
+{
+	return this->logging_enabled;
+}
+
+void Setting::enableLogging(void)
+{
+	logging_enabled = true;
+}
+
+void Setting::disableLogging(void)
+{
+	logging_enabled = false;
+}
+
 uint8_t Setting::setLogInterval(void)
 {
 	return log_interval = log_interval_edit;
@@ -201,18 +216,18 @@ void Setting::restoreLogIntervalValue()
 
 void Setting::changeLogInterval(uint8_t log_interval)
 {
-	double tmp, ms;
-	tmp = this->serial_baud_edit/780;
-	ms = (1/tmp)*1000;
-	if (log_interval != 0) {
-		if (log_interval > 6)
-			log_interval = 6;
-		else if (log_interval < 0)
-			log_interval = 0;
-		while (log_value[log_interval] < ms)
-			log_interval++;
-	}
+	double ms = (1/(double)(this->serial_baud_edit/780))*1000;
 
+	if (log_interval != 0) {
+		if (log_interval > 6) {
+			log_interval = 6;
+		} else if (log_interval < 0) {
+			log_interval = 0;
+		}
+		while (log_value[log_interval] < ms) {
+			log_interval++;
+		}
+	}
 	drawLogIntervalValue(log_value[log_interval]);
 	log_interval_edit = log_interval;
 }
@@ -221,24 +236,24 @@ void Setting::restoreSerialBaud()
 {
 	drawSerialBaud(this->serial_baud);
 	serial_baud_edit = this->serial_baud;
-
 }
 
 void Setting::changeSerialBaud(uint8_t baud_level)
 {
 	drawSerialBaud(serial_value[baud_level]);
 	serial_baud_edit = serial_value[baud_level];
+	changeLogInterval(log_interval);
 }
 
 void Setting::selectBLLevel(uint16_t color)
 {
-	for (int i = 1; i < 4; i++)
+	for (int i = 1; i < SELECTION_BORDER_WIDTH+1; i++)
 		tft->drawRect(x + X_BL_LEVEL-i, y-1-i, 135+i*2, 28+i*2, color);
 }
 
 void Setting::selectSerialLogging(uint16_t color)
 {
-	for (int i = 1; i < 4; i++)
+	for (int i = 1; i < SELECTION_BORDER_WIDTH+1; i++)
 		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + Y_SERIAL -10, 135+i*2+120, 28+i*2+40, color);
 }
 
@@ -250,7 +265,7 @@ void Setting::selectLogInterval(uint16_t color)
 
 void Setting::deSelectBLLevel(uint16_t color)
 {
-	for (int i = 1; i < 4; i++)
+	for (int i = 1; i < SELECTION_BORDER_WIDTH+1; i++)
 		tft->drawRect(x + X_BL_LEVEL -i, y-1-i, 135+i*2, 28+i*2, color);
 }
 
@@ -263,7 +278,7 @@ void Setting::deSelectLogInterval(uint16_t color)
 
 void Setting::deSelectSerialLogging(uint16_t color)
 {
-	for (int i = 1; i < 4; i++)
+	for (int i = 1; i < SELECTION_BORDER_WIDTH+1; i++)
 		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + Y_SERIAL -10, 135+i*2+120, 28+i*2+40, color);
 }
 
@@ -280,8 +295,6 @@ void Setting::selectSerialBaud(uint16_t color)
 {
 	com_serial_baud->setTextColor(color, TFT_BLACK);
 	drawSerialBaud(this->serial_baud);
-	com_log_interval->clear();
-	com_log_interval->draw("    ");
 	com_serial_baud->select();
 }
 
@@ -295,7 +308,6 @@ void Setting::deSelectSerialBaud(uint16_t color)
 void Setting::drawLogIntervalValue(uint16_t log_value)
 {
 	com_log_interval->clear();
-	//com_log_interval->loadFont("Chewy-Regular24");
 	com_log_interval->loadFont(NotoSansBold20);
 	if (log_value == 0)
 		com_log_interval->draw("OFF");
@@ -308,7 +320,6 @@ void Setting::drawSerialBaud(uint32_t baud)
 {
 	com_serial_baud->clear();
 	com_serial_baud->loadFont(NotoSansBold20);
-	//com_serial_baud->loadFont("Chewy-Regular24");
 	com_serial_baud->draw(String(baud) + " bps");
 	com_serial_baud->unloadFont();
 }

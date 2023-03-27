@@ -48,15 +48,25 @@ void Component::setCoordinate(uint16_t x, uint16_t y)
 
 void Component::drawOutLines(void)
 {
-	for (int i = 0; i < 3; i++) {
-		tft->drawRect(x-(3-i), y-(3-i), width+(6-i*2), height+(6-i*2), TFT_YELLOW);
+	for (int i = 0; i < SELECTION_BORDER_WIDTH; i++) {
+		tft->drawRect(
+				x-(SELECTION_BORDER_WIDTH-i),
+				y-(SELECTION_BORDER_WIDTH-i),
+				width+(SELECTION_BORDER_WIDTH*2-i*2),
+				height+(SELECTION_BORDER_WIDTH*2-i*2),
+				TFT_YELLOW);
 	}
 }
 
 void Component::clearOutLines(void)
 {
-	for (int i = 0; i < 3; i++) {
-		tft->drawRect(x-(3-i), y-(3-i), width+(6-i*2), height+(6-i*2), TFT_BLACK);
+	for (int i = 0; i < SELECTION_BORDER_WIDTH; i++) {
+		tft->drawRect(
+				x-(SELECTION_BORDER_WIDTH-i),
+				y-(SELECTION_BORDER_WIDTH-i),
+				width+(SELECTION_BORDER_WIDTH*2-i*2),
+				height+(SELECTION_BORDER_WIDTH*2-i*2),
+				TFT_BLACK);
 	}
 }
 

@@ -10,8 +10,8 @@ Header::Header(TFT_eSPI *tft) : Component(tft)
 	icon_input = new InputHeaderIconWidget(tft);
 	icon_wifi = new WifiHeaderIconWidget(tft);
 	icon_log = new LogHeaderIconWidget(tft);
-	icon_v = new UnitHeaderIconWidget(tft, SMALL_VOLT);  //3  9
-	icon_a = new UnitHeaderIconWidget(tft, SMALL_AMPERE);  //4  10
+	icon_v = new UnitHeaderIconWidget(tft, SMALL_VOLT);  //9
+	icon_a = new UnitHeaderIconWidget(tft, SMALL_AMPERE);  //10
 }
 
 void Header::init(uint16_t x, uint16_t y)
@@ -44,34 +44,45 @@ void Header::init(uint16_t x, uint16_t y)
 	mode->init(TFT_YELLOW, TFT_BLACK, 1, TL_DATUM);
 	mode->setCoordinate(x + 200, y);
 
-	icon_wifi->setIconColor(TFT_GREEN, BG_ENABLED_INT);
 	icon_wifi->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
 	icon_wifi->draw();
-	icon_log->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
+	icon_log->setIconColor(TFT_DARKGREY, BG_COLOR);
 	icon_log->draw();
 }
 
 void Header::onLogging(void)
 {
-	flag_logging = true;
+	flag_logging = IN_USE;
+	update_logging_icon = true;
+}
+
+void Header::possibleLogging()
+{
+	flag_logging = CAN_USE;
 	update_logging_icon = true;
 }
 
 void Header::offLogging(void)
 {
-	flag_logging = false;
+	flag_logging = CANNOT_USE;
 	update_logging_icon = true;
 }
 
 void Header::onWiFi(void)
 {
-	flag_wifi = true;
+	flag_wifi = IN_USE;
+	update_wifi_icon = true;
+}
+
+void Header::possibleWiFi(void)
+{
+	flag_wifi = CAN_USE;
 	update_wifi_icon = true;
 }
 
 void Header::offWiFi(void)
 {
-	flag_wifi = false;
+	flag_wifi = CANNOT_USE;
 	update_wifi_icon = true;
 }
 
@@ -80,9 +91,37 @@ void Header::select(void)
 	mode->select();
 }
 
+void Header::select(icon_w icon)
+{
+	switch(icon) {
+		case LOGGING:
+			icon_log->select();
+			update_logging_icon = true;
+			break;
+		case WIFI:
+			icon_wifi->select();
+			update_wifi_icon = true;
+			break;
+	}
+}
+
 void Header::deSelect(void)
 {
 	mode->deSelect();
+}
+
+void Header::deSelect(icon_w icon)
+{
+	switch(icon) {
+		case LOGGING:
+			icon_log->deselect();
+			update_logging_icon = true;
+			break;
+		case WIFI:
+			icon_wifi->deselect();
+			update_wifi_icon = true;
+			break;
+	}
 }
 
 void Header::drawMode(String str)
@@ -144,8 +183,11 @@ void Header::draw(void)
 
 	if (update_logging_icon) {
 		update_logging_icon = false;
-		if (flag_logging) {
+		if (flag_logging == IN_USE) {
 			icon_log->setIconColor(TFT_GREEN, BG_ENABLED_INT);
+			icon_log->draw();
+		} else if (flag_logging == CAN_USE) {
+			icon_log->setIconColor(TFT_LIGHTGREY, BG_ENABLED_INT);
 			icon_log->draw();
 		} else {
 			icon_log->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
@@ -155,8 +197,11 @@ void Header::draw(void)
 
 	if (update_wifi_icon) {
 		update_wifi_icon = false;
-		if (flag_wifi) {
+		if (flag_wifi == IN_USE) {
 			icon_wifi->setIconColor(TFT_GREEN, BG_ENABLED_INT);
+			icon_wifi->draw();
+		} else if (flag_wifi == CAN_USE){
+			icon_wifi->setIconColor(TFT_LIGHTGREY, BG_ENABLED_INT);
 			icon_wifi->draw();
 		} else {
 			icon_wifi->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);

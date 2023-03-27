@@ -89,3 +89,44 @@ void BaseIconWidget::setIconColor(uint16_t fg_color, uint16_t bg_color)
 	ic->fg_color = fg_color;
 	ic->bg_color = bg_color;
 }
+
+void BaseIconWidget::select(void)
+{
+	this->selected = true;
+	this->drawOutLines();
+}
+
+void BaseIconWidget::deselect(void)
+{
+	this->selected = false;
+	this->clearOutLines();
+}
+
+bool BaseIconWidget::getSelected(void)
+{
+	return this->selected;
+}
+
+void BaseIconWidget::drawOutLines(void)
+{
+	for (int i = 0; i < SELECTION_BORDER_WIDTH; i++) {
+		tft->drawRect(
+				ic->x-(SELECTION_BORDER_WIDTH-i),
+				ic->y-(SELECTION_BORDER_WIDTH-i),
+				ic->width+(SELECTION_BORDER_WIDTH*2-i*2),
+				ic->height+(SELECTION_BORDER_WIDTH*2-i*2),
+				TFT_YELLOW);
+	}
+}
+
+void BaseIconWidget::clearOutLines(void)
+{
+	for (int i = 0; i < SELECTION_BORDER_WIDTH; i++) {
+		tft->drawRect(
+				ic->x-(SELECTION_BORDER_WIDTH-i),
+				ic->y-(SELECTION_BORDER_WIDTH-i),
+				ic->width+(SELECTION_BORDER_WIDTH*2-i*2),
+				ic->height+(SELECTION_BORDER_WIDTH*2-i*2),
+				TFT_BLACK);
+	}
+}
