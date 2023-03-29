@@ -169,11 +169,11 @@ void wifiTask(void *parameter)
 	String ssid = "";
 	String passwd = "";
 	for (;;) {
-		if (screen.wifiManager->state == 0) {
+		if (screen.wifiManager->credentials_state == STATE_CREDENTIALS_OK) {
 			ssid = NVS.getString("ssid");
 			passwd = NVS.getString("passwd");
 			if (!screen.wifiManager->ap_connect(ssid, passwd))
-				screen.wifiManager->state = 1;
+				screen.wifiManager->credentials_state = STATE_CREDENTIALS_INVALID;
 		}
 
 		if (Serial.available()) {

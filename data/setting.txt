@@ -4,7 +4,6 @@ voltage1=05.0
 current_limit0=03.0
 current_limit1=03.0
 backlight_level_preset=2
-fan_level=0
 serial_baud=115200
 log_interval=0
 firstboot=0
