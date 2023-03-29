@@ -189,14 +189,14 @@ void Screen::checkOnOff()
 			channel[0]->off();
 			channel[1]->off();
 			tft.fillRect(0, 0, 480, 320, TFT_BLACK);
-			setting->setBacklightLevel(0);
+			setting->turnOffBacklight();
 			writeSysLED(0);
 			setting->setLogInterval(0);
 		} else {
 			shutdown = false;
 			tft.fillRect(0, 0, 480, 320, TFT_BLACK);
 			setting->setLogInterval();
-			setting->setBacklightLevel();
+			setting->setBacklightLevelPreset();
 
 			header->init(5, 8);
 			if (mode >= SETTING) {
@@ -467,7 +467,7 @@ void Screen::drawSettingBL()
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
 		mode = SETTING;
-		NVS.setInt("bl_level", setting->setBacklightLevel());
+		NVS.setInt("bl_level", setting->setBacklightLevelPreset());
 		setting->activateBLLevel();
 		activated = dial_cnt = STATE_BL;
 		return;
@@ -896,7 +896,7 @@ void Screen::fsInit(void)
 	float volt_set1 = 5.0;
 	float current_limit0 = 3.0;
 	float current_limit1 = 3.0;
-	uint8_t backlight_level = 3;
+	uint8_t backlight_level_preset = 3;
 	uint8_t log_interval = 0;
 	uint32_t serial_baud = 115200;
 	uint16_t port_udp = 0;
@@ -905,7 +905,7 @@ void Screen::fsInit(void)
 	if (checkFirstBoot()) {
 		Serial.println("First boot!!!");
 		NVS.setInt("autorun", 0);
-		NVS.setInt("bl_level", backlight_level);
+		NVS.setInt("bl_level", backlight_level_preset);
 		NVS.setInt("serial_baud", serial_baud, true);
 		NVS.setInt("log_interval", log_interval);
 		NVS.setString("firstboot", "no");
@@ -920,7 +920,7 @@ void Screen::fsInit(void)
 	volt_set1 = NVS.getString("voltage1").toFloat()*1000;
 	current_limit0 = NVS.getString("current_limit0").toFloat()*1000;
 	current_limit1 = NVS.getString("current_limit1").toFloat()*1000;
-	backlight_level = NVS.getInt("bl_level");
+	backlight_level_preset = NVS.getInt("bl_level");
 	serial_baud = NVS.getInt("serial_baud");
 	log_interval = NVS.getInt("log_interval");
 
@@ -931,7 +931,7 @@ void Screen::fsInit(void)
 	channel[0]->setCurrentLimit(current_limit0, 1);
 	channel[1]->setVolt(volt_set1, 1);
 	channel[1]->setCurrentLimit(current_limit1, 1);
-	setting->setBacklightLevel(backlight_level, true);
+	setting->setBacklightLevelPreset(backlight_level_preset, true);
 	setting->setSerialBaud(serial_baud);
 	setting->setLogInterval(log_interval);
 	wifiManager->ipaddr_udp.fromString(NVS.getString("ipaddr_udp"));

@@ -47,7 +47,7 @@ void Setting::init(uint16_t x, uint16_t y)
 
 	tft->fillRect(x + X_BL_LEVEL, y, 135, 26, TFT_BLACK);
 	tft->drawRect(x + X_BL_LEVEL, y-1, 135, 28, TFT_YELLOW);
-	changeBacklight(backlight_level);
+	changeBacklight(backlight_level_preset);
 
 	com_serial_baud->init(TFT_WHITE, TFT_BLACK, 1, MC_DATUM);
 	com_serial_baud->setCoordinate(x + X_BAUD_RATE-10, y + 30 + Y_SERIAL);
@@ -84,32 +84,42 @@ void Setting::popUp(void)
 	popup->pushSprite(200, 200);
 }
 
-uint8_t Setting::_setBacklightLevel(uint8_t level)
+uint8_t Setting::_setBacklightLevelPreset(uint8_t level_preset)
 {
-	if (level > 6)
-		level = 6;
-	else if (level < 0)
-		level = 0;
-	ledcWrite(2, bl_value[level]);
-	return level;
+	if (level_preset > 6)
+		level_preset = 6;
+	else if (level_preset < 0)
+		level_preset = 0;
+	this->setBacklightLevel(bl_value_preset[level_preset]);
+	return level_preset;
 }
 
-uint8_t Setting::setBacklightLevel(void)
+uint8_t Setting::setBacklightLevelPreset(void)
 {
-	backlight_level = backlight_level_edit;
-	return _setBacklightLevel(backlight_level);
+	backlight_level_preset = backlight_level_edit;
+	return _setBacklightLevelPreset(backlight_level_preset);
 }
 
-void Setting::setBacklightLevel(uint8_t level, bool edit)
+void Setting::setBacklightLevelPreset(uint8_t level_preset, bool edit)
 {
-	backlight_level = _setBacklightLevel(level);
+	backlight_level_preset = _setBacklightLevelPreset(level_preset);
 	if (edit)
-		backlight_level_edit = backlight_level;
+		backlight_level_edit = backlight_level_preset;
 }
 
 void Setting::setBacklightLevel(uint8_t level)
 {
-	backlight_level = _setBacklightLevel(level);
+	if (level > 255) {
+		level = 255;
+	} else if (level < 0) {
+		level = 0;
+	}
+	ledcWrite(2, level);
+}
+
+void Setting::turnOffBacklight(void)
+{
+	this->setBacklightLevel(0);
 }
 
 void Setting::setLogInterval(uint8_t val)
@@ -139,7 +149,7 @@ uint32_t Setting::setSerialBaud(uint32_t baud)
 
 uint8_t Setting::getBacklightLevel(void)
 {
-	return backlight_level;
+	return backlight_level_preset;
 }
 
 uint8_t Setting::getLogInterval(void)
@@ -170,17 +180,17 @@ uint8_t Setting::getSerialBaudLevel(void)
 
 void Setting::restoreBacklight()
 {
-	backlight_level_edit = backlight_level;
+	backlight_level_edit = backlight_level_preset;
 }
 
 void Setting::changeBacklight(uint8_t level)
 {
-	if (level == 255) {
-		level = backlight_level;
+	if (level == 255) {  // default if called without argument
+		level = backlight_level_preset;
 	}
 	drawBacklightLevel(level);
 	backlight_level_edit = level;
-	ledcWrite(2, bl_value[level]);
+	ledcWrite(2, bl_value_preset[level]);
 }
 
 void Setting::restoreLogIntervalValue()
