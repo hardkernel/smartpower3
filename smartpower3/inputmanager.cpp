@@ -38,9 +38,9 @@ uint8_t Button::checkPressed(void) {
 void initEncoder(void *dial)
 {
 	ESP32Encoder::useInternalWeakPullResistors = UP;
-	encoder.attachHalfQuad(33, 32);
+	encoder.attachFullQuad(33, 32);
 	encoder.setCount(0);
-	encoder.setFilter(500);
+	encoder.setFilter(1023);
 	xTaskCreate(countEncoder, "encoderTask", 1500, dial, 1, NULL);
 }
 
@@ -50,26 +50,34 @@ void countEncoder(void *dial)
 	int8_t cnt;
 	for (;;) {
 		cnt = encoder.getCount();
-		if (cnt > 5) {
+		if (cnt > 9) {
 			encoder.setCount(0);
 			tmp->cnt += 1;
 			tmp->direct = 1;
-			tmp->step = 10;
-		} else if (cnt < -5) {
+			tmp->step = 3;
+			vTaskDelay(5);
+			continue;
+		} else if (cnt < -9) {
 			encoder.setCount(0);
 			tmp->cnt -= 1;
 			tmp->direct = -1;
-			tmp->step = 10;
+			tmp->step = 3;
+			vTaskDelay(5);
+			continue;
 		} else if (cnt > 1) {
 			encoder.setCount(0);
 			tmp->cnt += 1;
 			tmp->direct = 1;
 			tmp->step = 1;
+			vTaskDelay(55);
+			continue;
 		} else if (cnt < -1) {
 			encoder.setCount(0);
 			tmp->cnt -= 1;
 			tmp->direct = -1;
 			tmp->step = 1;
+			vTaskDelay(55);
+			continue;
 		}
 		vTaskDelay(100);
 	}
