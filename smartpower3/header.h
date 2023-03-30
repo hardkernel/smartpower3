@@ -4,7 +4,11 @@
 
 #include "component.h"
 #include "fndwidget.h"
-#include "iconwidget.h"
+#include "icons/base_icon_widget.h"
+#include "icons/wifi_header_icon_widget.h"
+#include "icons/log_header_icon_widget.h"
+#include "icons/input_header_icon_widget.h"
+#include "icons/unit_header_icon_widget.h"
 
 class Header : public Component
 {
@@ -36,10 +40,10 @@ private:
 	bool low_input = 1;
 	uint8_t intPin = -1;
 	Component *mode;
-	IconWidget *icon_input;
-	IconWidget *icon_wifi;
-	IconWidget *icon_log;
-	IconWidget *icon_v, *icon_a;
+	InputHeaderIconWidget *icon_input;
+	WifiHeaderIconWidget *icon_wifi;
+	LogHeaderIconWidget *icon_log;
+	UnitHeaderIconWidget *icon_v, *icon_a;
 	FndWidget *input_v, *input_a;
 	uint16_t debug = 0;
 	bool flag_logging = false;

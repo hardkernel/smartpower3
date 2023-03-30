@@ -1,6 +1,8 @@
 #include "component.h"
 #include "fndwidget.h"
-#include "iconwidget.h"
+#include "icons/protection_channel_icon_widget.h"
+#include "icons/polarity_channel_icon_widget.h"
+#include "icons/unit_channel_icon_widget.h"
 #include <STPD01.h>
 
 #define OFFSET_FND 5
@@ -63,7 +65,7 @@ public:
 	void clearDebug(void);
 
 private:
-	bool activated;
+	bool activated = false;
 	TFT_eSPI *tft;
 	uint16_t volt_set = 5000;
 	uint16_t _volt_set = 5000;
@@ -72,13 +74,16 @@ private:
 	FndWidget *volt;
 	FndWidget *_volt;
 	FndWidget *_current;
+#ifdef DEBUG_STPD01
 	Component *stpd;
 	Component *lowV;
+#endif
 	Component *debug_intr[8];
 	FndWidget *current;
 	FndWidget *watt;
-	IconWidget *icon_op, *icon_sp, *icon_tp, *icon_tw, *icon_ip;
-	IconWidget *icon_p, *icon_n, *icon_v, *icon_a, *icon_w;
+	ProtectionChannelIconWidget *icon_op, *icon_sp, *icon_tp, *icon_tw, *icon_ip;
+	PolarityChannelIconWidget *icon_positive, *icon_negative;
+	UnitChannelIconWidget *icon_volt, *icon_ampere, *icon_watt;
 	STPD01 *stpd01;
 	uint8_t channel;
 	uint16_t x, y;

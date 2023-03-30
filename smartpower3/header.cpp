@@ -7,11 +7,11 @@ Header::Header(TFT_eSPI *tft) : Component(tft)
 	input_a = new FndWidget(tft);
 	mode = new Component(tft, 76, 22, 4);
 	display_mode = new Component(tft, 110, 22, 4);
-	icon_input = new IconWidget(tft);
-	icon_wifi = new IconWidget(tft);
-	icon_log = new IconWidget(tft);
-	icon_v = new IconWidget(tft);
-	icon_a = new IconWidget(tft);
+	icon_input = new InputHeaderIconWidget(tft);
+	icon_wifi = new WifiHeaderIconWidget(tft);
+	icon_log = new LogHeaderIconWidget(tft);
+	icon_v = new UnitHeaderIconWidget(tft, SMALL_VOLT);  //3  9
+	icon_a = new UnitHeaderIconWidget(tft, SMALL_AMPERE);  //4  10
 }
 
 void Header::init(uint16_t x, uint16_t y)
@@ -26,17 +26,17 @@ void Header::init(uint16_t x, uint16_t y)
 	input_a->pushValue(0);
 	input_a->fnd_update(true);
 
-	icon_v->init(8, x+86, y, FG_COLOR, BG_COLOR);
+	icon_v->init(x+86, y, FG_COLOR, BG_COLOR);
 	icon_v->setIconColor(TFT_GREEN, BG_ENABLED_INT);
-	icon_v->unitsWrite(3);
-	icon_a->init(8, x+146, y, FG_COLOR, BG_COLOR);
+	icon_v->draw();
+	icon_a->init(x+146, y, FG_COLOR, BG_COLOR);
 	icon_a->setIconColor(TFT_GREEN, BG_ENABLED_INT);
-	icon_a->unitsWrite(4);
+	icon_a->draw();
 
 
-	icon_input->init(9, x, y, FG_COLOR, BG_COLOR);
-	icon_wifi->init(9, x + 400, y, FG_COLOR, BG_COLOR);
-	icon_log->init(9, x + 440, y, FG_COLOR, BG_COLOR);
+	icon_input->init(x, y, FG_COLOR, BG_COLOR);
+	icon_wifi->init(x + 400, y, FG_COLOR, BG_COLOR);
+	icon_log->init(x + 440, y, FG_COLOR, BG_COLOR);
 
 	display_mode->init(TFT_BLACK, TFT_YELLOW, 1, TL_DATUM);
 	display_mode->setCoordinate(x + 300, y);
@@ -46,9 +46,9 @@ void Header::init(uint16_t x, uint16_t y)
 
 	icon_wifi->setIconColor(TFT_GREEN, BG_ENABLED_INT);
 	icon_wifi->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
-	icon_wifi->wifiWrite();
+	icon_wifi->draw();
 	icon_log->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
-	icon_log->logWrite();
+	icon_log->draw();
 }
 
 void Header::onLogging(void)
@@ -115,23 +115,23 @@ void Header::draw(void)
 			input_a->setTextColor(TFT_RED, TFT_BLACK);
 
 			icon_input->setIconColor(TFT_RED, BG_ENABLED_INT);
-			icon_input->inputWrite();
+			icon_input->draw();
 
 			icon_v->setIconColor(TFT_RED, BG_ENABLED_INT);
-			icon_v->unitsWrite(3);
+			icon_v->draw();
 			icon_a->setIconColor(TFT_RED, BG_ENABLED_INT);
-			icon_a->unitsWrite(4);
+			icon_a->draw();
 		} else {
 			input_v->setTextColor(TFT_GREEN, TFT_BLACK);
 			input_a->setTextColor(TFT_GREEN, TFT_BLACK);
 
 			icon_input->setIconColor(TFT_GREEN, BG_ENABLED_INT);
-			icon_input->inputWrite();
+			icon_input->draw();
 
 			icon_v->setIconColor(TFT_GREEN, BG_ENABLED_INT);
-			icon_v->unitsWrite(3);
+			icon_v->draw();
 			icon_a->setIconColor(TFT_GREEN, BG_ENABLED_INT);
-			icon_a->unitsWrite(4);
+			icon_a->draw();
 		}
 		input_v->pushValue(in_volt);
 		input_v->fnd_update();
@@ -146,10 +146,10 @@ void Header::draw(void)
 		update_logging_icon = false;
 		if (flag_logging) {
 			icon_log->setIconColor(TFT_GREEN, BG_ENABLED_INT);
-			icon_log->logWrite();
+			icon_log->draw();
 		} else {
 			icon_log->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
-			icon_log->logWrite();
+			icon_log->draw();
 		}
 	}
 
@@ -157,10 +157,10 @@ void Header::draw(void)
 		update_wifi_icon = false;
 		if (flag_wifi) {
 			icon_wifi->setIconColor(TFT_GREEN, BG_ENABLED_INT);
-			icon_wifi->wifiWrite();
+			icon_wifi->draw();
 		} else {
 			icon_wifi->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
-			icon_wifi->wifiWrite();
+			icon_wifi->draw();
 		}
 	}
 }
