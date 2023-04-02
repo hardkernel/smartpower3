@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 #include "component.h"
-#include "NotoSansBold20.h"
+#include "fonts/NotoSansBold20.h"
 
 #define BL_LCD	17
 #define FREQ	50000

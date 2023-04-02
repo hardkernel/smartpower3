@@ -3,7 +3,7 @@
 #define FNDWIDGET_H
 
 #include <TFT_eSPI.h>
-#include "fnd_font.h"
+#include "fonts/fnd_font.h"
 #include "component.h"
 
 #define WAIT 1

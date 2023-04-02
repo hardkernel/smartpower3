@@ -1,6 +1,6 @@
 #include "setting.h"
-#include "ChewyRegular24.h"
-#include "ChewyRegular32.h"
+#include "fonts/ChewyRegular24.h"
+#include "fonts/ChewyRegular32.h"
 
 Setting::Setting(TFT_eSPI *tft)
 {
