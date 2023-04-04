@@ -15,8 +15,8 @@ class Header : public Component
 public:
 	Header(TFT_eSPI *tft);
 	void init(uint16_t x, uint16_t y);
-	void activate(void);
-	void deActivate(void);
+	void select(void);
+	void deSelect(void);
 	void drawMode(String str);
 	void pushPower(uint16_t volt, uint16_t ampere, uint16_t watt);
 	void draw(void);

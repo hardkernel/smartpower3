@@ -52,11 +52,11 @@ public:
 	uint8_t* getOnOff(void);
 	void run(void);
 	void drawScreen(void);
-	void activate();
-	void activate_setting();
+	void select();
+	void select_setting();
 	void countDial(int8_t mode_count, int8_t direct, uint8_t step, uint32_t milisec);
-	void deActivate();
-	void deActivateSetting();
+	void deSelect();
+	void deSelectSetting();
 	void getBtnPress(uint8_t idx, uint32_t cur_time, bool long_pressed = 0);
 	void setTime(uint32_t milisec);
 	void clearBtnEvent(void);
@@ -98,7 +98,7 @@ private:
 	Header *header;
 	Setting *setting;
 	TwoWire *_wire;
-	uint8_t activated = 0;
+	uint8_t selected = 0;
 	uint32_t dial_time = 0;
 	uint32_t cur_time = 0;
 	uint32_t task_time = 0;

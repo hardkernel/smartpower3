@@ -75,14 +75,14 @@ void Header::offWiFi(void)
 	update_wifi_icon = true;
 }
 
-void Header::activate(void)
+void Header::select(void)
 {
-	mode->activate();
+	mode->select();
 }
 
-void Header::deActivate(void)
+void Header::deSelect(void)
 {
-	mode->deActivate();
+	mode->deSelect();
 }
 
 void Header::drawMode(String str)

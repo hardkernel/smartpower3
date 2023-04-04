@@ -417,12 +417,12 @@ uint16_t FndWidget::getValue()
 	return this->value;
 }
 
-void FndWidget::activate(void)
+void FndWidget::select(void)
 {
 	drawOutLines();
 }
 
-void FndWidget::deActivate(void)
+void FndWidget::deSelect(void)
 {
 	clearOutLines();
 }

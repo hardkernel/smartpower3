@@ -33,8 +33,8 @@ public:
 	bool off(void);
 	void setVolt(float volt_set, uint8_t mode = 0);
 	void setCurrentLimit(float val, uint8_t mode = 0);
-	void activate(comp_t comp);
-	void deActivate(comp_t comp);
+	void select(comp_t comp);
+	void deSelect(comp_t comp);
 	void setCompColor(comp_t comp);
 	void clearCompColor(void);
 	void editVolt(float volt_set);
@@ -65,7 +65,6 @@ public:
 	void clearDebug(void);
 
 private:
-	bool activated = false;
 	TFT_eSPI *tft;
 	uint16_t volt_set = 5000;
 	uint16_t _volt_set = 5000;

@@ -407,28 +407,28 @@ void Channel::pushPowerEdit()
 	this->_current->pushValue(_current_limit);
 }
 
-void Channel::activate(comp_t comp)
+void Channel::select(comp_t comp)
 {
 	switch (comp) {
 		case VOLT:
-			_volt->activate();
+			_volt->select();
 			break;
 		case CURRENT:
-			_current->activate();
+			_current->select();
 			break;
 		case WATT:
 			break;
 	}
 }
 
-void Channel::deActivate(comp_t comp)
+void Channel::deSelect(comp_t comp)
 {
 	switch (comp) {
 		case VOLT:
-			_volt->deActivate();
+			_volt->deSelect();
 			break;
 		case CURRENT:
-			_current->deActivate();
+			_current->deSelect();
 			break;
 		case WATT:
 			break;

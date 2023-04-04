@@ -41,8 +41,8 @@ public:
 	void fnd_font_init(struct font_info *f_info, enum FND_FONT_SIZE font);
 	void drawOutLines();
 	void clearOutLines();
-	void activate();
-	void deActivate();
+	void select();
+	void deSelect();
 	void setMonitorVoltage(void);
 	void setCurrentLimit(void);
 	

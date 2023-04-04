@@ -49,22 +49,21 @@ public:
 	void restoreSerialBaud(void);
 	void restoreLogIntervalValue(void);
 
-	void activateBLLevel(uint16_t color=TFT_YELLOW);
-	void activateLogInterval(uint16_t color=TFT_YELLOW);
-	void activateSerialBaud(uint16_t color=TFT_YELLOW);
-	void activateSerialLogging(uint16_t color=TFT_YELLOW);
+	void selectBLLevel(uint16_t color=TFT_YELLOW);
+	void selectLogInterval(uint16_t color=TFT_YELLOW);
+	void selectSerialBaud(uint16_t color=TFT_YELLOW);
+	void selectSerialLogging(uint16_t color=TFT_YELLOW);
 
-	void deActivateBLLevel(uint16_t color=TFT_BLACK);
-	void deActivateLogInterval(uint16_t color=TFT_BLACK);
-	void deActivateSerialBaud(uint16_t color=TFT_BLACK);
-	void deActivateSerialLogging(uint16_t color=TFT_BLACK);
+	void deSelectBLLevel(uint16_t color=TFT_BLACK);
+	void deSelectLogInterval(uint16_t color=TFT_BLACK);
+	void deSelectSerialBaud(uint16_t color=TFT_BLACK);
+	void deSelectSerialLogging(uint16_t color=TFT_BLACK);
 
 	void drawBacklightLevel(uint8_t level);
 	void drawLogIntervalValue(uint16_t log_interval);
 	void drawSerialBaud(uint32_t serial_baud);
 	void popUp(void);
-	
-	void activateSerialBaud(void);
+
 	void drawIpaddr(String ipaddr);
 	void drawUDPIpaddr(String ipaddr);
 	void drawUDPport(uint16_t port);
