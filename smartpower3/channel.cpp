@@ -207,9 +207,9 @@ void Channel::disabled(void)
 	pinMode(en_stpd01[channel], OUTPUT);
 	digitalWrite(en_stpd01[channel], LOW);
 
-	volt->setTextColor(TFT_DARKGREY, TFT_BLACK);
-	current->setTextColor(TFT_DARKGREY, TFT_BLACK);
-	watt->setTextColor(TFT_DARKGREY, TFT_BLACK);
+	volt->setTextColor(TFT_DARKGREY, BG_COLOR);
+	current->setTextColor(TFT_DARKGREY, BG_COLOR);
+	watt->setTextColor(TFT_DARKGREY, BG_COLOR);
 }
 
 bool Channel::on(void)
@@ -221,9 +221,9 @@ bool Channel::on(void)
 		stpd01->initInterrupt();
 		err = stpd01->on();
 	}
-	volt->setTextColor(TFT_RED, TFT_BLACK);
-	current->setTextColor(TFT_RED, TFT_BLACK);
-	watt->setTextColor(TFT_RED, TFT_BLACK);
+	volt->setTextColor(TFT_RED, BG_COLOR);
+	current->setTextColor(TFT_RED, BG_COLOR);
+	watt->setTextColor(TFT_RED, BG_COLOR);
 	if (!hide) {
 		icon_volt->setIconColor(TFT_RED, BG_ENABLED_INT);
 		icon_volt->draw();
@@ -241,9 +241,9 @@ bool Channel::off(void)
 	if (stpd01->available()) {
 		err = stpd01->off();
 	}
-	volt->setTextColor(TFT_DARKGREY, TFT_BLACK);
-	current->setTextColor(TFT_DARKGREY, TFT_BLACK);
-	watt->setTextColor(TFT_DARKGREY, TFT_BLACK);
+	volt->setTextColor(TFT_DARKGREY, BG_COLOR);
+	current->setTextColor(TFT_DARKGREY, BG_COLOR);
+	watt->setTextColor(TFT_DARKGREY, BG_COLOR);
 	volt->pushValue(0);
 	current->pushValue(0);
 	watt->pushValue(0);
@@ -353,8 +353,8 @@ void Channel::drawChannel(bool forced)
 
 void Channel::clearCompColor(void)
 {
-	_volt->setTextColor(TFT_YELLOW, TFT_BLACK);
-	_current->setTextColor(TFT_YELLOW, TFT_BLACK);
+	_volt->setTextColor(TFT_YELLOW, BG_COLOR);
+	_current->setTextColor(TFT_YELLOW, BG_COLOR);
 	_volt_set = volt_set;
 	_current_limit = current_limit;
 	_volt->pushValue(volt_set);

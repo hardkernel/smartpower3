@@ -38,10 +38,10 @@ void Header::init(uint16_t x, uint16_t y)
 	icon_wifi->init(x + 400, y, FG_COLOR, BG_COLOR);
 	icon_log->init(x + 440, y, FG_COLOR, BG_COLOR);
 
-	display_mode->init(TFT_BLACK, TFT_YELLOW, 1, TL_DATUM);
+	display_mode->init(BG_COLOR, TFT_YELLOW, 1, TL_DATUM);
 	display_mode->setCoordinate(x + 300, y);
 
-	mode->init(TFT_YELLOW, TFT_BLACK, 1, TL_DATUM);
+	mode->init(TFT_YELLOW, BG_COLOR, 1, TL_DATUM);
 	mode->setCoordinate(x + 200, y);
 
 	icon_wifi->setIconColor(TFT_DARKGREY, BG_ENABLED_INT);
@@ -150,8 +150,8 @@ void Header::draw(void)
 	if (updated) {
 		updated = false;
 		if (low_input) {
-			input_v->setTextColor(TFT_RED, TFT_BLACK);
-			input_a->setTextColor(TFT_RED, TFT_BLACK);
+			input_v->setTextColor(TFT_RED, BG_COLOR);
+			input_a->setTextColor(TFT_RED, BG_COLOR);
 
 			icon_input->setIconColor(TFT_RED, BG_ENABLED_INT);
 			icon_input->draw();
@@ -161,8 +161,8 @@ void Header::draw(void)
 			icon_a->setIconColor(TFT_RED, BG_ENABLED_INT);
 			icon_a->draw();
 		} else {
-			input_v->setTextColor(TFT_GREEN, TFT_BLACK);
-			input_a->setTextColor(TFT_GREEN, TFT_BLACK);
+			input_v->setTextColor(TFT_GREEN, BG_COLOR);
+			input_a->setTextColor(TFT_GREEN, BG_COLOR);
 
 			icon_input->setIconColor(TFT_GREEN, BG_ENABLED_INT);
 			icon_input->draw();

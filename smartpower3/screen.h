@@ -64,8 +64,6 @@ public:
 	void clearBtnEvent(void);
 	void checkOnOff();
 	static void isr_stp(void);
-	void listDir(const char * dirname, uint8_t levels);
-	void readFile(const char * path);
 	void drawBmp(const char *filename, int16_t x, int16_t y);
 	uint16_t read16(fs::File &f);
 	uint32_t read32(fs::File &f);
@@ -129,7 +127,6 @@ private:
 	fs::FS *fs;
 	uint16_t current_limit = 3;
 	uint16_t volt_set = 5;
-	uint16_t volt_limit = 20;
 	bool saved = false;
 	bool changed[5] = {false,};
 	uint32_t cnt[2] = {0, 0};

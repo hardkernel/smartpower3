@@ -21,6 +21,9 @@
 #define X_IPADDR 220
 #define X_SSID 180
 
+#define COLOR_SELECTED TFT_YELLOW
+#define COLOR_DESELECTED TFT_BLACK
+
 class Setting
 {
 public:
@@ -52,15 +55,15 @@ public:
 	void restoreSerialBaud(void);
 	void restoreLogIntervalValue(void);
 
-	void selectBLLevel(uint16_t color=TFT_YELLOW);
-	void selectLogInterval(uint16_t color=TFT_YELLOW);
-	void selectSerialBaud(uint16_t color=TFT_YELLOW);
-	void selectSerialLogging(uint16_t color=TFT_YELLOW);
+	void selectBLLevel(uint16_t color=COLOR_SELECTED);
+	void selectLogInterval(uint16_t color=COLOR_SELECTED);
+	void selectSerialBaud(uint16_t color=COLOR_SELECTED);
+	void selectSerialLogging(uint16_t color=COLOR_SELECTED);
 
-	void deSelectBLLevel(uint16_t color=TFT_BLACK);
-	void deSelectLogInterval(uint16_t color=TFT_BLACK);
-	void deSelectSerialBaud(uint16_t color=TFT_BLACK);
-	void deSelectSerialLogging(uint16_t color=TFT_BLACK);
+	void deSelectBLLevel(uint16_t color=COLOR_DESELECTED);
+	void deSelectLogInterval(uint16_t color=COLOR_DESELECTED);
+	void deSelectSerialBaud(uint16_t color=COLOR_DESELECTED);
+	void deSelectSerialLogging(uint16_t color=COLOR_DESELECTED);
 
 	void drawBacklightLevel(uint8_t level);
 	void drawLogIntervalValue(uint16_t log_interval);
@@ -71,6 +74,7 @@ public:
 	void drawUDPIpaddr(String ipaddr);
 	void drawUDPport(uint16_t port);
 	void drawSSID(String ssid);
+
 	void debug(void);
 private:
 	TFT_eSPI *tft;

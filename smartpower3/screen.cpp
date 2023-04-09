@@ -1,3 +1,4 @@
+#include "helpers.h"
 #include "screen.h"
 
 bool Screen::_int = false;
@@ -9,8 +10,7 @@ Screen::Screen()
 	tft.init();
 	tft.invertDisplay(true);
 	tft.setRotation(3);
-	tft.fillScreen(TFT_BLACK);
-	tft.fillScreen(TFT_BLACK);
+	tft.fillScreen(BG_COLOR);
 	tft.setSwapBytes(true);
 }
 
@@ -37,9 +37,9 @@ void Screen::begin(TwoWire *theWire)
 
 	setting = new Setting(&tft);
 
-    WiFi.mode(WIFI_STA);
-    WiFi.disconnect();
-    delay(100);
+	WiFi.mode(WIFI_STA);
+	WiFi.disconnect();
+	delay(100);
 	udp.begin(WIFI_UDP_PORT);
 	wifiManager = new WiFiManager(udp, client, setting);
 
@@ -47,7 +47,7 @@ void Screen::begin(TwoWire *theWire)
 	delay(2000);
 	tft.setRotation(3);
 
-	tft.fillRect(0, 0, 480, 320, TFT_BLACK);
+	tft.fillRect(0, 0, 480, 320, BG_COLOR);
 	initScreen();
 	initLED();
 	header->init(5, 8);
@@ -107,7 +107,7 @@ void Screen::setIntFlag(uint8_t ch)
 
 void Screen::initScreen(void)
 {
-	tft.fillRect(0, 52, 480, 285, TFT_BLACK);
+	tft.fillRect(0, 52, 480, 285, BG_COLOR);
 	for (int i = 0; i < 2; i++) {
 		tft.drawLine(0, 50 + i, 480, 50 + i, TFT_DARKGREY);
 		tft.drawLine(0, 274 + i, 480, 274 + i, TFT_DARKGREY);
@@ -137,7 +137,6 @@ void Screen::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 		header->setLowInput(false);
 		state_power = 3;
 	}
-
 	header->pushPower(volt, ampere, watt);
 }
 
@@ -188,13 +187,13 @@ void Screen::checkOnOff()
 			onoff[1] = 0;
 			channel[0]->off();
 			channel[1]->off();
-			tft.fillRect(0, 0, 480, 320, TFT_BLACK);
+			tft.fillRect(0, 0, 480, 320, BG_COLOR);
 			setting->turnOffBacklight();
 			writeSysLED(0);
 			setting->setLogInterval(0);
 		} else {
 			shutdown = false;
-			tft.fillRect(0, 0, 480, 320, TFT_BLACK);
+			tft.fillRect(0, 0, 480, 320, BG_COLOR);
 			setting->setLogInterval();
 			setting->setBacklightLevelPreset();
 
@@ -213,9 +212,7 @@ void Screen::checkOnOff()
 			}
 		}
 	}
-
-	if (state_power != old_state_power)
-		old_state_power = state_power;
+	old_state_power = state_power;
 }
 
 void Screen::disablePower()
@@ -246,18 +243,11 @@ void Screen::deSelectSetting()
 
 void Screen::select()
 {
-	if (dial_cnt == dial_cnt_old)
+	if (dial_cnt == dial_cnt_old) {
 		return;
-	dial_cnt_old = dial_cnt;
-	if (dial_cnt > 5) {  // count of screen_state_base enum elements
-		dial_cnt = 5;
-		if (dial_direct == 1)
-			dial_cnt = 0;
-	} else if (dial_cnt < 0) {
-		dial_cnt = 0;
-		if (dial_direct == -1)
-			dial_cnt = 5;
 	}
+	dial_cnt_old = dial_cnt;
+	clampVariableToCircularRange(0, 5, dial_direct, &dial_cnt);  // 5 is 0 based count of screen_state_base elements
 
 	deSelect();
 	selected = dial_cnt;
@@ -285,18 +275,11 @@ void Screen::select()
 
 void Screen::select_setting()
 {
-	if (dial_cnt == dial_cnt_old)
+	if (dial_cnt == dial_cnt_old) {
 		return;
-	dial_cnt_old = dial_cnt;
-	if (dial_cnt > 3) {  // count of screen_state_setting enum elements
-		dial_cnt = 3;
-		if (dial_direct == 1)
-			dial_cnt = 0;
-	} else if (dial_cnt < 0) {
-		dial_cnt = 0;
-		if (dial_direct == -1)
-			dial_cnt = 3;
 	}
+	dial_cnt_old = dial_cnt;
+	clampVariableToCircularRange(0, 3, dial_direct, &dial_cnt);  // 3 is i based count of screen_state_setting elements
 
 	deSelectSetting();
 	selected = dial_cnt;
@@ -378,14 +361,16 @@ void Screen::drawBaseMove()
 			channel[1]->setCompColor(CURRENT);
 			current_limit = channel[1]->getCurrentLimit();
 		} else if (selected == STATE_LOGGING) {
-			mode = BASE_MOVE;  // same as current state, but redraw will check selection timeout
+			// same as current state, but redraw will check selection timeout
+			mode = BASE_MOVE;
 			if (setting->isLoggingEnabled()) {
 				setting->disableLogging();
 			} else {
 				setting->enableLogging();
 			}
 		} else if (selected == STATE_WIFI) {
-			mode = BASE_MOVE;  // same as current state, but redraw will check selection timeout
+			// same as current state, but redraw will check selection timeout
+			mode = BASE_MOVE;
 			if (wifiManager->isWiFiEnabled()) {
 				wifiManager->disableWiFi();
 			} else {
@@ -393,8 +378,7 @@ void Screen::drawBaseMove()
 			}
 		}
 		dial_state = dial_cnt;
-		dial_cnt = 0;
-		dial_cnt_old = 0;
+		dial_cnt = dial_cnt_old = 0;
 	}
 }
 
@@ -437,8 +421,7 @@ void Screen::drawSetting()
 {
 	select_setting();
 	if ((cur_time - dial_time) > 10000) {
-		dial_cnt = 0;
-		dial_cnt_old = 0;
+		dial_cnt = dial_cnt_old = 0;
 		deSelectSetting();
 		selected = STATE_NONE;
 	}
@@ -483,9 +466,7 @@ void Screen::drawSetting()
 			}
 		}
 	}
-	if (dial_cnt != dial_cnt_old) {
-		dial_cnt_old = dial_cnt;
-	}
+	dial_cnt_old = dial_cnt;
 }
 
 void Screen::drawSettingBL()
@@ -516,10 +497,7 @@ void Screen::drawSettingBL()
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
-		if (dial_cnt < 0)
-			dial_cnt = 0;
-		else if (dial_cnt > 6)
-			dial_cnt = 6;
+		clampVariableToRange(0, 6, &dial_cnt);
 		dial_cnt_old = dial_cnt;
 		setting->changeBacklight(dial_cnt);
 	}
@@ -568,16 +546,10 @@ void Screen::drawSettingLOG()
 	}
 	if (dial_cnt != dial_cnt_old) {
 		if (selected == 5) {
-			if (dial_cnt < 0)
-				dial_cnt = 0;
-			else if (dial_cnt > 6)
-				dial_cnt = 6;
+			clampVariableToRange(0, 6, &dial_cnt);
 			setting->changeLogInterval(dial_cnt);
 		} else {
-			if (dial_cnt < 0)
-				dial_cnt = 0;
-			else if (dial_cnt > 9)
-				dial_cnt = 9;
+			clampVariableToRange(0, 9, &dial_cnt);
 			setting->changeSerialBaud(dial_cnt);
 		}
 		dial_cnt_old = dial_cnt;
@@ -603,7 +575,7 @@ void Screen::setWiFiIconState()
 {
 	if (WiFi.status() == WL_CONNECTED) {
 		header->onWiFi();
-	} else if (wifiManager->can_connect()) {
+	} else if (wifiManager->canConnect()) {
 		header->possibleWiFi();
 	} else {
 		header->offWiFi();
@@ -644,9 +616,9 @@ void Screen::drawScreen()
 			if (updated_wifi_info || wifiManager->update_wifi_info) {
 				updated_wifi_info = wifiManager->update_wifi_info = false;
 				if (WiFi.status() == WL_CONNECTED) {
-					setting->drawSSID(wifiManager->ap_info_connected());
+					setting->drawSSID(wifiManager->apInfoConnected());
 				} else if (wifiManager->hasSavedConnectionInfo()) {
-					setting->drawSSID(wifiManager->ap_info_saved());
+					setting->drawSSID(wifiManager->apInfoSaved());
 				} else {
 					setting->drawSSID("WiFi not saved");
 				}
@@ -666,12 +638,9 @@ void Screen::drawScreen()
 void Screen::changeVolt(screen_mode_t mode)
 {
 	if (selected == STATE_VOLT0) {
-		if (dial_cnt < -(volt_set/100 - 30))
-			dial_cnt = -(volt_set/100 - 30);
-		else if (dial_cnt + (volt_set/100) > 200)
-			dial_cnt = 200 - (volt_set/100);
+		clampVariableToRange(-(volt_set/100 - 30), (200 - (volt_set/100)), &dial_cnt);
 		if (mode == BASE_MOVE) {
-			channel[0]->setVolt(dial_cnt);
+			channel[0]->setVolt(dial_cnt); // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
 				NVS.setString("voltage0", String(channel[0]->getVolt()/1000.0));
 
@@ -680,12 +649,9 @@ void Screen::changeVolt(screen_mode_t mode)
 			channel[0]->editVolt(dial_cnt);
 		}
 	} else if (selected == STATE_CURRENT0) {
-		if (dial_cnt > (30 - current_limit))
-			dial_cnt = (30 - current_limit);
-		else if (dial_cnt < -(current_limit - 5))
-			dial_cnt = -(current_limit - 5);
+		clampVariableToRange(-(current_limit - 5), (30 - current_limit), &dial_cnt);
 		if (mode == BASE_MOVE) {
-			channel[0]->setCurrentLimit(dial_cnt);
+			channel[0]->setCurrentLimit(dial_cnt);  // this by default sets absolute value
 			if (dial_cnt != 0) {
 				NVS.setString("current_limit0", String(channel[0]->getCurrentLimit()/10.0));
 			}
@@ -694,12 +660,9 @@ void Screen::changeVolt(screen_mode_t mode)
 		}
 
 	} else if (selected == STATE_VOLT1) {
-		if (dial_cnt < -(volt_set/100 - 30))
-			dial_cnt = -(volt_set/100 - 30);
-		else if (dial_cnt + (volt_set/100) > 200)
-			dial_cnt = 200 - (volt_set/100);
+		clampVariableToRange(-(volt_set/100 - 30), (200 - (volt_set/100)), &dial_cnt);
 		if (mode == BASE_MOVE) {
-			channel[1]->setVolt(dial_cnt);
+			channel[1]->setVolt(dial_cnt); // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
 				NVS.setString("voltage1", String(channel[1]->getVolt()/1000.0));
 			}
@@ -707,12 +670,9 @@ void Screen::changeVolt(screen_mode_t mode)
 			channel[1]->editVolt(dial_cnt);
 		}
 	} else if (selected == STATE_CURRENT1) {
-		if (dial_cnt > (30 - current_limit))
-			dial_cnt = (30 - current_limit);
-		else if (dial_cnt < -(current_limit - 5))
-			dial_cnt = -(current_limit - 5);
+		clampVariableToRange(-(current_limit - 5), (30 - current_limit), &dial_cnt);
 		if (mode == BASE_MOVE) {
-			channel[1]->setCurrentLimit(dial_cnt);
+			channel[1]->setCurrentLimit(dial_cnt);  // this by default sets absolute value
 			if (dial_cnt != 0) {
 				NVS.setString("current_limit1", String(channel[1]->getCurrentLimit()/10.0));
 			}
@@ -722,7 +682,6 @@ void Screen::changeVolt(screen_mode_t mode)
 	}
 
 }
-
 
 void Screen::isrSTPD01()
 {
@@ -755,8 +714,9 @@ void Screen::setTime(uint32_t milisec)
 				flag_long_press = 0;
 			}
 		} else {
-			if (flag_long_press != 3)
+			if (flag_long_press != 3) {
 				btn_pressed[2] = true;
+			}
 			flag_long_press = 0;
 		}
 		if (flag_long_press == 1) {
@@ -777,11 +737,7 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time, bool long_pressed)
 	switch (idx) {
 	case 0: /* Channel0 ON/OFF */
 	case 1: /* Channel1 ON/OFF */
-		if (shutdown)
-			break;
-		if (mode > BASE_EDIT)
-			break;
-		if (long_pressed)
+		if (shutdown || mode > BASE_EDIT || long_pressed)
 			break;
 		if (onoff[idx] == 1)
 			onoff[idx] = 2;
@@ -801,57 +757,6 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time, bool long_pressed)
 		btn_pressed[idx] = true;
 		break;
 	}
-}
-
-void Screen::readFile(const char * path){
-    File file = fs->open(path);
-    if(!file || file.isDirectory()){
-        Serial.println("- failed to open file for reading");
-        return;
-    }
-
-    Serial.println("- read from file:");
-	char tmp;
-    while(file.available()){
-		tmp = file.read();
-		if (tmp == '\n') {
-			Serial.printf(" : %d \n\r", file.position());
-			continue;
-		}
-		Serial.write(tmp);
-    }
-    file.close();
-}
-
-void Screen::listDir(const char * dirname, uint8_t levels){
-    Serial.printf("Listing directory: %s\r\n", dirname);
-
-    File root = fs->open(dirname);
-    if(!root){
-        Serial.println("- failed to open directory");
-        return;
-    }
-    if(!root.isDirectory()){
-        Serial.println(" - not a directory");
-        return;
-    }
-
-    File file = root.openNextFile();
-    while(file){
-        if(file.isDirectory()){
-            Serial.print("  DIR : ");
-            Serial.println(file.name());
-            if(levels){
-                listDir(file.name(), levels -1);
-            }
-        } else {
-            Serial.print("  FILE: ");
-            Serial.print(file.name());
-            Serial.print("\tSIZE: ");
-            Serial.println(file.size());
-        }
-        file = root.openNextFile();
-    }
 }
 
 void Screen::drawBmp(const char *filename, int16_t x, int16_t y)
@@ -929,7 +834,6 @@ uint32_t Screen::read32(fs::File &f) {
   ((uint8_t *)&result)[3] = f.read(); // MSB
   return result;
 }
-
 
 void Screen::fsInit(void)
 {

@@ -167,20 +167,20 @@ void inputTask(void *parameter)
 void wifiTask(void *parameter)
 {
 	for (;;) {
-		if (screen.wifiManager->can_connect() && screen.isWiFiEnabled()) {
-			screen.wifiManager->ap_connect_from_settings();
+		if (screen.wifiManager->canConnect() && screen.isWiFiEnabled()) {
+			screen.wifiManager->apConnectFromSettings();
 		} else if (!screen.isWiFiEnabled()) {
-			screen.wifiManager->ap_disconnect_and_turn_wifi_off();
+			screen.wifiManager->apDisconnectAndTurnWiFiOff();
 		}
 		screen.setWiFiIconState();
 
 		if (Serial.available()) {
 			if (screen.wifiManager->isCommandMode())
-				screen.wifiManager->cmd_main(Serial.read());
+				screen.wifiManager->WiFiMenuMain(Serial.read());
 			else {
 				if (Serial.read() == SERIAL_CTRL_C) {
 					screen.wifiManager->setCommandMode();
-					screen.wifiManager->view_main_menu();
+					screen.wifiManager->viewMainMenu();
 				} else {
 					Serial.printf(">>> Unknown command <<<\n\r");
 				}

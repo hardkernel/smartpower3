@@ -15,7 +15,7 @@
 #define EMPTY_IPADDRESS "0.0.0.0"
 #define EMPTY_PORT 0
 
-#define WIFI_CMD_MENU_CNT   (sizeof(WIFI_CMD_MENU)/sizeof(WIFI_CMD_MENU[0]))
+#define WIFI_CMD_MENU_CNT   (sizeof(wifi_cmd_menu)/sizeof(wifi_cmd_menu[0]))
 
 enum wifi_credentials_state {
 	STATE_CREDENTIALS_OK = 0,
@@ -23,7 +23,7 @@ enum wifi_credentials_state {
 	STATE_CREDENTIALS_NOT_CHECKED = 2,
 };
 
-const char WIFI_CMD_MENU[][50] = {
+const char wifi_cmd_menu[][50] = {
 	"[ WIFI Command mode menu ]",
 	"1. Connection AP Info",
 	"2. Connection UDP server Info",
@@ -40,54 +40,53 @@ class WiFiManager
 {
 public:
 	WiFiManager(WiFiUDP &udp, WiFiClient &client, Setting *setting);
-	void view_main_menu(void);
-	void view_ap_list(int16_t ap_list_cnt);
-	int16_t ap_scanning(void);
-	bool ap_connect(uint8_t ap_number, char *passwd);
-	bool ap_connect(String ssid, String passwd, bool show_ctrl_c_info = false);
-	bool ap_connect_from_settings(void);
-	void ap_set_passwd(uint8_t ap_number);
-	void ap_select(int16_t ap_list_cnt);
-	void ap_select_and_connect(void);
-	void ap_forget(void);
-	void ap_disconnect_and_turn_wifi_off(void);
-	void ap_info(void);
-	String ap_info_saved(void);
-	String ap_info_connected(void);
-	void udp_server_info();
-	void udp_server_forget(void);
-	void switch_wifi_connection(void);
-	void cmd_main(char idata);
+	void viewMainMenu(void);
+	void viewApList(int16_t ap_list_cnt);
+	int16_t apScanning(void);
+	bool apConnect(uint8_t ap_number, char *passwd);
+	bool apConnect(String ssid, String passwd, bool show_ctrl_c_info = false);
+	bool apConnectFromSettings(void);
+	void apSetPassword(uint8_t ap_number);
+	void apSelect(int16_t ap_list_cnt);
+	void apSelectAndConnect(void);
+	void apForget(void);
+	void apDisconnectAndTurnWiFiOff(void);
+	void apInfo(void);
+	String apInfoSaved(void);
+	String apInfoConnected(void);
+	void udpServerInfo();
+	void udpServerForget(void);
+	void switchWiFiConnection(void);
+	void WiFiMenuMain(char idata);
 	bool isCommandMode(void);
 	void setCommandMode(void);
-	bool is_connected(void);
-	bool can_connect(void);
+	bool isConnected(void);
+	bool canConnect(void);
 	bool hasSavedConnectionInfo(void);
 	bool isWiFiEnabled(void);
 	void disableWiFi(void);
 	void enableWiFi(void);
-	void set_udp();
+	void setUdp();
+	void switchLoggingOnOff(void);
 	wifi_credentials_state credentials_state = STATE_CREDENTIALS_OK;
 	uint16_t port_udp = 0;
 	IPAddress ipaddr_udp;
 	bool update_udp_info = true;
 	bool update_wifi_info = true;
-	void switchLoggingOnOff(void);
 private:
 	WiFiUDP udp;
 	WiFiClient client;
 	Setting *setting;
 	bool commandMode = false;
-	void do_ap_forget(void);
-	void do_udp_server_forget(void);
-	void do_switch_wifi_state(void);
-	void do_switch_logging(void);
-	void serialPrintCtrlCNotice(void);
-	IPAddress serial_get_udp_server_address(void);
-	uint16_t serial_get_udp_server_port(void);
-	void set_udp_server_port_and_address(String ipaddr, uint16_t port);
 	bool enabled = true;
-protected:
+	void doApForget(void);
+	void doUdpServerForget(void);
+	void doSwitchWiFiState(void);
+	void doSwitchLogging(void);
+	void serialPrintCtrlCNotice(void);
+	IPAddress serialGetUdpServerAddress(void);
+	uint16_t serialGetUdpServerPort(void);
+	void setUdpServerPortAndAddress(String ipaddr, uint16_t port);
 	void checkAndResetIndexAndValue(
 			uint8_t& index_variable,
 			char& indexed_variable,
@@ -95,7 +94,7 @@ protected:
 			const char *error_message,
 			const char *prompt_message
 	);
-	void do_yes_no_selection(
+	void doYesNoSelection(
 			void (WiFiManager::*func)(),
 			const char *confirmation_string,
 			const char *approval_string,

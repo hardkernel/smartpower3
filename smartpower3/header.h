@@ -44,7 +44,6 @@ public:
 	void possibleWiFi(void);
 	void offWiFi(void);
 	Component *display_mode;
-
 private:
 	TFT_eSPI *tft;
 	uint16_t x;

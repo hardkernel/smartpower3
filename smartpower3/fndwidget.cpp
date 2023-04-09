@@ -13,8 +13,6 @@ FndWidget::~FndWidget(void)
 struct fnd* FndWidget::fnd_init(uint8_t cnt, uint8_t dot_pos, bool rbo,
 		uint16_t x, uint16_t y, uint16_t fg_color, uint16_t bg_color, enum FND_FONT_SIZE f_size, uint32_t div)
 {
-	uint32_t	i;
-
 	f = (struct fnd *)malloc(sizeof(struct fnd));
 	if (f == NULL) {
 		Serial.printf("fnd struct allocation fail!\n\r");
@@ -49,36 +47,36 @@ struct fnd* FndWidget::fnd_init(uint8_t cnt, uint8_t dot_pos, bool rbo,
 
 	f->x = x;
 	f->y = y;
-	f->bg_color 	= bg_color;
-	f->fg_color 	= fg_color;
-	f->cnt 		= cnt;
-	f->dot_en	= false;
-	f->dot_on 	= false;
-	f->rbo		= rbo;
+	f->bg_color = bg_color;
+	f->fg_color = fg_color;
+	f->cnt = cnt;
+	f->dot_en = false;
+	f->dot_on = false;
+	f->rbo = rbo;
 	f->f_size = f_size;
 	f->div = div;
 	width = cnt * f->f_info->w;
 	height = f->f_info->h;
 
 	if (dot_pos && (dot_pos < f->cnt)) {
-		f->dot_pos 	= f->cnt - dot_pos;
+		f->dot_pos = f->cnt - dot_pos;
 		f->dot_x_offset = f->dot_pos * f->f_info->w;
 		f->dot_en = true;
 	}
 
-	for (i = 0; i < f->cnt; i++) {
+	for (uint32_t i = 0; i < f->cnt; i++) {
 		f->dd[i].value  = 0;
 		f->dd[i].update = true;
 	}
 	fnd_clear_all();
 
-	return	f;
+	return f;
 }
 
 
 void FndWidget::fnd_num_write(uint16_t f_pos)
 {
-	uint16_t	w_offset;
+	uint16_t w_offset;
 
 	w_offset = f->f_info->w * f_pos;
 
@@ -91,7 +89,7 @@ void FndWidget::fnd_num_write(uint16_t f_pos)
 
 void FndWidget::fnd_clear_all(void)
 {
-	uint16_t	f_width, w, h;
+	uint16_t f_width, w, h;
 
 	f_width = f->cnt * f->f_info->w;
 	if (f->dot_en) {
@@ -108,9 +106,9 @@ void FndWidget::fnd_clear_all(void)
 }
 void FndWidget::fnd_dot_write(void)
 {
-	uint16_t	w, h, h_end, i_pos;
-	uint8_t		f_mask;
-	const uint8_t	*f_img;
+	uint16_t w, h, h_end, i_pos;
+	uint8_t f_mask;
+	const uint8_t *f_img;
 
 	w     = f->x + f->dot_x_offset;
 	h     = f->y + f->f_info->d_y_offset;
@@ -150,13 +148,10 @@ struct font_table *fnd_font_table(struct fnd *f, uint8_t f_value)
 
 void FndWidget::fnd_fb_write(int8_t f_pos, int8_t f_value, int16_t color)
 {
-	struct font_table	*f_tbl;
-	const uint8_t		*f_img;
-	uint16_t		f_img_h, f_img_w;
-	uint8_t			f_mask;
-
-	uint16_t	h, h_end, w, w_end;
-	uint16_t	i_pos, i_offset;
+	struct font_table *f_tbl;
+	const uint8_t *f_img;
+	uint16_t f_img_h, f_img_w, h, h_end, w, w_end, i_pos, i_offset;
+	uint8_t f_mask;
 
 	f_tbl = fnd_font_table(f, f_value);
 
@@ -189,8 +184,7 @@ void FndWidget::fnd_fb_write(int8_t f_pos, int8_t f_value, int16_t color)
 
 void FndWidget::fnd_dd_clear()
 {
-	int i;
-	for (i = 0; i < f->cnt; i++) {
+	for (int i = 0; i < f->cnt; i++) {
 		f->dd[i].value  = -1;
 		f->dd[i].update = true;
 	}
@@ -198,8 +192,8 @@ void FndWidget::fnd_dd_clear()
 
 void FndWidget::fnd_update(bool forced)
 {
-	uint16_t	i, fnd_pos;
-	bool		rbo = f->rbo;
+	uint16_t i, fnd_pos;
+	bool rbo = f->rbo;
 	uint16_t value = this->value;
 	uint32_t fnd_data = 0;
 
@@ -354,7 +348,7 @@ void FndWidget::init(uint16_t fg_color, uint16_t bg_color, uint8_t size, uint8_t
 {
 #if 0
 	img->setColorDepth(8);
-	img->fillSprite(TFT_BLACK);
+	img->fillSprite(BG_COLOR);
 	img->createSprite(width, height);
 	img->setTextColor(fg_color, bg_color);
 	img->setTextSize(size);
