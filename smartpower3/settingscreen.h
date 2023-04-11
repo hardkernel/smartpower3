@@ -2,6 +2,7 @@
 #include <TFT_eSPI.h>
 #include "component.h"
 #include "fonts/NotoSansBold20.h"
+#include "settings.h"
 
 #define BL_LCD	17
 #define FREQ	50000
@@ -24,10 +25,10 @@
 #define COLOR_SELECTED TFT_YELLOW
 #define COLOR_DESELECTED TFT_BLACK
 
-class Setting
+class SettingScreen
 {
 public:
-	Setting(TFT_eSPI *tft);
+	SettingScreen(TFT_eSPI *tft, Settings *settings);
 	void init(uint16_t x, uint16_t y);
 
 	uint8_t setBacklightLevelPreset(void);
@@ -46,7 +47,7 @@ public:
 	uint8_t getLogInterval(void);
 	uint16_t getLogIntervalValue(void);
 	uint32_t getSerialBaud(void);
-	uint8_t getSerialBaudLevel(void);
+	uint8_t getSerialBaudIndex(void);
 
 	void changeBacklight(uint8_t level=255);
 	void restoreBacklight();
@@ -79,13 +80,13 @@ public:
 private:
 	TFT_eSPI *tft;
 	TFT_eSprite *popup;
+	Settings *settings;
 	uint16_t x;
 	uint16_t y;
 	uint8_t backlight_level_preset = 0;
 	uint8_t backlight_level_edit = 0;
 	uint16_t log_interval = 0;
 	uint16_t log_interval_edit = 0;
-	bool logging_enabled = false;
 	uint8_t bl_value_preset[7] = {10, 25, 50, 75, 100, 125, 150};
 	uint16_t log_value[7] = {0, 5, 10, 50, 100, 500, 1000};
 	uint32_t serial_value[10] = {9600, 19200, 38400, 57600, 115200, 230400, 460800, 500000, 576000, 921600};

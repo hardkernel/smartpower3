@@ -64,11 +64,12 @@ const char *encryption_str(int encryption)
 	}
 }
 
-WiFiManager::WiFiManager(WiFiUDP &udp, WiFiClient &client, Setting *setting)
+WiFiManager::WiFiManager(WiFiUDP &udp, WiFiClient &client, SettingScreen *setting_screen, Settings *settings)
 {
 	this->udp = udp;
 	this->client = client;
-	this->setting = setting;
+	this->setting_screen = setting_screen;
+	this->settings = settings;
 }
 
 void WiFiManager::viewMainMenu(void)
@@ -111,18 +112,18 @@ int16_t WiFiManager::apScanning(void)
 	return WiFi.scanNetworks();
 }
 
-bool WiFiManager::apConnect(String ssid, String passwd, bool show_ctrl_c_info)
+bool WiFiManager::apConnect(const char* ssid, const char* passwd, bool show_ctrl_c_info)
 {
 	char cmd;
-	uint8_t i = 0, wifi_conn_ok = 2;
+	uint8_t i = 0;
 
 	WiFi.disconnect();
-	WiFi.begin(ssid.c_str(), passwd.c_str());
+	WiFi.begin(ssid, passwd);
 
 	if (show_ctrl_c_info) {
 		this->serialPrintCtrlCNotice();
 	}
-	Serial.printf("Connecting... %s\n\r", ssid.c_str());
+	Serial.printf("Connecting... %s\n\r", ssid);
 
 	while((i++ < CONNECT_RETRY_CNT)) {
 		if (WiFi.status() == WL_CONNECTED) {
@@ -131,8 +132,7 @@ bool WiFiManager::apConnect(String ssid, String passwd, bool show_ctrl_c_info)
 					WiFi.SSID().c_str(),
 					WiFi.RSSI(),
 					WiFi.localIP().toString().c_str());
-			this->setNVSAPConnectionInfo(ssid, passwd, "true");
-			credentials_state = STATE_CREDENTIALS_OK;
+			this->setNVSAPConnectionInfo(ssid, passwd, WIFI_CREDENTIALS_STATE_OK);
 			return true;
 		}
 		Serial.printf("\nConnecting wait (%d)...\n\r", CONNECT_RETRY_CNT - i);
@@ -140,7 +140,7 @@ bool WiFiManager::apConnect(String ssid, String passwd, bool show_ctrl_c_info)
 		if (Serial.available()) {
 			cmd = Serial.read();
 			if (cmd  == SERIAL_CTRL_C) {
-				NVS.setInt("wifi_conn_ok", false);
+				settings->setWifiCredentialsState(WIFI_CREDENTIALS_STATE_NOT_CHECKED);
 				WiFi.disconnect();
 				return false;
 			}
@@ -148,17 +148,12 @@ bool WiFiManager::apConnect(String ssid, String passwd, bool show_ctrl_c_info)
 		delay(1000);
 	}
 
-	wifi_conn_ok = NVS.getInt("wifi_conn_ok");
-	if (wifi_conn_ok) {
-		credentials_state = STATE_CREDENTIALS_OK;
-		Serial.printf("\nConnecting to previous AP\n\r");
-	} else if (!wifi_conn_ok) {
-		credentials_state = STATE_CREDENTIALS_INVALID;
+	if (settings->getWifiCredentialsState() == WIFI_CREDENTIALS_STATE_OK) {
+		Serial.printf("\nReverting to previous AP\n\r");
 	} else {
-		credentials_state = STATE_CREDENTIALS_NOT_CHECKED;
-		Serial.printf("\n%s Connect failed\n\r", ssid.c_str());
+		Serial.printf("\n%s Connect failed\n\r", ssid);
 	}
-	passwd = NVS.setInt("wifi_conn_ok", false);
+	settings->setWifiCredentialsState(WIFI_CREDENTIALS_STATE_NOT_CHECKED);
 
 	return false;
 }
@@ -166,6 +161,7 @@ bool WiFiManager::apConnect(String ssid, String passwd, bool show_ctrl_c_info)
 bool WiFiManager::apConnect(uint8_t ap_number, char *passwd)
 {
 	String ssid;
+	ssid.reserve(256);
 
 	ssid = WiFi.SSID(ap_number);
 
@@ -175,24 +171,28 @@ bool WiFiManager::apConnect(uint8_t ap_number, char *passwd)
 		WiFi.RSSI(ap_number),
 		encryption_str(WiFi.encryptionType(ap_number)));
 
-	return this->apConnect(ssid, passwd, true);
+	return this->apConnect(ssid.c_str(), passwd, true);
 }
 
 bool WiFiManager::apConnectFromSettings()
 {
-	String ssid, password;
-	uint8_t i = 0;
-
-	if (this->getNVSAPConnectionInfo(ssid, password)) {
+	if (
+			!settings->getWifiAccessPointSsid().isEmpty()
+			&& !settings->getWifiPassword().isEmpty()
+	) {
 		WiFi.disconnect();
-		WiFi.begin(ssid.c_str(), password.c_str());
+		WiFi.begin(
+				settings->getWifiAccessPointSsid().c_str(),
+				settings->getWifiPassword().c_str());
 		if (WiFi.waitForConnectResult(CONNECT_RETRY_CNT * 1000) == WL_CONNECTED) {
-			this->setNVSAPConnectionInfo(ssid, password, "true");
-			this->credentials_state = STATE_CREDENTIALS_OK;
+			this->setNVSAPConnectionInfo(
+					settings->getWifiAccessPointSsid().c_str(),
+					settings->getWifiPassword().c_str(),
+					WIFI_CREDENTIALS_STATE_OK);
 			return true;
 		}
 	}
-	this->credentials_state = STATE_CREDENTIALS_INVALID;
+	settings->setWifiCredentialsState(WIFI_CREDENTIALS_STATE_INVALID);
 	return false;
 }
 
@@ -295,8 +295,7 @@ void WiFiManager::apSelectAndConnect()
 void WiFiManager::doApForget()
 {
 	WiFi.disconnect(true, true);
-	this->setNVSAPConnectionInfo("", "", "false");
-	credentials_state = STATE_CREDENTIALS_INVALID;
+	this->setNVSAPConnectionInfo("", "", WIFI_CREDENTIALS_STATE_INVALID);
 	delay(100);
 	update_wifi_info = true;
 }
@@ -339,7 +338,7 @@ void WiFiManager::apInfo()
 
 String WiFiManager::apInfoSaved()
 {
-	return NVS.getString("ssid");
+	return settings->getWifiAccessPointSsid();
 }
 
 String WiFiManager::apInfoConnected()
@@ -462,10 +461,10 @@ void WiFiManager::switchWiFiConnection()
 
 void WiFiManager::setUdpServerPortAndAddress(String ipaddr, uint16_t port)
 {
-	NVS.setString("ipaddr_udp", ipaddr);
-	NVS.setInt("port_udp", port);
-	port_udp = port;
 	ipaddr_udp.fromString(ipaddr);
+	settings->setWifiIpv4UdpLoggingServerIpAddress(ipaddr_udp);
+	settings->setWifiIpv4UdpLoggingServerPort(port);
+	port_udp = port;
 	update_udp_info = true;
 }
 
@@ -486,10 +485,10 @@ void WiFiManager::udpServerForget()
 
 void WiFiManager::doSwitchLogging()
 {
-	if (setting->isLoggingEnabled()) {
-		setting->disableLogging();
+	if (setting_screen->isLoggingEnabled()) {
+		setting_screen->disableLogging();
 	} else {
-		setting->enableLogging();
+		setting_screen->enableLogging();
 	}
 }
 
@@ -542,7 +541,7 @@ void WiFiManager::WiFiMenuMain(char idata)
 			Serial.printf(
 					"%s%s\n\r",
 					MSG_CMD_TURN_LOGGING_ON_OFF,
-					setting->isLoggingEnabled() ? MSG_ON : MSG_OFF);
+					setting_screen->isLoggingEnabled() ? MSG_ON : MSG_OFF);
 			switchLoggingOnOff();
 			break;
 		case    '9':
@@ -569,28 +568,28 @@ bool WiFiManager::canConnect(void)
 {
 	return (
 			!this->isConnected()
-			&& this->credentials_state == STATE_CREDENTIALS_OK
+			&& settings->getWifiCredentialsState() == WIFI_CREDENTIALS_STATE_OK
 			&& this->hasSavedConnectionInfo());
 }
 
 bool WiFiManager::hasSavedConnectionInfo()
 {
-	return (apInfoSaved() != "");
+	return (!apInfoSaved().isEmpty());
 }
 
 bool WiFiManager::isWiFiEnabled()
 {
-	return this->enabled;
+	return settings->isWifiEnabled();
 }
 
 void WiFiManager::disableWiFi()
 {
-	this->enabled = false;
+	settings->setWifiEnabled(false);
 }
 
 void WiFiManager::enableWiFi()
 {
-	this->enabled = true;
+	settings->setWifiEnabled(true);
 }
 
 bool WiFiManager::isCommandMode(void)
@@ -661,14 +660,10 @@ void WiFiManager::doYesNoSelection(void (WiFiManager::*func)(), const char *conf
 	}
 }
 
-void WiFiManager::setNVSAPConnectionInfo(String ssid, String password, bool wifi_conn_ok)
+void WiFiManager::setNVSAPConnectionInfo(const char *ssid, const char *password,
+										 wifi_credentials_state_e credentials_state)
 {
-	NVS.setString("ssid", ssid);
-	NVS.setString("passwd", password);
-	NVS.setInt("wifi_conn_ok", wifi_conn_ok);
-}
-
-bool WiFiManager::getNVSAPConnectionInfo(String &ssid, String &password)
-{
-	return NVS.getString("ssid", ssid) && NVS.getString("passwd", password);
+	settings->setWifiAccessPointSsid(ssid);
+	settings->setWifiPassword(password);
+	settings->setWifiCredentialsState(credentials_state);
 }

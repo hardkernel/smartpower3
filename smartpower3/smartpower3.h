@@ -2,6 +2,7 @@
 #include <Microchip_PAC193x.h>
 #include "screen.h"
 #include "inputmanager.h"
+#include "settings.h"
 
 #define BUTTON_MENU 36
 #define BUTTON_CH0 39
@@ -17,6 +18,7 @@ Button button[4] = {
 };
 
 Screen screen;
+Settings settings = Settings();
 Microchip_PAC193x PAC = Microchip_PAC193x(15000);
 
 MeasChannel mCh0(&PAC, 0);

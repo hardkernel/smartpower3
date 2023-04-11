@@ -18,12 +18,14 @@ void IRAM_ATTR onTimer()
 void setup(void) {
 	Serial.begin(115200);
 
-	NVS.begin();
+	delay(100);  // needed for the following not to block
+
+	settings.init();
 
 	I2CA.begin(15, 4, (uint32_t)10000);
 	I2CB.begin(21, 22, (uint32_t)800000);
 	PAC.begin(&I2CB);
-	screen.begin(&I2CA);
+	screen.begin(&settings, &I2CA);
 	initEncoder(&dial);  // this also starts a task, without specified core
 
 	xTaskCreatePinnedToCore(screenTask, "Draw Screen", 6000, NULL, 1, NULL, 1);  // delay 10
@@ -130,7 +132,7 @@ void logTask(void *parameter)
 
 void screenTask(void *parameter)
 {
-	uint8_t old_state = 0;
+	wl_status_t old_state = WL_IDLE_STATUS;
 	for (;;) {
 		if (old_state != WiFi.status()) {
 			old_state = WiFi.status();

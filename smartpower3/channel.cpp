@@ -280,7 +280,7 @@ uint16_t Channel::getVolt(void)
 
 uint16_t Channel::getCurrentLimit(void)
 {
-	return current_limit/100;
+	return current_limit;
 }
 
 uint16_t Channel::countVolt(float dial_count)

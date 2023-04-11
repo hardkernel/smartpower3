@@ -1,10 +1,10 @@
 #ifndef wifi_manager_h
 #define wifi_manager_h
 
-#include <ArduinoNvs.h>
+#include <settingscreen.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
-#include "setting.h"
+#include "settings.h"
 
 #define SERIAL_CTRL_C       0x03
 #define SERIAL_ENTER        0x0D
@@ -17,11 +17,6 @@
 
 #define WIFI_CMD_MENU_CNT   (sizeof(wifi_cmd_menu)/sizeof(wifi_cmd_menu[0]))
 
-enum wifi_credentials_state {
-	STATE_CREDENTIALS_OK = 0,
-	STATE_CREDENTIALS_INVALID = 1,
-	STATE_CREDENTIALS_NOT_CHECKED = 2,
-};
 
 const char wifi_cmd_menu[][50] = {
 	"[ WIFI Command mode menu ]",
@@ -39,12 +34,12 @@ const char wifi_cmd_menu[][50] = {
 class WiFiManager
 {
 public:
-	WiFiManager(WiFiUDP &udp, WiFiClient &client, Setting *setting);
+	WiFiManager(WiFiUDP &udp, WiFiClient &client, SettingScreen *setting_screen, Settings *settings);
 	void viewMainMenu(void);
 	void viewApList(int16_t ap_list_cnt);
 	int16_t apScanning(void);
 	bool apConnect(uint8_t ap_number, char *passwd);
-	bool apConnect(String ssid, String passwd, bool show_ctrl_c_info = false);
+	bool apConnect(const char* ssid, const char* passwd, bool show_ctrl_c_info = false);
 	bool apConnectFromSettings(void);
 	void apSetPassword(uint8_t ap_number);
 	void apSelect(int16_t ap_list_cnt);
@@ -68,7 +63,6 @@ public:
 	void enableWiFi(void);
 	void setUdp();
 	void switchLoggingOnOff(void);
-	wifi_credentials_state credentials_state = STATE_CREDENTIALS_OK;
 	uint16_t port_udp = 0;
 	IPAddress ipaddr_udp;
 	bool update_udp_info = true;
@@ -76,9 +70,9 @@ public:
 private:
 	WiFiUDP udp;
 	WiFiClient client;
-	Setting *setting;
+	SettingScreen *setting_screen;
+	Settings *settings;
 	bool commandMode = false;
-	bool enabled = true;
 	void doApForget(void);
 	void doUdpServerForget(void);
 	void doSwitchWiFiState(void);
@@ -86,7 +80,7 @@ private:
 	void serialPrintCtrlCNotice(void);
 	IPAddress serialGetUdpServerAddress(void);
 	uint16_t serialGetUdpServerPort(void);
-	void setUdpServerPortAndAddress(String ipaddr, uint16_t port);
+	void setUdpServerPortAndAddress(String ipaddr_udp, uint16_t port);
 	void checkAndResetIndexAndValue(
 			uint8_t& index_variable,
 			char& indexed_variable,
@@ -101,8 +95,8 @@ private:
 			const char *denial_string
 	);
 	bool isDigitChar(char input_char);
-	void setNVSAPConnectionInfo(String ssid, String password, bool wifi_conn_ok);
-	bool getNVSAPConnectionInfo(String& ssid, String& password);
+	void setNVSAPConnectionInfo(const char* ssid, const char* password,
+								wifi_credentials_state_e credentials_state);
 };
 
 #endif

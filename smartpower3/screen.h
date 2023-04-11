@@ -5,8 +5,8 @@
 #include "channel.h"
 #include "header.h"
 #include <STPD01.h>
-#include <ArduinoNvs.h>
 #include "wifimanager.h"
+#include "settings.h"
 
 #define LED2	13
 #define LED1	2
@@ -48,7 +48,7 @@ class Screen
 {
 public:
 	Screen();
-	void begin(TwoWire *theWire = &Wire);
+	void begin(Settings *settings, TwoWire *theWire = &Wire);
 	void pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch);
 	void pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt);
 	uint8_t* getOnOff(void);
@@ -69,7 +69,6 @@ public:
 	uint32_t read32(fs::File &f);
 	void changeVolt(screen_mode_t mode);
 	void fsInit(void);
-	bool checkFirstBoot();
 	bool flag_int[2] = {0,};
 	void isrSTPD01();
 	void initScreen();
@@ -100,7 +99,9 @@ private:
 	screen_mode_t mode = BASE;
 	Channel *channel[2];
 	Header *header;
-	Setting *setting;
+//TODO: ScreenSettings might be removed if not necessary after move to Settings
+	SettingScreen *setting_screen;
+	Settings *settings;
 	TwoWire *_wire;
 	uint8_t selected = 0;
 	uint32_t dial_time = 0;
