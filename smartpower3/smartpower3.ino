@@ -84,8 +84,8 @@ void logTask(void *parameter)
 			portENTER_CRITICAL(&timerMux);
 			interruptFlag--;
 			portEXIT_CRITICAL(&timerMux);
-			if (log_interval != screen.getLogInterval()) {
-				log_interval = screen.getLogInterval();
+			if (log_interval != screen.getEnabledLogInterval()) {
+				log_interval = screen.getEnabledLogInterval();
 				if (log_interval == 0)
 					timerAlarmWrite(timer, 250000, true);
 				else
@@ -166,23 +166,21 @@ void inputTask(void *parameter)
 
 void wifiTask(void *parameter)
 {
-	String ssid = "";
-	String passwd = "";
 	for (;;) {
-		if (screen.wifiManager->credentials_state == STATE_CREDENTIALS_OK) {
-			ssid = NVS.getString("ssid");
-			passwd = NVS.getString("passwd");
-			if (!screen.wifiManager->ap_connect(ssid, passwd))
-				screen.wifiManager->credentials_state = STATE_CREDENTIALS_INVALID;
+		if (screen.wifiManager->canConnect() && screen.isWiFiEnabled()) {
+			screen.wifiManager->apConnectFromSettings();
+		} else if (!screen.isWiFiEnabled()) {
+			screen.wifiManager->apDisconnectAndTurnWiFiOff();
 		}
+		screen.setWiFiIconState();
 
 		if (Serial.available()) {
 			if (screen.wifiManager->isCommandMode())
-				screen.wifiManager->cmd_main(Serial.read());
+				screen.wifiManager->WiFiMenuMain(Serial.read());
 			else {
 				if (Serial.read() == SERIAL_CTRL_C) {
 					screen.wifiManager->setCommandMode();
-					screen.wifiManager->view_main_menu();
+					screen.wifiManager->viewMainMenu();
 				} else {
 					Serial.printf(">>> Unknown command <<<\n\r");
 				}

@@ -24,6 +24,7 @@
 #define FG_ENABLED     0xFFFF      /* 01100 011001 01100, 204, 204, 204 */
 #define BG_ENABLED_INT    TFT_RED      /* 01100 011001 01100, 204, 204, 204 */
 #define FG_ENABLED_INT    TFT_WHITE      /* 01100 011001 01100, 204, 204, 204 */
+#define SELECTION_BORDER_WIDTH 2
 
 class Component
 {
@@ -44,6 +45,7 @@ public:
 	void setTextColor(uint16_t fg_color, uint16_t bg_color);
 	void loadFont(const uint8_t font[]);
 	void unloadFont(void);
+	void clearAndDrawWithFont(const uint8_t font[], String string_to_draw);
 private:
 	uint16_t width;
 	uint16_t height;

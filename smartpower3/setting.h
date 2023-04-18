@@ -19,7 +19,10 @@
 #define X_LOG_LEVEL 250
 #define Y_WIFI_INFO	140
 #define X_IPADDR 220
-#define X_SSID 220
+#define X_SSID 180
+
+#define COLOR_SELECTED TFT_YELLOW
+#define COLOR_DESELECTED TFT_BLACK
 
 class Setting
 {
@@ -33,6 +36,9 @@ public:
 	void turnOffBacklight(void);
 	uint8_t setLogInterval(void);
 	void setLogInterval(uint8_t val);
+	bool isLoggingEnabled(void);
+	void enableLogging(void);
+	void disableLogging(void);
 	uint32_t setSerialBaud(uint32_t baud);
 	uint32_t setSerialBaud();
 
@@ -49,15 +55,15 @@ public:
 	void restoreSerialBaud(void);
 	void restoreLogIntervalValue(void);
 
-	void selectBLLevel(uint16_t color=TFT_YELLOW);
-	void selectLogInterval(uint16_t color=TFT_YELLOW);
-	void selectSerialBaud(uint16_t color=TFT_YELLOW);
-	void selectSerialLogging(uint16_t color=TFT_YELLOW);
+	void selectBLLevel(uint16_t color=COLOR_SELECTED);
+	void selectLogInterval(uint16_t color=COLOR_SELECTED);
+	void selectSerialBaud(uint16_t color=COLOR_SELECTED);
+	void selectSerialLogging(uint16_t color=COLOR_SELECTED);
 
-	void deSelectBLLevel(uint16_t color=TFT_BLACK);
-	void deSelectLogInterval(uint16_t color=TFT_BLACK);
-	void deSelectSerialBaud(uint16_t color=TFT_BLACK);
-	void deSelectSerialLogging(uint16_t color=TFT_BLACK);
+	void deSelectBLLevel(uint16_t color=COLOR_DESELECTED);
+	void deSelectLogInterval(uint16_t color=COLOR_DESELECTED);
+	void deSelectSerialBaud(uint16_t color=COLOR_DESELECTED);
+	void deSelectSerialLogging(uint16_t color=COLOR_DESELECTED);
 
 	void drawBacklightLevel(uint8_t level);
 	void drawLogIntervalValue(uint16_t log_interval);
@@ -68,6 +74,7 @@ public:
 	void drawUDPIpaddr(String ipaddr);
 	void drawUDPport(uint16_t port);
 	void drawSSID(String ssid);
+
 	void debug(void);
 private:
 	TFT_eSPI *tft;
@@ -78,6 +85,7 @@ private:
 	uint8_t backlight_level_edit = 0;
 	uint16_t log_interval = 0;
 	uint16_t log_interval_edit = 0;
+	bool logging_enabled = false;
 	uint8_t bl_value_preset[7] = {10, 25, 50, 75, 100, 125, 150};
 	uint16_t log_value[7] = {0, 5, 10, 50, 100, 500, 1000};
 	uint32_t serial_value[10] = {9600, 19200, 38400, 57600, 115200, 230400, 460800, 500000, 576000, 921600};

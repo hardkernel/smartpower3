@@ -1,3 +1,4 @@
+#include "helpers.h"
 #include "component.h"
 
 Component::Component(TFT_eSPI *tft, uint16_t width, uint16_t height, uint8_t font)
@@ -26,7 +27,7 @@ Component::~Component(void)
 void Component::init(uint16_t fg_color, uint16_t bg_color, uint8_t size, uint8_t align)
 {
 	img->setColorDepth(16);
-	img->fillSprite(TFT_BLACK);
+	img->fillSprite(BG_COLOR);
 	img->createSprite(width, height);
 	img->setTextColor(fg_color, bg_color);
 	img->setTextSize(size);
@@ -48,15 +49,25 @@ void Component::setCoordinate(uint16_t x, uint16_t y)
 
 void Component::drawOutLines(void)
 {
-	for (int i = 0; i < 3; i++) {
-		tft->drawRect(x-(3-i), y-(3-i), width+(6-i*2), height+(6-i*2), TFT_YELLOW);
+	for (int i = 0; i < SELECTION_BORDER_WIDTH; i++) {
+		tft->drawRect(
+				x-(SELECTION_BORDER_WIDTH-i),
+				y-(SELECTION_BORDER_WIDTH-i),
+				width+(SELECTION_BORDER_WIDTH*2-i*2),
+				height+(SELECTION_BORDER_WIDTH*2-i*2),
+				TFT_YELLOW);
 	}
 }
 
 void Component::clearOutLines(void)
 {
-	for (int i = 0; i < 3; i++) {
-		tft->drawRect(x-(3-i), y-(3-i), width+(6-i*2), height+(6-i*2), TFT_BLACK);
+	for (int i = 0; i < SELECTION_BORDER_WIDTH; i++) {
+		tft->drawRect(
+				x-(SELECTION_BORDER_WIDTH-i),
+				y-(SELECTION_BORDER_WIDTH-i),
+				width+(SELECTION_BORDER_WIDTH*2-i*2),
+				height+(SELECTION_BORDER_WIDTH*2-i*2),
+				BG_COLOR);
 	}
 }
 
@@ -107,7 +118,15 @@ void Component::draw(bool force_update)
 
 void Component::clear(void)
 {
-	img->fillSprite(TFT_BLACK);
+	img->fillSprite(BG_COLOR);
+}
+
+void Component::clearAndDrawWithFont(const uint8_t font[], String string_to_draw)
+{
+	this->clear();
+	this->loadFont(font);
+	this->draw(string_to_draw);
+	this->unloadFont();
 }
 
 void Component::pushValue(uint16_t value)

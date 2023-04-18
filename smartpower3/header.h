@@ -10,13 +10,26 @@
 #include "icons/input_header_icon_widget.h"
 #include "icons/unit_header_icon_widget.h"
 
+enum icon_w {
+	WIFI,
+	LOGGING
+};
+
+enum tri_state {
+	CANNOT_USE = 0,
+	CAN_USE,
+	IN_USE
+};
+
 class Header : public Component
 {
 public:
 	Header(TFT_eSPI *tft);
 	void init(uint16_t x, uint16_t y);
 	void select(void);
+	void select(icon_w icon);
 	void deSelect(void);
+	void deSelect(icon_w icon);
 	void drawMode(String str);
 	void pushPower(uint16_t volt, uint16_t ampere, uint16_t watt);
 	void draw(void);
@@ -26,10 +39,11 @@ public:
 	void setDebug(void);
 	void onLogging(void);
 	void offLogging(void);
+	void possibleLogging(void);
 	void onWiFi(void);
+	void possibleWiFi(void);
 	void offWiFi(void);
 	Component *display_mode;
-
 private:
 	TFT_eSPI *tft;
 	uint16_t x;
@@ -46,9 +60,9 @@ private:
 	UnitHeaderIconWidget *icon_v, *icon_a;
 	FndWidget *input_v, *input_a;
 	uint16_t debug = 0;
-	bool flag_logging = false;
+	tri_state flag_logging = CANNOT_USE;
 	bool update_logging_icon = false;
-	bool flag_wifi = false;
+	tri_state flag_wifi = CANNOT_USE;
 	bool update_wifi_icon = false;
 };
 

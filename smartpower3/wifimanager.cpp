@@ -1,5 +1,9 @@
 #include "wifimanager.h"
 
+// general
+const char *MSG_ON = "ON";
+const char *MSG_OFF = "OFF";
+// menu items
 const char *MSG_CMD_MODE_ENTERED = ">>> WiFi command mode entered <<<";
 const char *MSG_CMD_MODE_EXITED = ">>> WiFi command mode exited <<<";
 const char *MSG_CMD_UNKNOWN = ">>> Unknown command <<<";
@@ -18,21 +22,31 @@ const char *MSG_CMD_UDP_INFO = ">>> UDP server connection info for logging <<<";
 const char *MSG_CMD_NO_UDP_INFO = ">>> No UDP server info <<<";
 const char *MSG_CMD_FORGET_CONNECTION = ">>> Forget connection AP <<<";
 const char *MSG_CMD_FORGET_UDP_SERVER_INFO = ">>> Forget UDP server <<<";
+const char *MSG_CMD_TURN_WIFI_ON_OFF = "[Dis]Connect pre-saved WiFi network. Current state: ";
+const char *MSG_CMD_TURN_LOGGING_ON_OFF = "Switch logging ON or OFF (if logging interval is set). Current state: ";
 // yes/no selections
 // common
 const char *MSG_YN_REDO_SELECTION_REQUEST = "\n\rPlease enter \"y\" or \"n\" & Enter or press Ctrl+C: ";
 // UDP server forget
-const char *MSG_YN_UDP_FORGET_CONFIRMATION = "Do you really want to forget the UDP server settings?(y/n & Enter): ";
+const char *MSG_YN_UDP_FORGET_CONFIRMATION = "Do you really want to forget the UDP server settings? (y/n & Enter): ";
 const char *MSG_YN_UDP_FORGET_SUCCESS = "\n\rUDP server settings have been erased.";
 const char *MSG_YN_UDP_FORGET_FAILURE = "\n\rUDP server settings have NOT been erased.";
 // WiFi AP forget
-const char *MSG_YN_AP_FORGET_CONFIRMATION = "Do you really want to forget the network settings?(y/n & Enter): ";
+const char *MSG_YN_AP_FORGET_CONFIRMATION = "Do you really want to forget the network settings? (y/n & Enter): ";
 const char *MSG_YN_AP_FORGET_SUCCESS = "\n\rWiFi access point data have been erased.";
 const char *MSG_YN_AP_FORGET_FAILURE = "\n\rWiFi access point data have NOT been erased.";
 // UDP server setting string
 const char *MSG_UDP_SERVER_IP_ADDRESS = "Input your IP address of UDP server (for example \"192.168.0.5\"): ";
 const char *MSG_UDP_SERVER_IP_ADDRESS_PORT = "Input your port number of UDP server (for example \"6000\"): ";
 const char *MSG_UDP_SERVER_UPDATE_SUCCESS = "Successfully set UDP server address and port: %s:%d\r\n";
+// Switch WiFi state setting string
+const char *MSG_YN_WIFI_SWITCH_STATE_CONFIRMATION = "Do you really want to switch WiFi state? (y/n & Enter): ";
+const char *MSG_YN_WIFI_SWITCH_STATE_SUCCESS = "\n\rWiFi state successfully changed.";
+const char *MSG_YN_WIFI_SWITCH_STATE_FAILURE = "\n\rWiFi state not changed.";
+// Switch logging on/off
+const char *MSG_YN_LOGGING_SWITCH_STATE_CONFIRMATION = "Do you really want to switch logging state? (y/n & Enter): ";
+const char *MSG_YN_LOGGING_SWITCH_STATE_SUCCESS = "\n\rLogging state successfully changed.";
+const char *MSG_YN_LOGGING_SWITCH_STATE_FAILURE = "\n\rLogging state not changed.";
 // AP selection
 const char *MSG_AP_SELECT = "Select AP Number (0 - %d) & Enter : ";
 const char *MSG_AP_SELECT_PASSWORD = "Please enter password & press Enter : ";
@@ -50,22 +64,23 @@ const char *encryption_str(int encryption)
 	}
 }
 
-WiFiManager::WiFiManager(WiFiUDP &udp, WiFiClient &client)
+WiFiManager::WiFiManager(WiFiUDP &udp, WiFiClient &client, Setting *setting)
 {
 	this->udp = udp;
 	this->client = client;
+	this->setting = setting;
 }
 
-void WiFiManager::view_main_menu(void)
+void WiFiManager::viewMainMenu(void)
 {
 	Serial.printf("\n\r");
 	for(uint8_t i = 0; i < WIFI_CMD_MENU_CNT; i++)
-		Serial.printf("%s\n\r", &WIFI_CMD_MENU[i][0]);
+		Serial.printf("%s\n\r", &wifi_cmd_menu[i][0]);
 
 	Serial.printf("%s", MSG_CMD);
 }
 
-void WiFiManager::view_ap_list(int16_t ap_list_cnt)
+void WiFiManager::viewApList(int16_t ap_list_cnt)
 {
 	// scanNetworks in ap_scanning can return negative value indicating failure
 	// or unfinished scan - see WiFiType.h
@@ -89,17 +104,17 @@ void WiFiManager::view_ap_list(int16_t ap_list_cnt)
 	}
 }
 
-int16_t WiFiManager::ap_scanning(void)
+int16_t WiFiManager::apScanning(void)
 {
 	Serial.printf("%s\n\r", MSG_CMD_SCANNING);
 	WiFi.disconnect();  // needs to be disconnected between successive scans
 	return WiFi.scanNetworks();
 }
 
-bool WiFiManager::ap_connect(String ssid, String passwd, bool show_ctrl_c_info)
+bool WiFiManager::apConnect(String ssid, String passwd, bool show_ctrl_c_info)
 {
 	char cmd;
-	uint8_t i = 0;
+	uint8_t i = 0, wifi_conn_ok = 2;
 
 	WiFi.disconnect();
 	WiFi.begin(ssid.c_str(), passwd.c_str());
@@ -113,9 +128,11 @@ bool WiFiManager::ap_connect(String ssid, String passwd, bool show_ctrl_c_info)
 		if (WiFi.status() == WL_CONNECTED) {
 			Serial.printf("[[[ Connection Okay ]]]\n\r");
 			Serial.printf("Connected AP : %s(%d dbm), local IP : %s\n\r",
-					WiFi.SSID().c_str(), WiFi.RSSI(), WiFi.localIP().toString().c_str());
+					WiFi.SSID().c_str(),
+					WiFi.RSSI(),
+					WiFi.localIP().toString().c_str());
 			this->setNVSAPConnectionInfo(ssid, passwd, "true");
-			credentials_state = STATE_CREDENTIALS_INVALID;
+			credentials_state = STATE_CREDENTIALS_OK;
 			return true;
 		}
 		Serial.printf("\nConnecting wait (%d)...\n\r", CONNECT_RETRY_CNT - i);
@@ -131,9 +148,12 @@ bool WiFiManager::ap_connect(String ssid, String passwd, bool show_ctrl_c_info)
 		delay(1000);
 	}
 
-	if (NVS.getInt("wifi_conn_ok")) {
+	wifi_conn_ok = NVS.getInt("wifi_conn_ok");
+	if (wifi_conn_ok) {
 		credentials_state = STATE_CREDENTIALS_OK;
 		Serial.printf("\nConnecting to previous AP\n\r");
+	} else if (!wifi_conn_ok) {
+		credentials_state = STATE_CREDENTIALS_INVALID;
 	} else {
 		credentials_state = STATE_CREDENTIALS_NOT_CHECKED;
 		Serial.printf("\n%s Connect failed\n\r", ssid.c_str());
@@ -143,7 +163,7 @@ bool WiFiManager::ap_connect(String ssid, String passwd, bool show_ctrl_c_info)
 	return false;
 }
 
-bool WiFiManager::ap_connect(uint8_t ap_number, char *passwd)
+bool WiFiManager::apConnect(uint8_t ap_number, char *passwd)
 {
 	String ssid;
 
@@ -155,12 +175,30 @@ bool WiFiManager::ap_connect(uint8_t ap_number, char *passwd)
 		WiFi.RSSI(ap_number),
 		encryption_str(WiFi.encryptionType(ap_number)));
 
-	return this->ap_connect(ssid, passwd, true);
+	return this->apConnect(ssid, passwd, true);
 }
 
-void WiFiManager::ap_set_passwd(uint8_t ap_number)
+bool WiFiManager::apConnectFromSettings()
 {
-	char passwd[64], cmd; // 64 chars is the longest wifi password currently possible
+	String ssid, password;
+	uint8_t i = 0;
+
+	if (this->getNVSAPConnectionInfo(ssid, password)) {
+		WiFi.disconnect();
+		WiFi.begin(ssid.c_str(), password.c_str());
+		if (WiFi.waitForConnectResult(CONNECT_RETRY_CNT * 1000) == WL_CONNECTED) {
+			this->setNVSAPConnectionInfo(ssid, password, "true");
+			this->credentials_state = STATE_CREDENTIALS_OK;
+			return true;
+		}
+	}
+	this->credentials_state = STATE_CREDENTIALS_INVALID;
+	return false;
+}
+
+void WiFiManager::apSetPassword(uint8_t ap_number)
+{
+	char passwd[64], cmd; // 64 chars is the longest password currently possible
 	uint8_t pos = 0, sizeof_passwd = sizeof(passwd);
 
 	memset(passwd, 0x00, sizeof_passwd);
@@ -171,7 +209,7 @@ void WiFiManager::ap_set_passwd(uint8_t ap_number)
 	Serial.printf(MSG_AP_SELECT_PASSWORD);
 
 	if (WiFi.encryptionType(ap_number) == WIFI_AUTH_OPEN) {
-		this->ap_connect(ap_number, passwd);
+		this->apConnect(ap_number, passwd);
 		return;
 	}
 
@@ -182,20 +220,25 @@ void WiFiManager::ap_set_passwd(uint8_t ap_number)
 				return;
 			} else if ( cmd == SERIAL_ENTER ) {
 				Serial.printf("\n\r");
-				this->ap_connect(ap_number, passwd);
+				this->apConnect(ap_number, passwd);
 				return;
 			}
 			else {
 				Serial.printf("*");
 				passwd[pos++] = cmd;
 			}
-			this->checkAndResetIndexAndValue(pos, *passwd, sizeof_passwd, "\n\rPassword longer than possible.", MSG_AP_SELECT_PASSWORD);
+			this->checkAndResetIndexAndValue(
+					pos,
+					*passwd,
+					sizeof_passwd,
+					"\n\rPassword longer than possible.",
+					MSG_AP_SELECT_PASSWORD);
 		}
 		delay(100);
 	}
 }
 
-void WiFiManager::ap_select(int16_t ap_list_cnt)
+void WiFiManager::apSelect(int16_t ap_list_cnt)
 {
 	char cmd, sel_ap_number[5];
 	int16_t pos = 0, connect_ap_number = 0, sizeof_sel_ap_number = sizeof(sel_ap_number);
@@ -213,7 +256,7 @@ void WiFiManager::ap_select(int16_t ap_list_cnt)
 			if (cmd  == SERIAL_CTRL_C) {
 				return;
 			} else if (cmd == SERIAL_ENTER) {
-				this->ap_set_passwd(connect_ap_number);
+				this->apSetPassword(connect_ap_number);
 				return;
 			} else {
 				Serial.printf("%c", cmd);
@@ -235,72 +278,96 @@ void WiFiManager::ap_select(int16_t ap_list_cnt)
 	}
 }
 
-void WiFiManager::ap_select_and_connect()
+void WiFiManager::apSelectAndConnect()
 {
 	// if Enter is pressed, first AP is the default
 	int16_t APListCount = 0;
 
-	APListCount = this->ap_scanning();
-	this->view_ap_list(APListCount);
+	APListCount = this->apScanning();
+	this->viewApList(APListCount);
 	// scanNetworks in ap_scanning can return negative value indicating failure
 	// or unfinished scan - see WiFiType.h
 	if (APListCount > 0) {
-		this->ap_select(APListCount);
+		this->apSelect(APListCount);
 	}
 }
 
-void WiFiManager::do_ap_forget()
+void WiFiManager::doApForget()
 {
 	WiFi.disconnect(true, true);
 	this->setNVSAPConnectionInfo("", "", "false");
+	credentials_state = STATE_CREDENTIALS_INVALID;
+	delay(100);
+	update_wifi_info = true;
 }
 
-void WiFiManager::ap_forget()
+void WiFiManager::apForget()
 {
-	this->do_yes_no_selection(
-			&WiFiManager::do_ap_forget,
+	this->doYesNoSelection(
+			&WiFiManager::doApForget,
 			MSG_YN_AP_FORGET_CONFIRMATION,
 			MSG_YN_AP_FORGET_SUCCESS,
 			MSG_YN_AP_FORGET_FAILURE
 	);
 }
 
-void WiFiManager::udp_server_info()
+void WiFiManager::apDisconnectAndTurnWiFiOff()
+{
+	WiFi.disconnect(true, false);
+}
+
+void WiFiManager::udpServerInfo()
 {
 	Serial.printf("IP Address [%s]\n\r", ipaddr_udp.toString().c_str());
 	Serial.printf("Port [%d]\n\r", port_udp);
 }
 
-void WiFiManager::ap_info()
+void WiFiManager::apInfo()
 {
 	if (WiFi.status() == WL_CONNECTED) {
 		Serial.printf("%s\n\r", MSG_CMD_CONNECT_INFO);
-		Serial.printf("%s (%d dbm))\n\r", WiFi.SSID().c_str(), WiFi.RSSI());
+		Serial.printf("%s (%d dbm)\n\r", WiFi.SSID().c_str(), WiFi.RSSI());
 		Serial.printf("IP Address [%s]\n\r", WiFi.localIP().toString().c_str());
 		Serial.printf("MAC Address [%s]\n\r", WiFi.macAddress().c_str());
+	} else if (this->apInfoSaved() != "") {
+		Serial.printf("%s\n\r", MSG_CMD_CONNECT_INFO);
+		Serial.printf("%s [saved connection data]\n\r", this->apInfoSaved().c_str());
 	} else {
 		Serial.printf("%s\n\r", MSG_CMD_NO_CONNECT);
 	}
 }
 
-void WiFiManager::set_udp()
+String WiFiManager::apInfoSaved()
+{
+	return NVS.getString("ssid");
+}
+
+String WiFiManager::apInfoConnected()
+{
+	char wifi_info[35];
+
+	sprintf(wifi_info, "%s : %s", WiFi.SSID(), WiFi.localIP().toString());
+	return wifi_info;
+}
+
+void WiFiManager::setUdp()
 {
 	IPAddress ipaddr;
 	uint16_t port;
 
 	this->serialPrintCtrlCNotice();
 
-	ipaddr = this->serial_get_udp_server_address();
+	ipaddr = this->serialGetUdpServerAddress();
 	if (ipaddr) {
-		port = this->serial_get_udp_server_port();
+		port = this->serialGetUdpServerPort();
 		if (port) {
-			this->set_udp_server_port_and_address(ipaddr.toString(), port);
+			this->setUdpServerPortAndAddress(ipaddr.toString(), port);
 			Serial.printf(MSG_UDP_SERVER_UPDATE_SUCCESS, ipaddr.toString().c_str(), port);
 		}
 	}
 }
 
-IPAddress WiFiManager::serial_get_udp_server_address()
+IPAddress WiFiManager::serialGetUdpServerAddress()
 {
 	char ipaddr[16], cmd;
 	uint8_t pos = 0, sizeof_ipaddr = sizeof(ipaddr);
@@ -335,7 +402,7 @@ IPAddress WiFiManager::serial_get_udp_server_address()
 	}
 }
 
-uint16_t WiFiManager::serial_get_udp_server_port()
+uint16_t WiFiManager::serialGetUdpServerPort()
 {
 	char port[5], cmd;
 	uint8_t pos = 0, sizeof_port = sizeof(port);
@@ -372,7 +439,28 @@ uint16_t WiFiManager::serial_get_udp_server_port()
 	}
 }
 
-void WiFiManager::set_udp_server_port_and_address(String ipaddr, uint16_t port)
+void WiFiManager::doSwitchWiFiState()
+{
+	if (this->isConnected()) {
+		this->disableWiFi();
+	} else if (this->canConnect()) {
+		this->enableWiFi();
+	} else {
+		Serial.println("\n\rPlease set connection settings first!");
+	}
+}
+
+void WiFiManager::switchWiFiConnection()
+{
+	this->doYesNoSelection(
+			&WiFiManager::doSwitchWiFiState,
+			MSG_YN_WIFI_SWITCH_STATE_CONFIRMATION,
+			MSG_YN_WIFI_SWITCH_STATE_SUCCESS,
+			MSG_YN_WIFI_SWITCH_STATE_FAILURE
+	);
+}
+
+void WiFiManager::setUdpServerPortAndAddress(String ipaddr, uint16_t port)
 {
 	NVS.setString("ipaddr_udp", ipaddr);
 	NVS.setInt("port_udp", port);
@@ -381,50 +469,83 @@ void WiFiManager::set_udp_server_port_and_address(String ipaddr, uint16_t port)
 	update_udp_info = true;
 }
 
-void WiFiManager::do_udp_server_forget()
+void WiFiManager::doUdpServerForget()
 {
-	this->set_udp_server_port_and_address((String)EMPTY_IPADDRESS, (uint16_t)EMPTY_PORT);
+	this->setUdpServerPortAndAddress((String)EMPTY_IPADDRESS, (uint16_t)EMPTY_PORT);
 }
 
-void WiFiManager::udp_server_forget()
+void WiFiManager::udpServerForget()
 {
-	this->do_yes_no_selection(
-			&WiFiManager::do_udp_server_forget,
+	this->doYesNoSelection(
+			&WiFiManager::doUdpServerForget,
 			MSG_YN_UDP_FORGET_CONFIRMATION,
 			MSG_YN_UDP_FORGET_SUCCESS,
 			MSG_YN_UDP_FORGET_FAILURE
 	);
 }
 
-void WiFiManager::cmd_main(char idata)
+void WiFiManager::doSwitchLogging()
+{
+	if (setting->isLoggingEnabled()) {
+		setting->disableLogging();
+	} else {
+		setting->enableLogging();
+	}
+}
+
+void WiFiManager::switchLoggingOnOff()
+{
+	this->doYesNoSelection(
+			&WiFiManager::doSwitchLogging,
+			MSG_YN_LOGGING_SWITCH_STATE_CONFIRMATION,
+			MSG_YN_LOGGING_SWITCH_STATE_SUCCESS,
+			MSG_YN_LOGGING_SWITCH_STATE_FAILURE
+	);
+}
+
+void WiFiManager::WiFiMenuMain(char idata)
 {
 	Serial.println(idata);
 	Serial.println();
 
 	switch(idata) {
 		case    '1':
-			ap_info();
+			apInfo();
 			break;
 		case    '2':
 			Serial.printf("%s\n\r", MSG_CMD_UDP_INFO);
-			udp_server_info();
+			udpServerInfo();
 			break;
 		case    '3':
-			ap_select_and_connect();
+			apSelectAndConnect();
 			break;
 		case    '4':
 			Serial.printf("%s\n\r", MSG_CMD_SET_UDP);
-			set_udp();
+			setUdp();
 			break;
 		case    '5':
 			Serial.printf("%s\n\r", MSG_CMD_FORGET_CONNECTION);
-			ap_forget();
+			apForget();
 			break;
 		case    '6':
 			Serial.printf("%s\n\r", MSG_CMD_FORGET_UDP_SERVER_INFO);
-			udp_server_forget();
+			udpServerForget();
 			break;
 		case    '7':
+			Serial.printf(
+					"%s%s\n\r",
+					MSG_CMD_TURN_WIFI_ON_OFF,
+					this->isConnected() ? MSG_ON : MSG_OFF);
+			switchWiFiConnection();
+			break;
+		case    '8':
+			Serial.printf(
+					"%s%s\n\r",
+					MSG_CMD_TURN_LOGGING_ON_OFF,
+					setting->isLoggingEnabled() ? MSG_ON : MSG_OFF);
+			switchLoggingOnOff();
+			break;
+		case    '9':
 		case    SERIAL_CTRL_C:
 			commandMode = false;
 			Serial.printf("%s\n\r", MSG_CMD_MODE_EXITED);
@@ -434,9 +555,42 @@ void WiFiManager::cmd_main(char idata)
 			break;
 	}
 
-	view_main_menu();
+	viewMainMenu();
 	while (Serial.available())
 		Serial.read();
+}
+
+bool WiFiManager::isConnected(void)
+{
+	return (WiFi.status() == WL_CONNECTED);
+}
+
+bool WiFiManager::canConnect(void)
+{
+	return (
+			!this->isConnected()
+			&& this->credentials_state == STATE_CREDENTIALS_OK
+			&& this->hasSavedConnectionInfo());
+}
+
+bool WiFiManager::hasSavedConnectionInfo()
+{
+	return (apInfoSaved() != "");
+}
+
+bool WiFiManager::isWiFiEnabled()
+{
+	return this->enabled;
+}
+
+void WiFiManager::disableWiFi()
+{
+	this->enabled = false;
+}
+
+void WiFiManager::enableWiFi()
+{
+	this->enabled = true;
 }
 
 bool WiFiManager::isCommandMode(void)
@@ -474,7 +628,7 @@ bool WiFiManager::isDigitChar(char input_char)
 	return (input_char > 47) && (input_char < 58);
 }
 
-void WiFiManager::do_yes_no_selection(void (WiFiManager::*func)(), const char *confirmation_string, const char *approval_string, const char *denial_string)
+void WiFiManager::doYesNoSelection(void (WiFiManager::*func)(), const char *confirmation_string, const char *approval_string, const char *denial_string)
 {
 	char buf, cmd;
 
@@ -512,4 +666,9 @@ void WiFiManager::setNVSAPConnectionInfo(String ssid, String password, bool wifi
 	NVS.setString("ssid", ssid);
 	NVS.setString("passwd", password);
 	NVS.setInt("wifi_conn_ok", wifi_conn_ok);
+}
+
+bool WiFiManager::getNVSAPConnectionInfo(String &ssid, String &password)
+{
+	return NVS.getString("ssid", ssid) && NVS.getString("passwd", password);
 }

@@ -12,11 +12,7 @@ class ChannelIconWidget: public BaseIconWidget {
 public:
 	ChannelIconWidget(TFT_eSPI *tft, uint8_t channel);
 	virtual ~ChannelIconWidget(void);
-	void setInt(bool val);
-	void clearInt(void);
-	bool getInt(void);
 protected:
-	bool value = false;
 	uint8_t channel;
 };
 
