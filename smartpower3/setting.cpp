@@ -1,6 +1,6 @@
 #include "setting.h"
-#include "ChewyRegular24.h"
-#include "ChewyRegular32.h"
+#include "fonts/ChewyRegular24.h"
+#include "fonts/ChewyRegular32.h"
 
 Setting::Setting(TFT_eSPI *tft)
 {
@@ -230,38 +230,38 @@ void Setting::changeSerialBaud(uint8_t baud_level)
 	serial_baud_edit = serial_value[baud_level];
 }
 
-void Setting::activateBLLevel(uint16_t color)
+void Setting::selectBLLevel(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
 		tft->drawRect(x + X_BL_LEVEL-i, y-1-i, 135+i*2, 28+i*2, color);
 }
 
-void Setting::activateSerialLogging(uint16_t color)
+void Setting::selectSerialLogging(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
 		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + Y_SERIAL -10, 135+i*2+120, 28+i*2+40, color);
 }
 
-void Setting::activateLogInterval(uint16_t color)
+void Setting::selectLogInterval(uint16_t color)
 {
 	com_log_interval->setTextColor(color, TFT_BLACK);
-	com_log_interval->activate();
+	com_log_interval->select();
 }
 
-void Setting::deActivateBLLevel(uint16_t color)
+void Setting::deSelectBLLevel(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
 		tft->drawRect(x + X_BL_LEVEL -i, y-1-i, 135+i*2, 28+i*2, color);
 }
 
-void Setting::deActivateLogInterval(uint16_t color)
+void Setting::deSelectLogInterval(uint16_t color)
 {
 	com_log_interval->setTextColor(color, TFT_BLACK);
 	drawLogIntervalValue(log_value[log_interval]);
-	com_log_interval->deActivate();
+	com_log_interval->deSelect();
 }
 
-void Setting::deActivateSerialLogging(uint16_t color)
+void Setting::deSelectSerialLogging(uint16_t color)
 {
 	for (int i = 1; i < 4; i++)
 		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + Y_SERIAL -10, 135+i*2+120, 28+i*2+40, color);
@@ -276,20 +276,20 @@ void Setting::drawBacklightLevel(uint8_t level)
 	}
 }
 
-void Setting::activateSerialBaud(uint16_t color)
+void Setting::selectSerialBaud(uint16_t color)
 {
 	com_serial_baud->setTextColor(color, TFT_BLACK);
 	drawSerialBaud(this->serial_baud);
 	com_log_interval->clear();
 	com_log_interval->draw("    ");
-	com_serial_baud->activate();
+	com_serial_baud->select();
 }
 
-void Setting::deActivateSerialBaud(uint16_t color)
+void Setting::deSelectSerialBaud(uint16_t color)
 {
 	com_serial_baud->setTextColor(color, TFT_BLACK);
 	drawSerialBaud(this->serial_baud_edit);
-	com_serial_baud->deActivate();
+	com_serial_baud->deSelect();
 }
 
 void Setting::drawLogIntervalValue(uint16_t log_value)

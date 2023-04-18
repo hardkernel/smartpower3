@@ -117,7 +117,7 @@ void Screen::initScreen(void)
 
 	channel[0]->initScreen(onoff[0]);
 	channel[1]->initScreen(onoff[1]);
-	activated = dial_cnt = dial_cnt_old = STATE_NONE;
+	selected = dial_cnt = dial_cnt_old = STATE_NONE;
 }
 
 void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch)
@@ -203,7 +203,7 @@ void Screen::checkOnOff()
 				setting->init(10, 80);
 				for (int i = 0; i < 2; i++)
 					tft.drawLine(0, 50 + i, 480, 50 + i, TFT_DARKGREY);
-				activated = dial_cnt = dial_cnt_old = STATE_NONE;
+				selected = dial_cnt = dial_cnt_old = STATE_NONE;
 				updated_wifi_info = true;
 				updated_wifi_icon = true;
 				wifiManager->update_udp_info = true;
@@ -225,21 +225,21 @@ void Screen::disablePower()
 	enabled_stpd01[1] = false;
 }
 
-void Screen::deActivate()
+void Screen::deSelect()
 {
-	channel[0]->deActivate(VOLT);
-	channel[0]->deActivate(CURRENT);
-	channel[1]->deActivate(VOLT);
-	channel[1]->deActivate(CURRENT);
+	channel[0]->deSelect(VOLT);
+	channel[0]->deSelect(CURRENT);
+	channel[1]->deSelect(VOLT);
+	channel[1]->deSelect(CURRENT);
 }
 
-void Screen::deActivateSetting()
+void Screen::deSelectSetting()
 {
-	setting->deActivateBLLevel();
-	setting->deActivateSerialLogging();
+	setting->deSelectBLLevel();
+	setting->deSelectSerialLogging();
 }
 
-void Screen::activate()
+void Screen::select()
 {
 	if (dial_cnt == dial_cnt_old)
 		return;
@@ -254,25 +254,25 @@ void Screen::activate()
 			dial_cnt = 3;
 	}
 
-	deActivate();
-	activated = dial_cnt;
+	deSelect();
+	selected = dial_cnt;
 	switch (dial_cnt) {
 		case STATE_VOLT0:
-			channel[0]->activate(VOLT);
+			channel[0]->select(VOLT);
 			break;
 		case STATE_CURRENT0:
-			channel[0]->activate(CURRENT);
+			channel[0]->select(CURRENT);
 			break;
 		case STATE_CURRENT1:
-			channel[1]->activate(CURRENT);
+			channel[1]->select(CURRENT);
 			break;
 		case STATE_VOLT1:
-			channel[1]->activate(VOLT);
+			channel[1]->select(VOLT);
 			break;
 	}
 }
 
-void Screen::activate_setting()
+void Screen::select_setting()
 {
 	if (dial_cnt == dial_cnt_old)
 		return;
@@ -287,14 +287,14 @@ void Screen::activate_setting()
 			dial_cnt = 2;
 	}
 
-	deActivateSetting();
-	activated = dial_cnt;
+	deSelectSetting();
+	selected = dial_cnt;
 	switch (dial_cnt) {
 		case STATE_BL:
-			setting->activateBLLevel();
+			setting->selectBLLevel();
 			break;
 		case STATE_LOG:
-			setting->activateSerialLogging();
+			setting->selectSerialLogging();
 			break;
 	}
 }
@@ -314,7 +314,7 @@ void Screen::drawBase()
 		updated_wifi_info = true;
 		updated_wifi_icon = true;
 		wifiManager->update_udp_info = true;
-		activated = dial_cnt = dial_cnt_old = STATE_NONE;
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
 
 	if (btn_pressed[3] == true) {
@@ -328,34 +328,34 @@ void Screen::drawBase()
 
 void Screen::drawBaseMove()
 {
-	activate();
+	select();
 	if ((cur_time - dial_time) > 5000) {
 		mode = BASE;
-		deActivate();
-		activated = dial_cnt = dial_cnt_old = STATE_NONE;
+		deSelect();
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
 	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
 		flag_long_press = 3;
 		mode = BASE;
 		btn_pressed[2] = false;
-		deActivate();
-		activated = dial_cnt = dial_cnt_old = STATE_NONE;
+		deSelect();
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
-		if (activated == STATE_VOLT0) {
+		if (selected == STATE_VOLT0) {
 			mode = BASE_EDIT;
 			channel[0]->setCompColor(VOLT);
 			volt_set = channel[0]->getVolt();
-		} else if (activated == STATE_CURRENT0) {
+		} else if (selected == STATE_CURRENT0) {
 			mode = BASE_EDIT;
 			channel[0]->setCompColor(CURRENT);
 			current_limit = channel[0]->getCurrentLimit();
-		} else if (activated == STATE_VOLT1) {
+		} else if (selected == STATE_VOLT1) {
 			mode = BASE_EDIT;
 			channel[1]->setCompColor(VOLT);
 			volt_set = channel[1]->getVolt();
-		} else if (activated == STATE_CURRENT1) {
+		} else if (selected == STATE_CURRENT1) {
 			mode = BASE_EDIT;
 			channel[1]->setCompColor(CURRENT);
 			current_limit = channel[1]->getCurrentLimit();
@@ -370,8 +370,8 @@ void Screen::drawBaseEdit()
 {
 	if ((cur_time - dial_time) > 10000) {
 		mode = BASE;
-		deActivate();
-		activated = dial_cnt = dial_cnt_old = STATE_NONE;
+		deSelect();
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
 		channel[0]->clearCompColor();
 		channel[1]->clearCompColor();
 	}
@@ -403,24 +403,24 @@ void Screen::drawBaseEdit()
 
 void Screen::drawSetting()
 {
-	activate_setting();
+	select_setting();
 	if ((cur_time - dial_time) > 10000) {
 		dial_cnt = 0;
 		dial_cnt_old = 0;
-		deActivateSetting();
-		activated = STATE_NONE;
+		deSelectSetting();
+		selected = STATE_NONE;
 	}
 	if (btn_pressed[2] == true) {
 		btn_pressed[2] = false;
-		if (activated == STATE_NONE) {
+		if (selected == STATE_NONE) {
 			channel[0]->clearHide();
 			channel[1]->clearHide();
 			initScreen();
 			mode = BASE;
 		} else {
-			deActivateSetting();
+			deSelectSetting();
 		}
-		activated = dial_cnt =  STATE_NONE;
+		selected = dial_cnt =  STATE_NONE;
 	}
 	if (btn_pressed[1] == true) {
 		btn_pressed[1] = false;
@@ -428,15 +428,15 @@ void Screen::drawSetting()
 	}
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
-		if (activated == STATE_BL) {
+		if (selected == STATE_BL) {
 			mode = SETTING_BL;
 			dial_cnt = setting->getBacklightLevel();
-			setting->activateBLLevel(TFT_GREEN);
-		} else if (activated == STATE_LOG) {
+			setting->selectBLLevel(TFT_GREEN);
+		} else if (selected == STATE_LOG) {
 			mode = SETTING_LOG;
 			dial_cnt = setting->getSerialBaudLevel();
-			setting->activateSerialLogging(TFT_GREEN);
-			setting->activateSerialBaud(TFT_YELLOW);
+			setting->selectSerialLogging(TFT_GREEN);
+			setting->selectSerialBaud(TFT_YELLOW);
 		}
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -448,28 +448,28 @@ void Screen::drawSettingBL()
 {
 	if ((cur_time - dial_time) > 10000) {
 		mode = SETTING;
-		deActivateSetting();
-		activated = dial_cnt = STATE_NONE;
+		deSelectSetting();
+		selected = dial_cnt = STATE_NONE;
 		dial_cnt_old = STATE_NONE;
 		setting->changeBacklight();
-		setting->deActivateBLLevel();
+		setting->deSelectBLLevel();
 	}
 	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
 		flag_long_press = 3;
 		btn_pressed[2] = false;
 		mode = SETTING;
-		activated = dial_cnt = dial_cnt_old = STATE_BL;
-		deActivateSetting();
+		selected = dial_cnt = dial_cnt_old = STATE_BL;
+		deSelectSetting();
 		setting->changeBacklight();
-		setting->activateBLLevel();
+		setting->selectBLLevel();
 		return;
 	}
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
 		mode = SETTING;
 		NVS.setInt("bl_level", setting->setBacklightLevelPreset());
-		setting->activateBLLevel();
-		activated = dial_cnt = STATE_BL;
+		setting->selectBLLevel();
+		selected = dial_cnt = STATE_BL;
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -486,47 +486,47 @@ void Screen::drawSettingLOG()
 {
 	if ((cur_time - dial_time) > 10000) {
 		mode = SETTING;
-		deActivateSetting();
-		activated = dial_cnt = dial_cnt_old = STATE_NONE;
+		deSelectSetting();
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
 		dial_cnt_old = STATE_NONE;
-		setting->deActivateSerialBaud(TFT_WHITE);
+		setting->deSelectSerialBaud(TFT_WHITE);
 		setting->restoreSerialBaud();
-		setting->deActivateLogInterval(TFT_WHITE);
+		setting->deSelectLogInterval(TFT_WHITE);
 		setting->restoreLogIntervalValue();
-		setting->deActivateSerialLogging(TFT_YELLOW);
+		setting->deSelectSerialLogging(TFT_YELLOW);
 	}
 	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
 		flag_long_press = 3;
 		btn_pressed[2] = false;
 		mode = SETTING;
-		activated = dial_cnt = dial_cnt_old = STATE_LOG;
-		setting->deActivateSerialBaud(TFT_WHITE);
+		selected = dial_cnt = dial_cnt_old = STATE_LOG;
+		setting->deSelectSerialBaud(TFT_WHITE);
 		setting->restoreSerialBaud();
-		setting->deActivateLogInterval(TFT_WHITE);
+		setting->deSelectLogInterval(TFT_WHITE);
 		setting->restoreLogIntervalValue();
-		setting->deActivateSerialLogging(TFT_YELLOW);
+		setting->deSelectSerialLogging(TFT_YELLOW);
 		return;
 	}
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
-		if (activated == 5) {
+		if (selected == 5) {
 			mode = SETTING;
 			NVS.setInt("serial_baud", setting->setSerialBaud());
 			NVS.setInt("log_interval", setting->setLogInterval());
-			activated = dial_cnt = dial_cnt_old = STATE_LOG;
-			setting->deActivateLogInterval(TFT_WHITE);
-			setting->deActivateSerialLogging(TFT_YELLOW);
+			selected = dial_cnt = dial_cnt_old = STATE_LOG;
+			setting->deSelectLogInterval(TFT_WHITE);
+			setting->deSelectSerialLogging(TFT_YELLOW);
 		} else {
-			setting->deActivateSerialBaud(TFT_WHITE);
-			setting->activateLogInterval();
+			setting->deSelectSerialBaud(TFT_WHITE);
+			setting->selectLogInterval();
 			dial_cnt = 0;
 			dial_cnt_old = 1;
-			activated = 5;
+			selected = 5;
 		}
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
-		if (activated == 5) {
+		if (selected == 5) {
 			if (dial_cnt < 0)
 				dial_cnt = 0;
 			else if (dial_cnt > 6)
@@ -624,7 +624,7 @@ void Screen::drawScreen()
 
 void Screen::changeVolt(screen_mode_t mode)
 {
-	if (activated == STATE_VOLT0) {
+	if (selected == STATE_VOLT0) {
 		if (dial_cnt < -(volt_set/100 - 30))
 			dial_cnt = -(volt_set/100 - 30);
 		else if (dial_cnt + (volt_set/100) > 200)
@@ -638,7 +638,7 @@ void Screen::changeVolt(screen_mode_t mode)
 		} else {
 			channel[0]->editVolt(dial_cnt);
 		}
-	} else if (activated == STATE_CURRENT0) {
+	} else if (selected == STATE_CURRENT0) {
 		if (dial_cnt > (30 - current_limit))
 			dial_cnt = (30 - current_limit);
 		else if (dial_cnt < -(current_limit - 5))
@@ -652,7 +652,7 @@ void Screen::changeVolt(screen_mode_t mode)
 			channel[0]->editCurrentLimit(dial_cnt);
 		}
 
-	} else if (activated == STATE_VOLT1) {
+	} else if (selected == STATE_VOLT1) {
 		if (dial_cnt < -(volt_set/100 - 30))
 			dial_cnt = -(volt_set/100 - 30);
 		else if (dial_cnt + (volt_set/100) > 200)
@@ -665,7 +665,7 @@ void Screen::changeVolt(screen_mode_t mode)
 		} else {
 			channel[1]->editVolt(dial_cnt);
 		}
-	} else if (activated == STATE_CURRENT1) {
+	} else if (selected == STATE_CURRENT1) {
 		if (dial_cnt > (30 - current_limit))
 			dial_cnt = (30 - current_limit);
 		else if (dial_cnt < -(current_limit - 5))

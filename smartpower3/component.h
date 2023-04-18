@@ -39,8 +39,8 @@ public:
 	void clear(void);
 	void setCoordinate(uint16_t x, uint16_t y);
 	void pushValue(uint16_t value);
-	void activate(void);
-	void deActivate(void);
+	void select(void);
+	void deSelect(void);
 	void setTextColor(uint16_t fg_color, uint16_t bg_color);
 	void loadFont(const uint8_t font[]);
 	void unloadFont(void);
@@ -50,7 +50,7 @@ private:
 	uint16_t x;
 	uint16_t y;
 	uint8_t font;
-	bool activated;
+	bool selected;
 	TFT_eSprite *img;
 	TFT_eSPI *tft;
 	uint16_t value;

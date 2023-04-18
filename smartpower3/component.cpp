@@ -115,16 +115,16 @@ void Component::pushValue(uint16_t value)
 	this->value = value;
 }
 
-void Component::activate(void)
+void Component::select(void)
 {
-	activated = true;
+	selected = true;
 	drawOutLines();
 }
 
-void Component::deActivate(void)
+void Component::deSelect(void)
 {
-	if (activated) {
+	if (selected) {
 		clearOutLines();
-		activated = false;
+		selected = false;
 	}
 }

@@ -4,15 +4,19 @@
 
 #include "component.h"
 #include "fndwidget.h"
-#include "iconwidget.h"
+#include "icons/base_icon_widget.h"
+#include "icons/wifi_header_icon_widget.h"
+#include "icons/log_header_icon_widget.h"
+#include "icons/input_header_icon_widget.h"
+#include "icons/unit_header_icon_widget.h"
 
 class Header : public Component
 {
 public:
 	Header(TFT_eSPI *tft);
 	void init(uint16_t x, uint16_t y);
-	void activate(void);
-	void deActivate(void);
+	void select(void);
+	void deSelect(void);
 	void drawMode(String str);
 	void pushPower(uint16_t volt, uint16_t ampere, uint16_t watt);
 	void draw(void);
@@ -36,10 +40,10 @@ private:
 	bool low_input = 1;
 	uint8_t intPin = -1;
 	Component *mode;
-	IconWidget *icon_input;
-	IconWidget *icon_wifi;
-	IconWidget *icon_log;
-	IconWidget *icon_v, *icon_a;
+	InputHeaderIconWidget *icon_input;
+	WifiHeaderIconWidget *icon_wifi;
+	LogHeaderIconWidget *icon_log;
+	UnitHeaderIconWidget *icon_v, *icon_a;
 	FndWidget *input_v, *input_a;
 	uint16_t debug = 0;
 	bool flag_logging = false;

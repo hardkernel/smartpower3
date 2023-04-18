@@ -3,7 +3,7 @@
 #define FNDWIDGET_H
 
 #include <TFT_eSPI.h>
-#include "fnd_font.h"
+#include "fonts/fnd_font.h"
 #include "component.h"
 
 #define WAIT 1
@@ -41,8 +41,8 @@ public:
 	void fnd_font_init(struct font_info *f_info, enum FND_FONT_SIZE font);
 	void drawOutLines();
 	void clearOutLines();
-	void activate();
-	void deActivate();
+	void select();
+	void deSelect();
 	void setMonitorVoltage(void);
 	void setCurrentLimit(void);
 	
