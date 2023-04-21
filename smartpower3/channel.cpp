@@ -283,10 +283,37 @@ uint16_t Channel::getCurrentLimit(void)
 	return current_limit/100;
 }
 
+uint16_t Channel::countVolt(float dial_count)
+{
+	int16_t step_change_voltage = 11000;
+	uint16_t steps = abs(dial_count);
+	uint16_t return_volt_set = this->volt_set;
+	int16_t distance_to_step_change = this->volt_set-step_change_voltage;
+
+	if (distance_to_step_change <= 0 && dial_count > 0) {  // below limit and upwards
+		while (return_volt_set < step_change_voltage && steps > 0) {
+			steps--;
+			return_volt_set += 100;
+		}
+		return_volt_set += steps*200;
+	} else if (distance_to_step_change <= 0 && dial_count < 0) {  // below limit and downwards
+		return_volt_set -= steps*100;
+	} else if (distance_to_step_change >= 0 && dial_count > 0) {  // above limit and upwards
+		return_volt_set += steps*200;
+	} else if (distance_to_step_change >= 0 && dial_count < 0) {  // above limit and downwards
+		while (return_volt_set > step_change_voltage && steps > 0) {
+			steps--;
+			return_volt_set -= 200;
+		}
+		return_volt_set -= steps*100;
+	}
+	return return_volt_set;
+}
+
 void Channel::setVolt(float volt_set, uint8_t mode)
 {
 	if (mode == 0) {
-		this->volt_set = this->volt_set + volt_set*100;
+		this->volt_set = this->countVolt(volt_set);
 		stpd01->setVoltage(min((uint16_t)20000, this->volt_set));
 	} else if (mode == 1) {
 		this->volt_set = volt_set;
@@ -302,7 +329,7 @@ void Channel::setVolt(float volt_set, uint8_t mode)
 
 void Channel::editVolt(float volt_set)
 {
-	this->_volt_set = this->volt_set + volt_set*100;
+	this->_volt_set = this->countVolt(volt_set);
 }
 
 void Channel::setCurrentLimit(float val, uint8_t mode)
