@@ -25,7 +25,7 @@ void setup(void) {
 	I2CA.begin(15, 4, (uint32_t)10000);
 	I2CB.begin(21, 22, (uint32_t)800000);
 	PAC.begin(&I2CB);
-	screen.begin(&settings, &I2CA);
+	measuring_screen.begin(&settings, &I2CA);
 	initEncoder(&dial);  // this also starts a task, without specified core
 
 	xTaskCreatePinnedToCore(screenTask, "Draw Screen", 6000, NULL, 1, NULL, 1);  // delay 10
@@ -47,12 +47,12 @@ void setup(void) {
 
 void isr_stpd01_ch0()
 {
-	screen.setIntFlag(0);
+	measuring_screen.setIntFlag(0);
 }
 
 void isr_stpd01_ch1()
 {
-	screen.setIntFlag(1);
+	measuring_screen.setIntFlag(1);
 }
 
 void initPAC1933(void)
@@ -86,17 +86,17 @@ void logTask(void *parameter)
 			portENTER_CRITICAL(&timerMux);
 			interruptFlag--;
 			portEXIT_CRITICAL(&timerMux);
-			if (log_interval != screen.getEnabledLogInterval()) {
-				log_interval = screen.getEnabledLogInterval();
+			if (log_interval != measuring_screen.getEnabledLogInterval()) {
+				log_interval = measuring_screen.getEnabledLogInterval();
 				if (log_interval == 0)
 					timerAlarmWrite(timer, 250000, true);
 				else
 					timerAlarmWrite(timer, 1000*log_interval, true);
 			}
-			if ((log_interval > 0) && !screen.wifiManager->isCommandMode()) {
+			if ((log_interval > 0) && !measuring_screen.wifiManager->isCommandMode()) {
 				sprintf(buffer_input, "%010lu,%05d,%04d,%05d,%1d,", millis(), mCh0.V(),mCh0.A(log_interval), mCh0.W(log_interval), low_input);
-				sprintf(buffer_ch0, "%05d,%04d,%05d,%1d,%02x,", mCh1.V(), mCh1.A(log_interval), mCh1.W(log_interval), onoff[0], screen.getIntStat(0));
-				sprintf(buffer_ch1, "%05d,%04d,%05d,%1d,%02x,", mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval), onoff[1], screen.getIntStat(1));
+				sprintf(buffer_ch0, "%05d,%04d,%05d,%1d,%02x,", mCh1.V(), mCh1.A(log_interval), mCh1.W(log_interval), onoff[0], measuring_screen.getIntStat(0));
+				sprintf(buffer_ch1, "%05d,%04d,%05d,%1d,%02x,", mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval), onoff[1], measuring_screen.getIntStat(1));
 
 				checksum8 = 0;
 				checksum8_xor = 0;
@@ -118,7 +118,7 @@ void logTask(void *parameter)
 				Serial.printf(buffer_ch0);
 				Serial.printf(buffer_ch1);
 				Serial.printf(buffer_checksum);
-				screen.runWiFiLogging(buffer_input, buffer_ch0, buffer_ch1, buffer_checksum);
+				measuring_screen.runWiFiLogging(buffer_input, buffer_ch0, buffer_ch1, buffer_checksum);
 			} else {
 				vTaskDelay(10);
 			}
@@ -136,10 +136,10 @@ void screenTask(void *parameter)
 	for (;;) {
 		if (old_state != WiFi.status()) {
 			old_state = WiFi.status();
-			screen.updateWiFiInfo();
+			measuring_screen.updateWiFiInfo();
 		}
 
-		screen.run();
+		measuring_screen.run();
 		vTaskDelay(10);
 	}
 }
@@ -153,15 +153,15 @@ void inputTask(void *parameter)
 		for (int i = 0; i < 4; i++) {
 			pressed = button[i].checkPressed();
 			if (pressed == 1)
-				screen.getBtnPress(i, cur_time);
+				measuring_screen.getBtnPress(i, cur_time);
 			else if (pressed == 2)
-				screen.getBtnPress(i, cur_time, true);
+				measuring_screen.getBtnPress(i, cur_time, true);
 		}
 		if (dial.cnt != 0) {
-			screen.countDial(dial.cnt, dial.direct, dial.step, cur_time);
+			measuring_screen.countDial(dial.cnt, dial.direct, dial.step, cur_time);
 			dial.cnt = 0;
 		}
-		screen.setTime(cur_time);
+		measuring_screen.setTime(cur_time);
 		vTaskDelay(10);
 	}
 }
@@ -169,20 +169,20 @@ void inputTask(void *parameter)
 void wifiTask(void *parameter)
 {
 	for (;;) {
-		if (screen.wifiManager->canConnect() && screen.isWiFiEnabled()) {
-			screen.wifiManager->apConnectFromSettings();
-		} else if (!screen.isWiFiEnabled()) {
-			screen.wifiManager->apDisconnectAndTurnWiFiOff();
+		if (measuring_screen.wifiManager->canConnect() && measuring_screen.isWiFiEnabled()) {
+			measuring_screen.wifiManager->apConnectFromSettings();
+		} else if (!measuring_screen.isWiFiEnabled()) {
+			measuring_screen.wifiManager->apDisconnectAndTurnWiFiOff();
 		}
-		screen.setWiFiIconState();
+		measuring_screen.setWiFiIconState();
 
 		if (Serial.available()) {
-			if (screen.wifiManager->isCommandMode())
-				screen.wifiManager->WiFiMenuMain(Serial.read());
+			if (measuring_screen.wifiManager->isCommandMode())
+				measuring_screen.wifiManager->WiFiMenuMain(Serial.read());
 			else {
 				if (Serial.read() == SERIAL_CTRL_C) {
-					screen.wifiManager->setCommandMode();
-					screen.wifiManager->viewMainMenu();
+					measuring_screen.wifiManager->setCommandMode();
+					measuring_screen.wifiManager->viewMainMenu();
 				} else {
 					Serial.printf(">>> Unknown command <<<\n\r");
 				}
@@ -193,14 +193,14 @@ void wifiTask(void *parameter)
 }
 
 void loop() {
-	onoff = screen.getOnOff();
+	onoff = measuring_screen.getOnOff();
 
 	mChs.sample();
 
 	if ((millis() - ctime1) > 300) {
 		ctime1 = millis();
 		if (mCh0.V() < 6000) {
-			screen.debug();
+			measuring_screen.debug();
 			for (int i = 0; i < 3; i++) {
 				mChs.sample();
 				if (mCh0.V() > 6000) {
@@ -211,20 +211,20 @@ void loop() {
 		} else {
 			low_input = false;
 		}
-		screen.pushInputPower(mCh0.V(), mCh0.A(300), mCh0.W(300));
-		screen.pushPower(mCh1.V(), mCh1.A(300), mCh1.W(300), 0);
-		screen.pushPower(mCh2.V(), mCh2.A(300), mCh2.W(300), 1);
+		measuring_screen.pushInputPower(mCh0.V(), mCh0.A(300), mCh0.W(300));
+		measuring_screen.pushPower(mCh1.V(), mCh1.A(300), mCh1.W(300), 0);
+		measuring_screen.pushPower(mCh2.V(), mCh2.A(300), mCh2.W(300), 1);
 
-		if (!screen.getShutdown()) {
+		if (!measuring_screen.getShutdown()) {
 			if ((millis()/1000)%2)
-				screen.writeSysLED(50);
+				measuring_screen.writeSysLED(50);
 			else
-				screen.writeSysLED(0);
-			screen.writePowerLED(50);
+				measuring_screen.writeSysLED(0);
+			measuring_screen.writePowerLED(50);
 		}
 	}
 
-	if (screen.getShutdown()) {
-		screen.dimmingLED(1);
+	if (measuring_screen.getShutdown()) {
+		measuring_screen.dimmingLED(1);
 	}
 }

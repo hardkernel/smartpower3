@@ -1,12 +1,12 @@
+#include <measuringscreen.h>
 #include "helpers.h"
-#include "screen.h"
 //#include "settings.h"
 
-bool Screen::_int = false;
+bool MeasuringScreen::_int = false;
 
 uint8_t baud_idx;
 
-Screen::Screen()
+MeasuringScreen::MeasuringScreen()
 {
 	tft.init();
 	tft.invertDisplay(true);
@@ -15,7 +15,7 @@ Screen::Screen()
 	tft.setSwapBytes(true);
 }
 
-void Screen::begin(Settings *settings, TwoWire *theWire)
+void MeasuringScreen::begin(Settings *settings, TwoWire *theWire)
 {
 	Serial.println("in Screen::begin");
 	this->settings = settings;
@@ -58,7 +58,7 @@ void Screen::begin(Settings *settings, TwoWire *theWire)
 	header->init(5, 8);
 }
 
-void Screen::initLED()
+void MeasuringScreen::initLED()
 {
 	ledcSetup(0, FREQ, RESOLUTION);
 	ledcSetup(1, FREQ, RESOLUTION);
@@ -69,12 +69,12 @@ void Screen::initLED()
 	ledcWrite(1, 50);
 }
 
-uint8_t* Screen::getOnOff()
+uint8_t* MeasuringScreen::getOnOff()
 {
 	return onoff;
 }
 
-void Screen::run()
+void MeasuringScreen::run()
 {
 	checkOnOff();
 	if (!shutdown) {
@@ -105,12 +105,12 @@ void Screen::run()
 	}
 }
 
-void Screen::setIntFlag(uint8_t ch)
+void MeasuringScreen::setIntFlag(uint8_t ch)
 {
 	channel[ch]->setIntFlag();
 }
 
-void Screen::initScreen(void)
+void MeasuringScreen::initScreen(void)
 {
 	tft.fillRect(0, 52, 480, 285, BG_COLOR);
 	for (int i = 0; i < 2; i++) {
@@ -125,13 +125,13 @@ void Screen::initScreen(void)
 	selected = dial_cnt = dial_cnt_old = STATE_NONE;
 }
 
-void Screen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch)
+void MeasuringScreen::pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch)
 {
 	if (onoff[ch] == 1)
 		channel[ch]->pushPower(volt, ampere, watt);
 }
 
-void Screen::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt)
+void MeasuringScreen::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 {
 	if ((volt < 6000 || volt >= 26000) && !low_input) {
 		low_input = true;
@@ -145,7 +145,7 @@ void Screen::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt)
 	header->pushPower(volt, ampere, watt);
 }
 
-void Screen::checkOnOff()
+void MeasuringScreen::checkOnOff()
 {
 	if (state_power == 1) {
 		state_power = 2;
@@ -220,7 +220,7 @@ void Screen::checkOnOff()
 	old_state_power = state_power;
 }
 
-void Screen::disablePower()
+void MeasuringScreen::disablePower()
 {
 	channel[0]->disabled();
 	channel[1]->disabled();
@@ -228,7 +228,7 @@ void Screen::disablePower()
 	enabled_stpd01[1] = false;
 }
 
-void Screen::deSelect()
+void MeasuringScreen::deSelect()
 {
 	channel[0]->deSelect(VOLT);
 	channel[0]->deSelect(CURRENT);
@@ -238,7 +238,7 @@ void Screen::deSelect()
 	header->deSelect(WIFI);
 }
 
-void Screen::deSelectSetting()
+void MeasuringScreen::deSelectSetting()
 {
 	setting_screen->deSelectBLLevel();
 	setting_screen->deSelectSerialLogging();
@@ -246,7 +246,7 @@ void Screen::deSelectSetting()
 	header->deSelect(WIFI);
 }
 
-void Screen::select()
+void MeasuringScreen::select()
 {
 	if (dial_cnt == dial_cnt_old) {
 		return;
@@ -278,7 +278,7 @@ void Screen::select()
 	}
 }
 
-void Screen::select_setting()
+void MeasuringScreen::select_setting()
 {
 	if (dial_cnt == dial_cnt_old) {
 		return;
@@ -304,7 +304,7 @@ void Screen::select_setting()
 	}
 }
 
-void Screen::drawBase()
+void MeasuringScreen::drawBase()
 {
 	if (dial_cnt != dial_cnt_old) {
 		clearBtnEvent();
@@ -332,7 +332,7 @@ void Screen::drawBase()
 	}
 }
 
-void Screen::drawBaseMove()
+void MeasuringScreen::drawBaseMove()
 {
 	select();
 	if ((cur_time - dial_time) > 5000) {
@@ -387,7 +387,7 @@ void Screen::drawBaseMove()
 	}
 }
 
-void Screen::drawBaseEdit()
+void MeasuringScreen::drawBaseEdit()
 {
 	if ((cur_time - dial_time) > 10000) {
 		mode = BASE;
@@ -422,7 +422,7 @@ void Screen::drawBaseEdit()
 	}
 }
 
-void Screen::drawSetting()
+void MeasuringScreen::drawSetting()
 {
 	select_setting();
 	if ((cur_time - dial_time) > 10000) {
@@ -474,7 +474,7 @@ void Screen::drawSetting()
 	dial_cnt_old = dial_cnt;
 }
 
-void Screen::drawSettingBL()
+void MeasuringScreen::drawSettingBL()
 {
 	if ((cur_time - dial_time) > 10000) {
 		mode = SETTING;
@@ -508,7 +508,7 @@ void Screen::drawSettingBL()
 	}
 }
 
-void Screen::drawSettingLOG()
+void MeasuringScreen::drawSettingLOG()
 {
 	if ((cur_time - dial_time) > 10000) {
 		mode = SETTING;
@@ -561,7 +561,7 @@ void Screen::drawSettingLOG()
 	}
 }
 
-uint16_t Screen::getEnabledLogInterval(void)
+uint16_t MeasuringScreen::getEnabledLogInterval(void)
 {
 	uint16_t tmp = setting_screen->getLogIntervalValue();
 
@@ -576,7 +576,7 @@ uint16_t Screen::getEnabledLogInterval(void)
 	return 0;
 }
 
-void Screen::setWiFiIconState()
+void MeasuringScreen::setWiFiIconState()
 {
 	if (WiFi.status() == WL_CONNECTED) {
 		header->onWiFi();
@@ -587,7 +587,7 @@ void Screen::setWiFiIconState()
 	}
 }
 
-void Screen::drawScreen()
+void MeasuringScreen::drawScreen()
 {
 	switch (mode) {
 	case BASE:
@@ -640,7 +640,7 @@ void Screen::drawScreen()
 	channel[1]->drawVoltSet();
 }
 
-void Screen::changeVolt(screen_mode_t mode)
+void MeasuringScreen::changeVolt(screen_mode_t mode)
 {
 	if (selected == STATE_VOLT0) {
 		clampVoltageDialCountToRange(volt_set, &dial_cnt);
@@ -687,7 +687,7 @@ void Screen::changeVolt(screen_mode_t mode)
 
 }
 
-void Screen::isrSTPD01()
+void MeasuringScreen::isrSTPD01()
 {
 	for (int i = 0; i < 2; i++) {
 		channel[i]->isAvailableSTPD01();
@@ -695,12 +695,12 @@ void Screen::isrSTPD01()
 	}
 }
 
-uint8_t Screen::getIntStat(uint8_t channel)
+uint8_t MeasuringScreen::getIntStat(uint8_t channel)
 {
 	return int_stat[channel];
 }
 
-void Screen::countDial(int8_t dial_cnt, int8_t direct, uint8_t step, uint32_t milisec)
+void MeasuringScreen::countDial(int8_t dial_cnt, int8_t direct, uint8_t step, uint32_t milisec)
 {
 	this->dial_cnt += dial_cnt*step;
 	this->dial_time = milisec;
@@ -708,7 +708,7 @@ void Screen::countDial(int8_t dial_cnt, int8_t direct, uint8_t step, uint32_t mi
 	this->dial_step = step;
 }
 
-void Screen::setTime(uint32_t milisec)
+void MeasuringScreen::setTime(uint32_t milisec)
 {
 	if (flag_long_press) {
 		if (digitalRead(36) == 0) {
@@ -730,13 +730,13 @@ void Screen::setTime(uint32_t milisec)
 	this->cur_time = milisec;
 }
 
-void Screen::clearBtnEvent(void)
+void MeasuringScreen::clearBtnEvent(void)
 {
 	for (int i = 0; i < 4; i++)
 		btn_pressed[i] = false;
 }
 
-void Screen::getBtnPress(uint8_t idx, uint32_t cur_time, bool long_pressed)
+void MeasuringScreen::getBtnPress(uint8_t idx, uint32_t cur_time, bool long_pressed)
 {
 	switch (idx) {
 	case 0: /* Channel0 ON/OFF */
@@ -763,7 +763,7 @@ void Screen::getBtnPress(uint8_t idx, uint32_t cur_time, bool long_pressed)
 	}
 }
 
-void Screen::drawBmp(const char *filename, int16_t x, int16_t y)
+void MeasuringScreen::drawBmp(const char *filename, int16_t x, int16_t y)
 {
 	if ((x >= tft.width()) || (y >= tft.height()))
 		return;
@@ -823,14 +823,14 @@ void Screen::drawBmp(const char *filename, int16_t x, int16_t y)
   bmpFS.close();
 }
 
-uint16_t Screen::read16(fs::File &f) {
+uint16_t MeasuringScreen::read16(fs::File &f) {
   uint16_t result;
   ((uint8_t *)&result)[0] = f.read(); // LSB
   ((uint8_t *)&result)[1] = f.read(); // MSB
   return result;
 }
 
-uint32_t Screen::read32(fs::File &f) {
+uint32_t MeasuringScreen::read32(fs::File &f) {
   uint32_t result;
   ((uint8_t *)&result)[0] = f.read(); // LSB
   ((uint8_t *)&result)[1] = f.read();
@@ -839,7 +839,7 @@ uint32_t Screen::read32(fs::File &f) {
   return result;
 }
 
-void Screen::fsInit(void)
+void MeasuringScreen::fsInit(void)
 {
 	uint16_t volt_set0 = 5000;  // 5.0V in millivolts
 	uint16_t volt_set1 = 5000;  // 5.0V in millivolts
@@ -887,27 +887,27 @@ void Screen::fsInit(void)
 	wifiManager->port_udp = settings->getWifiIpv4UdpLoggingServerPort(true);
 }
 
-void Screen::debug()
+void MeasuringScreen::debug()
 {
 	header->setDebug();
 }
 
-void Screen::countLowVoltage(uint8_t ch)
+void MeasuringScreen::countLowVoltage(uint8_t ch)
 {
 	channel[ch]->countLowVoltage();
 }
 
-void Screen::clearLowVoltage(uint8_t ch)
+void MeasuringScreen::clearLowVoltage(uint8_t ch)
 {
 	channel[ch]->clearLowVoltage();
 }
 
-bool Screen::getShutdown(void)
+bool MeasuringScreen::getShutdown(void)
 {
 	return shutdown;
 }
 
-void Screen::dimmingLED(uint8_t led)
+void MeasuringScreen::dimmingLED(uint8_t led)
 {
 	for (int i = 0; i < 150; i++) {
 		ledcWrite(led, i);
@@ -919,17 +919,17 @@ void Screen::dimmingLED(uint8_t led)
 	}
 }
 
-void Screen::writeSysLED(uint8_t val)
+void MeasuringScreen::writeSysLED(uint8_t val)
 {
 	ledcWrite(0, val);
 }
 
-void Screen::writePowerLED(uint8_t val)
+void MeasuringScreen::writePowerLED(uint8_t val)
 {
 	ledcWrite(1, val);
 }
 
-void Screen::runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3)
+void MeasuringScreen::runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3)
 {
 	udp.beginPacket(wifiManager->ipaddr_udp, wifiManager->port_udp);
 	udp.write((uint8_t *)buf0, SIZE_LOG_BUFFER0-1);
@@ -939,20 +939,20 @@ void Screen::runWiFiLogging(const char *buf0, const char *buf1, const char *buf2
 	udp.endPacket();
 }
 
-void Screen::updateWiFiInfo(void)
+void MeasuringScreen::updateWiFiInfo(void)
 {
 	this->updated_wifi_info = true;
 	this->updated_wifi_icon = true;
 }
 
-bool Screen::isWiFiEnabled(void) {
+bool MeasuringScreen::isWiFiEnabled(void) {
 	return wifiManager->isWiFiEnabled();
 }
 
-void Screen::enableWiFi(void) {
+void MeasuringScreen::enableWiFi(void) {
 	wifiManager->enableWiFi();
 }
 
-void Screen::disableWiFi(void) {
+void MeasuringScreen::disableWiFi(void) {
 	wifiManager->disableWiFi();
 }

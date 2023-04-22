@@ -1,6 +1,6 @@
 #include <meas_channel.h>
+#include <measuringscreen.h>
 #include <Microchip_PAC193x.h>
-#include "screen.h"
 #include "inputmanager.h"
 #include "settings.h"
 
@@ -17,7 +17,7 @@ Button button[4] = {
 	Button(BUTTON_CH0), Button(BUTTON_CH1), Button(BUTTON_MENU), Button(BUTTON_DIAL)
 };
 
-Screen screen;
+MeasuringScreen measuring_screen;
 Settings settings = Settings();
 Microchip_PAC193x PAC = Microchip_PAC193x(15000);
 

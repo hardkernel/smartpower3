@@ -44,10 +44,10 @@ enum screen_state_setting {
 #define STATE_NONE 0
 #define WIFI_UDP_PORT 3333
 
-class Screen
+class MeasuringScreen
 {
 public:
-	Screen();
+	MeasuringScreen();
 	void begin(Settings *settings, TwoWire *theWire = &Wire);
 	void pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch);
 	void pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt);
@@ -99,7 +99,7 @@ private:
 	screen_mode_t mode = BASE;
 	Channel *channel[2];
 	Header *header;
-//TODO: ScreenSettings might be removed if not necessary after move to Settings
+//TODO: SettingScreen might be removed if not necessary after move to Settings
 	SettingScreen *setting_screen;
 	Settings *settings;
 	TwoWire *_wire;
