@@ -37,7 +37,6 @@ enum screen_state_setting {
 };
 
 #define STATE_NONE 0
-#define WIFI_UDP_PORT 3333
 
 class MeasuringScreen
 {
