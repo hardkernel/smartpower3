@@ -41,12 +41,7 @@ void MeasuringScreen::begin(Settings *settings, TwoWire *theWire)
 	tft.unloadFont();
 
 	setting_screen = new SettingScreen(&tft, settings);
-
-	WiFi.mode(WIFI_STA);
-	WiFi.disconnect();
-	delay(100);
-	udp.begin(WIFI_UDP_PORT);
-	wifiManager = new WiFiManager(udp, client, setting_screen, settings);
+	wifiManager = new WiFiManager(setting_screen, settings);
 
 	fsInit();
 	delay(2000);
@@ -927,16 +922,6 @@ void MeasuringScreen::writeSysLED(uint8_t val)
 void MeasuringScreen::writePowerLED(uint8_t val)
 {
 	ledcWrite(1, val);
-}
-
-void MeasuringScreen::runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3)
-{
-	udp.beginPacket(wifiManager->ipaddr_udp, wifiManager->port_udp);
-	udp.write((uint8_t *)buf0, SIZE_LOG_BUFFER0-1);
-	udp.write((uint8_t *)buf1, SIZE_LOG_BUFFER1-1);
-	udp.write((uint8_t *)buf2, SIZE_LOG_BUFFER2-1);
-	udp.write((uint8_t *)buf3, SIZE_CHECKSUM_BUFFER-1);
-	udp.endPacket();
 }
 
 void MeasuringScreen::updateWiFiInfo(void)

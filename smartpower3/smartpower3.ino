@@ -118,7 +118,7 @@ void logTask(void *parameter)
 				Serial.printf(buffer_ch0);
 				Serial.printf(buffer_ch1);
 				Serial.printf(buffer_checksum);
-				measuring_screen.runWiFiLogging(buffer_input, buffer_ch0, buffer_ch1, buffer_checksum);
+				measuring_screen.wifiManager->runWiFiLogging(buffer_input, buffer_ch0, buffer_ch1, buffer_checksum);
 			} else {
 				vTaskDelay(10);
 			}

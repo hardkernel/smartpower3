@@ -6,6 +6,13 @@
 #include <WiFiUdp.h>
 #include "settings.h"
 
+#define SIZE_LOG_BUFFER0 31
+#define SIZE_LOG_BUFFER1 23
+#define SIZE_LOG_BUFFER2 23
+#define SIZE_CHECKSUM_BUFFER 8
+
+#define WIFI_UDP_PORT 3333
+
 #define SERIAL_CTRL_C       0x03
 #define SERIAL_ENTER        0x0D
 #define SERIAL_Y            0x79
@@ -34,7 +41,7 @@ const char wifi_cmd_menu[][50] = {
 class WiFiManager
 {
 public:
-	WiFiManager(WiFiUDP &udp, WiFiClient &client, SettingScreen *setting_screen, Settings *settings);
+	WiFiManager(SettingScreen *setting_screen, Settings *settings);
 	void viewMainMenu(void);
 	void viewApList(int16_t ap_list_cnt);
 	int16_t apScanning(void);
@@ -67,6 +74,7 @@ public:
 	IPAddress ipaddr_udp;
 	bool update_udp_info = true;
 	bool update_wifi_info = true;
+	void runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3);
 private:
 	WiFiUDP udp;
 	WiFiClient client;

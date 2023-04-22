@@ -277,7 +277,6 @@ void SettingScreen::deSelectSerialLogging(uint16_t color)
 	}
 }
 
-
 void SettingScreen::drawBacklightLevel(uint8_t level)
 {
 	tft->fillRect(x + X_BL_LEVEL + 2, y+1, 130, 24, BG_COLOR);

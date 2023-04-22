@@ -64,10 +64,14 @@ const char *encryption_str(int encryption)
 	}
 }
 
-WiFiManager::WiFiManager(WiFiUDP &udp, WiFiClient &client, SettingScreen *setting_screen, Settings *settings)
+WiFiManager::WiFiManager(SettingScreen *setting_screen, Settings *settings)
 {
+	WiFi.mode(WIFI_STA);
+	WiFi.disconnect();
+	delay(100);
+	udp.begin(WIFI_UDP_PORT);
+
 	this->udp = udp;
-	this->client = client;
 	this->setting_screen = setting_screen;
 	this->settings = settings;
 }
@@ -666,4 +670,14 @@ void WiFiManager::setNVSAPConnectionInfo(const char *ssid, const char *password,
 	settings->setWifiAccessPointSsid(ssid);
 	settings->setWifiPassword(password);
 	settings->setWifiCredentialsState(credentials_state);
+}
+
+void WiFiManager::runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3)
+{
+	udp.beginPacket(this->ipaddr_udp, this->port_udp);
+	udp.write((uint8_t *)buf0, SIZE_LOG_BUFFER0-1);
+	udp.write((uint8_t *)buf1, SIZE_LOG_BUFFER1-1);
+	udp.write((uint8_t *)buf2, SIZE_LOG_BUFFER2-1);
+	udp.write((uint8_t *)buf3, SIZE_CHECKSUM_BUFFER-1);
+	udp.endPacket();
 }

@@ -11,11 +11,6 @@
 #define LED2	13
 #define LED1	2
 
-#define SIZE_LOG_BUFFER0	31
-#define SIZE_LOG_BUFFER1	23
-#define SIZE_LOG_BUFFER2	23
-#define SIZE_CHECKSUM_BUFFER	8
-
 enum screen_mode_t {
 	BASE = 0,
 	BASE_MOVE,
@@ -87,13 +82,10 @@ public:
 	void dimmingLED(uint8_t led);
 	void setWiFiIconState(void);
 	WiFiManager *wifiManager;
-	void runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3);
 	void updateWiFiInfo(void);
 	bool isWiFiEnabled(void);
 	void enableWiFi(void);
 	void disableWiFi(void);
-	WiFiUDP udp;
-	WiFiClient client;
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
