@@ -29,8 +29,9 @@ enum screen_state_base {
 	STATE_LOGGING
 };
 
+// first item is number 1, because 0 is used as "nothig selected" instead of extra flag
 enum screen_state_setting {
-	STATE_SETTING_WIFI = 0,
+	STATE_SETTING_WIFI = 1,
 	STATE_SETTING_LOGGING,
 	STATE_LOG,
 	STATE_BL,

@@ -279,7 +279,9 @@ void MeasuringScreen::select_setting()
 		return;
 	}
 	dial_cnt_old = dial_cnt;
-	clampVariableToCircularRange(0, 3, dial_direct, &dial_cnt);  // 3 is i based count of screen_state_setting elements
+	// 4 is 1 based count of screen_state_setting elements, lower limit is 1 because 0 is used
+	// as a marker for non-selected item that should not be included in the "selection circle"
+	clampVariableToCircularRange(1, 4, dial_direct, &dial_cnt);
 
 	deSelectSetting();
 	selected = dial_cnt;
@@ -421,9 +423,8 @@ void MeasuringScreen::drawSetting()
 {
 	select_setting();
 	if ((cur_time - dial_time) > 10000) {
-		dial_cnt = dial_cnt_old = 0;
 		deSelectSetting();
-		selected = STATE_NONE;
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
 	if (btn_pressed[2] == true) {
 		btn_pressed[2] = false;
