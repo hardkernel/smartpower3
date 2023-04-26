@@ -64,7 +64,7 @@ const char *encryption_str(int encryption)
 	}
 }
 
-WiFiManager::WiFiManager(SettingScreen *setting_screen, Settings *settings)
+WiFiManager::WiFiManager(Settings *settings)
 {
 	WiFi.mode(WIFI_STA);
 	WiFi.disconnect();
@@ -72,7 +72,6 @@ WiFiManager::WiFiManager(SettingScreen *setting_screen, Settings *settings)
 	udp.begin(WIFI_UDP_PORT);
 
 	this->udp = udp;
-	this->setting_screen = setting_screen;
 	this->settings = settings;
 }
 
@@ -489,10 +488,10 @@ void WiFiManager::udpServerForget()
 
 void WiFiManager::doSwitchLogging()
 {
-	if (setting_screen->isLoggingEnabled()) {
-		setting_screen->disableLogging();
+	if (settings->isLoggingEnabled()) {
+		settings->setLoggingEnabled(false);
 	} else {
-		setting_screen->enableLogging();
+		settings->setLoggingEnabled(true);
 	}
 }
 
@@ -545,7 +544,7 @@ void WiFiManager::WiFiMenuMain(char idata)
 			Serial.printf(
 					"%s%s\n\r",
 					MSG_CMD_TURN_LOGGING_ON_OFF,
-					setting_screen->isLoggingEnabled() ? MSG_ON : MSG_OFF);
+					settings->isLoggingEnabled() ? MSG_ON : MSG_OFF);
 			switchLoggingOnOff();
 			break;
 		case    '9':

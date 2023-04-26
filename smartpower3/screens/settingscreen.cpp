@@ -1,16 +1,8 @@
-#include <settingscreen.h>
-#include "fonts/ChewyRegular24.h"
-#include "fonts/ChewyRegular32.h"
 #include "helpers.h"
+#include "screens/settingscreen.h"
 
-SettingScreen::SettingScreen(TFT_eSPI *tft, Settings *settings)
+SettingScreen::SettingScreen(TFT_eSPI *tft, Header *header, Settings *settings, WiFiManager *wifi_manager, uint8_t *onoff) : Screen(tft, header, settings, wifi_manager, onoff)
 {
-	this->tft = tft;
-	this->settings = settings;
-
-	ledcSetup(2, FREQ, RESOLUTION);
-	ledcAttachPin(BL_LCD, 2);
-
 	/*
 	popup = new TFT_eSprite(tft);
 	popup->createSprite(100, 100);
@@ -24,11 +16,14 @@ SettingScreen::SettingScreen(TFT_eSPI *tft, Settings *settings)
 	com_udp_port = new Component(tft, 60, 20, 2);
 }
 
-
-void SettingScreen::init(uint16_t x, uint16_t y)
+void SettingScreen::init()
 {
-	this->x = x;
-	this->y = y;
+	this->x = SETTING_SCREEN_INIT_POSITION_X;
+	this->y = SETTING_SCREEN_INIT_POSITION_Y;
+
+	for (int i = 0; i < 2; i++) {
+		tft->drawLine(0, 50 + i, 480, 50 + i, TFT_DARKGREY);
+	}
 
 	tft->fillRect(0, 52, 480, 285, BG_COLOR);
 	tft->loadFont(NotoSansBold20);
@@ -39,11 +34,8 @@ void SettingScreen::init(uint16_t x, uint16_t y)
 
 	tft->loadFont(ChewyRegular32);
 	tft->drawString("Backlight Level", x, y, 4);
-
 	tft->drawString("Logging", x, y + Y_LOGGING, 4);
-
 	tft->drawString("Serial", x + 120, y + Y_LOGGING, 4);
-
 	tft->drawString("WiFi Info", x, y + Y_WIFI_INFO + 10, 4);
 	tft->unloadFont();
 
@@ -58,6 +50,7 @@ void SettingScreen::init(uint16_t x, uint16_t y)
 
 	com_ssid->init(TFT_WHITE, BG_COLOR, 1, MC_DATUM);
 	com_ssid->setCoordinate(x + X_SSID, y + Y_WIFI_INFO);
+
 	/*
 	com_ipaddr->init(TFT_WHITE, BG_COLOR, 1, MC_DATUM);
 	com_ipaddr->setCoordinate(x + X_IPADDR, y + Y_WIFI_INFO + 30);
@@ -76,6 +69,207 @@ void SettingScreen::init(uint16_t x, uint16_t y)
 
 	drawSerialBaud(this->serial_baud);
 	drawLogIntervalValue(log_value[log_interval]);
+
+	is_initialized = true;
+}
+
+bool SettingScreen::draw(void)
+{
+	show_next_screen = false;
+
+	if (!this->isInitialized()) {
+		this->init();
+	}
+
+	switch (mode) {
+		case SETTING_SETTING:
+			drawSetting();
+			break;
+		case SETTING_SETTING_BL:
+			drawSettingBL();
+			break;
+		case SETTING_SETTING_LOG:
+			drawSettingLOG();
+			break;
+	}
+
+	if (updated_wifi_info || wifi_manager->update_wifi_info) {
+		updated_wifi_info = wifi_manager->update_wifi_info = false;
+		this->selectAndDrawSSIDText();
+	}
+	if (wifi_manager->update_udp_info) {
+		wifi_manager->update_udp_info = false;
+		this->drawUDPIpaddrAndPort();
+	}
+
+	header->draw();
+	return show_next_screen;
+}
+
+void SettingScreen::drawSetting()
+{
+	select();
+	if ((cur_time - dial_time) > 10000) {
+		deSelect();
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
+	}
+	if (btn_pressed[2] == true) {
+		btn_pressed[2] = false;
+		if (selected == STATE_NONE) {
+			show_next_screen = true;
+		} else {
+			deSelect();
+			show_next_screen = false;
+		}
+		selected = dial_cnt = STATE_NONE;
+	}
+	if (btn_pressed[1] == true) {
+		btn_pressed[1] = false;
+		this->debug();
+	}
+	if (btn_pressed[3] == true) {
+		btn_pressed[3] = false;
+		if (selected == STATE_BL) {
+			mode = SETTING_SETTING_BL;
+			dial_cnt = this->getBacklightLevel();
+			this->selectBLLevel(TFT_GREEN);
+		} else if (selected == STATE_LOG) {
+			mode = SETTING_SETTING_LOG;
+			dial_cnt = this->getSerialBaudIndex();
+			this->selectSerialLogging(TFT_GREEN);
+			this->selectSerialBaud(TFT_YELLOW);
+		} else if (selected == STATE_SETTING_LOGGING) {
+			settings->switchLogging();
+		} else if (selected == STATE_SETTING_WIFI) {
+			settings->switchWifi();
+		}
+	}
+	dial_cnt_old = dial_cnt;
+}
+
+void SettingScreen::drawSettingLOG()
+{
+	if ((cur_time - dial_time) > 10000) {
+		mode = SETTING_SETTING;
+		deSelect();
+		selected = dial_cnt = dial_cnt_old = dial_cnt_old = STATE_NONE;
+		this->deSelectSerialBaud(TFT_WHITE);
+		this->restoreSerialBaud();
+		this->deSelectLogInterval(TFT_WHITE);
+		this->restoreLogIntervalValue();
+		this->deSelectSerialLogging(TFT_YELLOW);
+	}
+	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
+		flag_long_press = 3;
+		btn_pressed[2] = false;
+		mode = SETTING_SETTING;
+		selected = dial_cnt = dial_cnt_old = STATE_LOG;
+		this->deSelectSerialBaud(TFT_WHITE);
+		this->restoreSerialBaud();
+		this->deSelectLogInterval(TFT_WHITE);
+		this->restoreLogIntervalValue();
+		this->deSelectSerialLogging(TFT_YELLOW);
+		return;
+	}
+	if (btn_pressed[3] == true) {
+		btn_pressed[3] = false;
+		if (selected == 5) {
+			mode = SETTING_SETTING;
+			this->setSerialBaud();
+			this->setLogInterval();
+			selected = dial_cnt = dial_cnt_old = STATE_LOG;
+			this->deSelectLogInterval(TFT_WHITE);
+			this->deSelectSerialLogging(TFT_YELLOW);
+		} else {
+			this->deSelectSerialBaud(TFT_WHITE);
+			this->selectLogInterval();
+			dial_cnt = dial_cnt_old = this->getLogInterval();
+			selected = 5;
+		}
+		return;
+	}
+	if (dial_cnt != dial_cnt_old) {
+		if (selected == 5) {
+			clampVariableToRange(0, 6, &dial_cnt);
+			this->changeLogInterval(dial_cnt);
+		} else {
+			clampVariableToRange(0, 9, &dial_cnt);
+			this->changeSerialBaud(dial_cnt);
+		}
+		dial_cnt_old = dial_cnt;
+	}
+}
+
+void SettingScreen::drawSettingBL()
+{
+	if ((cur_time - dial_time) > 10000) {
+		mode = SETTING_SETTING;
+		deSelect();
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
+		this->changeBacklight();
+		this->deSelectBLLevel();
+	}
+	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
+		flag_long_press = 3;
+		btn_pressed[2] = false;
+		mode = SETTING_SETTING;
+		selected = dial_cnt = dial_cnt_old = STATE_BL;
+		deSelect();
+		this->changeBacklight();
+		this->selectBLLevel();
+		return;
+	}
+	if (btn_pressed[3] == true) {
+		btn_pressed[3] = false;
+		mode = SETTING_SETTING;
+		settings->setBacklightLevelIndex(this->setBacklightLevelPreset());
+		this->selectBLLevel();
+		selected = dial_cnt = STATE_BL;
+		return;
+	}
+	if (dial_cnt != dial_cnt_old) {
+		clampVariableToRange(0, 6, &dial_cnt);
+		dial_cnt_old = dial_cnt;
+		this->changeBacklight(dial_cnt);
+	}
+}
+
+void SettingScreen::select()
+{
+	if (dial_cnt == dial_cnt_old) {
+		return;
+	}
+	dial_cnt_old = dial_cnt;
+	// 4 is 1 based count of screen_state_setting elements, lower limit is 1 because 0 is used
+	// as a marker for non-selected item that should not be included in the "selection circle"
+	clampVariableToCircularRange(1, 4, dial_direct, &dial_cnt);
+
+	deSelect();
+	selected = dial_cnt;
+	switch (dial_cnt) {
+		case STATE_BL:
+			this->selectBLLevel();
+			break;
+		case STATE_LOG:
+			this->selectSerialLogging();
+			break;
+		case STATE_SETTING_WIFI:
+			header->select(WIFI);
+			break;
+		case STATE_SETTING_LOGGING:
+			header->select(LOGGING);
+			break;
+		default:
+			break;
+	}
+}
+
+void SettingScreen::deSelect()
+{
+	this->deSelectBLLevel();
+	this->deSelectSerialLogging();
+	header->deSelect(LOGGING);
+	header->deSelect(WIFI);
 }
 
 void SettingScreen::popUp(void)
@@ -122,21 +316,6 @@ void SettingScreen::setLogInterval(uint8_t val)
 {
 	settings->setLogInterval(val);
 	log_interval = val;
-}
-
-bool SettingScreen::isLoggingEnabled()
-{
-	return settings->isLoggingEnabled();
-}
-
-void SettingScreen::enableLogging(void)
-{
-	settings->setLoggingEnabled(true);
-}
-
-void SettingScreen::disableLogging(void)
-{
-	settings->setLoggingEnabled(false);
 }
 
 uint8_t SettingScreen::setLogInterval(void)
@@ -211,7 +390,7 @@ void SettingScreen::restoreLogIntervalValue()
 
 void SettingScreen::changeLogInterval(uint8_t log_interval)
 {
-	double ms = (1/(double)(this->serial_baud_edit/780))*1000;
+	double ms = (1/static_cast<double>(this->serial_baud_edit/780))*1000;
 
 	if (log_interval != 0) {
 		clampVariableToRange(0, 6, &log_interval);
@@ -332,4 +511,61 @@ void SettingScreen::drawUDPport(uint16_t port)
 void SettingScreen::debug()
 {
 	com_serial_baud->clear();
+}
+
+uint16_t SettingScreen::getEnabledLogInterval(void)
+{
+	uint16_t tmp = this->getLogIntervalValue();
+
+	if (tmp > 0 and settings->isLoggingEnabled()) {
+		header->onLogging();
+		return tmp;
+	} else if (tmp > 0) {
+		header->possibleLogging();
+	} else {
+		header->offLogging();
+	}
+	return 0;
+}
+
+void SettingScreen::onShutdown(void)
+{
+	this->shutdown = true;
+	this->turnOffBacklight();
+	this->log_interval = 0;
+	this->is_initialized = false;
+}
+
+void SettingScreen::onWakeup(void)
+{
+	this->shutdown = false;
+	this->log_interval = settings->getLogInterval();
+	selected = dial_cnt = dial_cnt_old = STATE_NONE;
+}
+
+void SettingScreen::onEnter(void)
+{
+	wifi_manager->update_wifi_info = wifi_manager->update_udp_info = true;
+}
+
+void SettingScreen::selectAndDrawSSIDText(void)
+{
+	if (WiFi.status() == WL_CONNECTED) {
+		this->drawSSID(wifi_manager->apInfoConnected());
+	} else if (wifi_manager->hasSavedConnectionInfo()) {
+		this->drawSSID(wifi_manager->apInfoSaved());
+	} else {
+		this->drawSSID("WiFi not saved");
+	}
+}
+
+void SettingScreen::drawUDPIpaddrAndPort(void)
+{
+	this->drawUDPIpaddr(wifi_manager->ipaddr_udp.toString());
+	this->drawUDPport(wifi_manager->port_udp);
+}
+
+screen_t SettingScreen::getType(void)
+{
+	return SETTING_SCREEN;
 }

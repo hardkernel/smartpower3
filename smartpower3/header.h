@@ -51,7 +51,7 @@ private:
 	uint16_t in_volt = 0;
 	uint16_t in_ampere = 0;
 	bool updated;
-	bool low_input = 1;
+	bool low_input = true;
 	uint8_t intPin = -1;
 	Component *mode;
 	InputHeaderIconWidget *icon_input;

@@ -101,6 +101,15 @@ void Settings::setLoggingEnabled(bool loggingEnabled, bool force_commit)
 	NVS.setInt("logging_enabled", logging_enabled, force_commit);
 }
 
+void Settings::switchLogging(bool from_storage)
+{
+	if (this->isLoggingEnabled(from_storage)) {
+		this->setLoggingEnabled(false);
+	} else {
+		this->setLoggingEnabled(true);
+	}
+}
+
 uint8_t Settings::getSerialBaudRateIndex(bool from_storage)
 {
 	uint32_t baud_rate;
@@ -158,6 +167,15 @@ void Settings::setWifiEnabled(bool wifiEnabled, bool force_commit)
 {
 	wifi_enabled = wifiEnabled;
 	NVS.setInt("wifi_enabled", wifi_enabled, force_commit);
+}
+
+void Settings::switchWifi(bool from_storage)
+{
+	if (this->isWifiEnabled(from_storage)) {
+		this->setWifiEnabled(false);
+	} else {
+		this->setWifiEnabled(true);
+	}
 }
 
 /*const IPAddress& Settings::getWifiIpv4AddressDns1 () const
@@ -307,7 +325,7 @@ void Settings::setFirstBoot(bool firstBoot, bool force_commit)
 wifi_credentials_state_e Settings::getWifiCredentialsState(bool from_storage)
 {
 	return (from_storage)
-			? (wifi_credentials_state_e) NVS.getInt("wifi_conn_ok", wifi_credentials_state)
+			? static_cast<wifi_credentials_state_e>(NVS.getInt("wifi_conn_ok", wifi_credentials_state))
 			: wifi_credentials_state;
 }
 

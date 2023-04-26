@@ -33,6 +33,7 @@ public:
 	void setLogInterval(uint8_t log_interval, bool force_commit = true);
 	bool isLoggingEnabled(bool from_storage = false);
 	void setLoggingEnabled(bool loggingEnabled = false, bool force_commit = true);
+	void switchLogging(bool from_storage=false);
 	uint8_t getSerialBaudRateIndex(bool from_storage=false);
 //	void setSerialBaudRateIndex (uint8_t serialBaudRateIndex = 0, bool force_commit = true);
 	uint32_t getSerialBaudRate(bool from_storage=false);
@@ -41,6 +42,7 @@ public:
 	void setWifiAccessPointSsid(const char* wifiAccessPointSsid, bool force_commit=true);
 	bool isWifiEnabled(bool from_storage = false);
 	void setWifiEnabled(bool wifiEnabled = true, bool force_commit = true);
+	void switchWifi(bool from_storage=false);
 /*	const IPAddress& getWifiIpv4AddressDns1 () const;
 	void setWifiIpv4AddressDns1 (const IPAddress &wifiIpv4AddressDns1);
 	const IPAddress& getWifiIpv4AddressDns2 () const;

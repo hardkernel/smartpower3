@@ -1,7 +1,6 @@
 #ifndef wifi_manager_h
 #define wifi_manager_h
 
-#include <settingscreen.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include "settings.h"
@@ -41,7 +40,7 @@ const char wifi_cmd_menu[][50] = {
 class WiFiManager
 {
 public:
-	WiFiManager(SettingScreen *setting_screen, Settings *settings);
+	WiFiManager(Settings *settings);
 	void viewMainMenu(void);
 	void viewApList(int16_t ap_list_cnt);
 	int16_t apScanning(void);
@@ -68,6 +67,7 @@ public:
 	bool isWiFiEnabled(void);
 	void disableWiFi(void);
 	void enableWiFi(void);
+	void switchWifiState(bool from_storage);
 	void setUdp();
 	void switchLoggingOnOff(void);
 	uint16_t port_udp = 0;
@@ -78,7 +78,6 @@ public:
 private:
 	WiFiUDP udp;
 	WiFiClient client;
-	SettingScreen *setting_screen;
 	Settings *settings;
 	bool commandMode = false;
 	void doApForget(void);

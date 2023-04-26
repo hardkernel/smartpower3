@@ -3,6 +3,7 @@
 #include <FunctionalInterrupt.h>
 
 #define DEBOUNCE_TIME 100
+#define LONG_PRESS_TIME 3000
 
 void countEncoder(void *val);
 void initEncoder(void *param);

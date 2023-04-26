@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 #include "component.h"
-#include "fonts/NotoSansBold20.h"
 #include "settings.h"
+#include "header.h"
+#include "screens/screen.h"
+
 
 #define BL_LCD	17
 #define FREQ	50000
@@ -25,11 +27,35 @@
 #define COLOR_SELECTED TFT_YELLOW
 #define COLOR_DESELECTED TFT_BLACK
 
-class SettingScreen
+
+enum setting_screen_mode_t {
+	SETTING_SETTING = 0,
+	SETTING_SETTING_BL,
+	SETTING_SETTING_LOG,
+};
+
+
+enum screen_state_setting {
+	STATE_SETTING_WIFI = 1,
+	STATE_SETTING_LOGGING,
+	STATE_LOG,
+	STATE_BL,
+};
+
+
+class SettingScreen : public Screen
 {
 public:
-	SettingScreen(TFT_eSPI *tft, Settings *settings);
-	void init(uint16_t x, uint16_t y);
+	SettingScreen(TFT_eSPI *tft, Header *header, Settings *settings, WiFiManager *wifi_manager, uint8_t *onoff);
+
+	virtual bool draw(void);
+	virtual void init(void);
+	virtual void select(void);
+	virtual void deSelect(void);
+
+	virtual void onShutdown(void);
+	virtual void onWakeup(void);
+	virtual screen_t getType(void);
 
 	uint8_t setBacklightLevelPreset(void);
 	void setBacklightLevelPreset(uint8_t level_preset, bool edit);
@@ -37,16 +63,14 @@ public:
 	void turnOffBacklight(void);
 	uint8_t setLogInterval(void);
 	void setLogInterval(uint8_t val);
-	bool isLoggingEnabled(void);
-	void enableLogging(void);
-	void disableLogging(void);
-	uint32_t setSerialBaud(uint32_t baud);
-	uint32_t setSerialBaud();
+	uint16_t getEnabledLogInterval(void);
 
 	uint8_t getBacklightLevel(void);
 	uint8_t getLogInterval(void);
 	uint16_t getLogIntervalValue(void);
 	uint32_t getSerialBaud(void);
+	uint32_t setSerialBaud(uint32_t baud);
+	uint32_t setSerialBaud();
 	uint8_t getSerialBaudIndex(void);
 
 	void changeBacklight(uint8_t level=255);
@@ -76,11 +100,13 @@ public:
 	void drawUDPport(uint16_t port);
 	void drawSSID(String ssid);
 
+	void selectAndDrawSSIDText(void);
+	void drawUDPIpaddrAndPort(void);
+	void onEnter(void);
 	void debug(void);
 private:
-	TFT_eSPI *tft;
+	setting_screen_mode_t mode = SETTING_SETTING;
 	TFT_eSprite *popup;
-	Settings *settings;
 	uint16_t x;
 	uint16_t y;
 	uint8_t backlight_level_preset = 0;
@@ -99,4 +125,7 @@ private:
 	Component *com_udp_ipaddr;
 	Component *com_udp_port;
 	uint8_t _setBacklightLevelPreset(uint8_t level_preset);
+	void drawSetting(void);
+	void drawSettingBL(void);
+	void drawSettingLOG(void);
 };
