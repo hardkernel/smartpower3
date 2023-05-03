@@ -135,7 +135,7 @@ bool WiFiManager::apConnect(const char* ssid, const char* passwd, bool show_ctrl
 					WiFi.SSID().c_str(),
 					WiFi.RSSI(),
 					WiFi.localIP().toString().c_str());
-			this->setNVSAPConnectionInfo(ssid, passwd, WIFI_CREDENTIALS_STATE_OK);
+			this->setStorageAPConnectionInfo(ssid, passwd, WIFI_CREDENTIALS_STATE_OK);
 			return true;
 		}
 		Serial.printf("\nConnecting wait (%d)...\n\r", CONNECT_RETRY_CNT - i);
@@ -188,7 +188,7 @@ bool WiFiManager::apConnectFromSettings()
 				settings->getWifiAccessPointSsid().c_str(),
 				settings->getWifiPassword().c_str());
 		if (WiFi.waitForConnectResult(CONNECT_RETRY_CNT * 1000) == WL_CONNECTED) {
-			this->setNVSAPConnectionInfo(
+			this->setStorageAPConnectionInfo(
 					settings->getWifiAccessPointSsid().c_str(),
 					settings->getWifiPassword().c_str(),
 					WIFI_CREDENTIALS_STATE_OK);
@@ -206,15 +206,17 @@ void WiFiManager::apSetPassword(uint8_t ap_number)
 
 	memset(passwd, 0x00, sizeof_passwd);
 
-	Serial.printf("\n\rAP (%s, %d dbm) \r\n",
+	Serial.printf("\n\rAP (%s, %d dbm) \n\r",
 			WiFi.SSID(ap_number).c_str(),
 			WiFi.RSSI(ap_number));
-	Serial.printf(MSG_AP_SELECT_PASSWORD);
 
 	if (WiFi.encryptionType(ap_number) == WIFI_AUTH_OPEN) {
 		this->apConnect(ap_number, passwd);
 		return;
 	}
+
+	Serial.printf(MSG_AP_SELECT_PASSWORD);
+	Serial.read();  // In some terminals, there is already one character in the pipeline that needs to be removed.
 
 	while(true) {
 		if (Serial.available()) {
@@ -298,7 +300,7 @@ void WiFiManager::apSelectAndConnect()
 void WiFiManager::doApForget()
 {
 	WiFi.disconnect(true, true);
-	this->setNVSAPConnectionInfo("", "", WIFI_CREDENTIALS_STATE_INVALID);
+	this->setStorageAPConnectionInfo("", "", WIFI_CREDENTIALS_STATE_INVALID);
 	delay(100);
 	update_wifi_info = true;
 }
@@ -663,7 +665,7 @@ void WiFiManager::doYesNoSelection(void (WiFiManager::*func)(), const char *conf
 	}
 }
 
-void WiFiManager::setNVSAPConnectionInfo(const char *ssid, const char *password,
+void WiFiManager::setStorageAPConnectionInfo(const char *ssid, const char *password,
 										 wifi_credentials_state_e credentials_state)
 {
 	settings->setWifiAccessPointSsid(ssid);

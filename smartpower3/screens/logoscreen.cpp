@@ -23,7 +23,7 @@ void LogoScreen::init()
 	tft->setRotation(0);
 	drawBmp("/logo_hardkernel.bmp", 0, 0);
 	tft->setRotation(3);
-	tft->loadFont(NotoSansBold20);
+	tft->loadFont(getFont("NotoSansBold20"));
 	tft->drawString("Build date : ", 80, 295, 2);
 	tft->drawString(String(__DATE__), 200, 295, 2);
 	tft->drawString(String(__TIME__), 320, 295, 2);

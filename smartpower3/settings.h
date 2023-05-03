@@ -2,7 +2,7 @@
 #define SMARTPOWER3_SETTINGS_H_
 
 #include <Arduino.h>
-#include <ArduinoNvs.h>
+#include <Preferences.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
 
@@ -115,6 +115,7 @@ private:
 	IPAddress wifi_ipv4_address_dns_2;*/
 	IPAddress wifi_ipv4_udp_logging_server_ip_address;
 	uint16_t wifi_ipv4_udp_logging_server_port = 0;
+	Preferences preferences;
 };
 
 #endif /* SMARTPOWER3_SETTINGS_H_ */

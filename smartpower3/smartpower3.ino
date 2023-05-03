@@ -169,8 +169,6 @@ void wifiTask(void *parameter)
 void setup(void) {
 	Serial.begin(115200);
 
-	delay(100);  // needed for the following not to block
-
 	settings.init();
 
 	I2CA.begin(15, 4, (uint32_t)10000);

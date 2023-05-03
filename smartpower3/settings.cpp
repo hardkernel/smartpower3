@@ -2,8 +2,6 @@
 
 Settings::Settings()
 {
-	NVS.begin();
-	delay(100);  // wait till NVS initializes, otherwise the init may block indefinetly
 	// reserve space for Strings to minimize fragmentation
 	this->wifi_access_point_ssid.reserve(256);
 	this->wifi_password.reserve(64);  // the longes password currently possible
@@ -11,6 +9,10 @@ Settings::Settings()
 
 void Settings::init()
 {
+	  // "storage" is default ArduinoNVS namespace, default nvs partition (ArduinoNVS used the first suitable partition)
+	preferences.begin("storage", false);
+	delay(100);  // wait till storage initializes, otherwise the init may block indefinetly
+
 	// Backlight level
 	this->backlight_level_index = this->getBacklightLevelIndex(true);
 	// Serial baud rate
@@ -48,13 +50,13 @@ void Settings::init()
 
 uint8_t Settings::getBacklightLevelIndex(bool from_storage)
 {
-	return (from_storage) ? NVS.getInt("bl_level", backlight_level_index) : backlight_level_index;
+	return (from_storage) ? preferences.getUChar("bl_level", backlight_level_index) : backlight_level_index;
 }
 
 void Settings::setBacklightLevelIndex(uint8_t backlightLevelIndex, bool force_commit)
 {
 	backlight_level_index = backlightLevelIndex;
-	NVS.setInt("bl_level", backlight_level_index, force_commit);
+	preferences.putUChar("bl_level", backlight_level_index);
 }
 
 const uint8_t* Settings::getBacklightLevelPreset () const
@@ -81,24 +83,24 @@ const uint16_t* Settings::getLogIntervalPreset () const
 
 uint8_t Settings::getLogInterval(bool from_storage)
 {
-	return (from_storage) ? NVS.getInt("log_interval", log_interval) : log_interval;
+	return (from_storage) ? preferences.getUChar("log_interval", log_interval) : log_interval;
 }
 
 void Settings::setLogInterval(uint8_t logInterval, bool force_commit)
 {
 	log_interval = logInterval;
-	NVS.setInt("log_interval", logInterval, force_commit);
+	preferences.putUChar("log_interval", logInterval);
 }
 
 bool Settings::isLoggingEnabled(bool from_storage)
 {
-	return (from_storage) ? NVS.getInt("logging_enabled", logging_enabled) : logging_enabled;
+	return (from_storage) ? preferences.getBool("logging_enabled", logging_enabled) : logging_enabled;
 }
 
 void Settings::setLoggingEnabled(bool loggingEnabled, bool force_commit)
 {
 	logging_enabled = loggingEnabled;
-	NVS.setInt("logging_enabled", logging_enabled, force_commit);
+	preferences.putBool("logging_enabled", logging_enabled);
 }
 
 void Settings::switchLogging(bool from_storage)
@@ -135,19 +137,19 @@ uint8_t Settings::getSerialBaudRateIndex(bool from_storage)
 
 uint32_t Settings::getSerialBaudRate(bool from_storage)
 {
-	return (from_storage) ? NVS.getInt("serial_baud", serial_baud_rate) : serial_baud_rate;
+	return (from_storage) ? preferences.getUInt("serial_baud", serial_baud_rate) : serial_baud_rate;
 }
 
 void Settings::setSerialBaudRate(uint32_t serialBaudRate, bool force_commit)
 {
 	serial_baud_rate = serialBaudRate;
-	NVS.setInt("serial_baud", serial_baud_rate, force_commit);
+	preferences.putUInt("serial_baud", serial_baud_rate);
 }
 
 String Settings::getWifiAccessPointSsid(bool from_storage)
 {
 	if (from_storage) {
-		NVS.getString("ssid", wifi_access_point_ssid);
+		wifi_access_point_ssid = preferences.getString("ssid");
 	}
 	return wifi_access_point_ssid;
 }
@@ -155,18 +157,18 @@ String Settings::getWifiAccessPointSsid(bool from_storage)
 void Settings::setWifiAccessPointSsid(const char* wifiAccessPointSsid, bool force_commit)
 {
 	wifi_access_point_ssid = wifiAccessPointSsid;
-	NVS.setString("ssid", wifi_access_point_ssid, force_commit);
+	preferences.putString("ssid", wifiAccessPointSsid);
 }
 
 bool Settings::isWifiEnabled(bool from_storage)
 {
-	return (from_storage) ? NVS.getInt("wifi_enabled", wifi_enabled) : wifi_enabled;
+	return (from_storage) ? preferences.getBool("wifi_enabled", wifi_enabled) : wifi_enabled;
 }
 
 void Settings::setWifiEnabled(bool wifiEnabled, bool force_commit)
 {
 	wifi_enabled = wifiEnabled;
-	NVS.setInt("wifi_enabled", wifi_enabled, force_commit);
+	preferences.putBool("wifi_enabled", wifi_enabled);
 }
 
 void Settings::switchWifi(bool from_storage)
@@ -252,7 +254,7 @@ IPAddress Settings::getWifiIpv4UdpLoggingServerIpAddress(bool from_storage)
 {
 	IPAddress ipaddress;
 	if (from_storage) {
-		ipaddress.fromString(NVS.getString("ipaddr_udp"));
+		ipaddress.fromString(preferences.getString("ipaddr_udp"));
 		return ipaddress;
 	}
 	return wifi_ipv4_udp_logging_server_ip_address;
@@ -261,26 +263,26 @@ IPAddress Settings::getWifiIpv4UdpLoggingServerIpAddress(bool from_storage)
 void Settings::setWifiIpv4UdpLoggingServerIpAddress(IPAddress wifiIpv4UdpLoggingServerIpAddress, bool force_commit)
 {
 	wifi_ipv4_udp_logging_server_ip_address = wifiIpv4UdpLoggingServerIpAddress;
-	NVS.setString("ipaddr_udp", wifi_ipv4_udp_logging_server_ip_address.toString(), force_commit);
+	preferences.putString("ipaddr_udp", wifi_ipv4_udp_logging_server_ip_address.toString());
 }
 
 uint16_t Settings::getWifiIpv4UdpLoggingServerPort(bool from_storage)
 {
 	return (from_storage) ?
-			NVS.getInt("port_udp", wifi_ipv4_udp_logging_server_port)
+			preferences.getUShort("port_udp", wifi_ipv4_udp_logging_server_port)
 			: wifi_ipv4_udp_logging_server_port;
 }
 
 void Settings::setWifiIpv4UdpLoggingServerPort (uint16_t wifiIpv4UdpLoggingServerPort, bool force_commit)
 {
 	wifi_ipv4_udp_logging_server_port = wifiIpv4UdpLoggingServerPort;
-	NVS.setInt("port_udp", wifi_ipv4_udp_logging_server_port, force_commit);
+	preferences.putUShort("port_udp", wifi_ipv4_udp_logging_server_port);
 }
 
 String Settings::getWifiPassword(bool from_storage)
 {
 	if (from_storage) {
-		NVS.getString("passwd", wifi_password);
+		wifi_password = preferences.getString("passwd");
 	}
 	return wifi_password;
 }
@@ -288,7 +290,7 @@ String Settings::getWifiPassword(bool from_storage)
 void Settings::setWifiPassword(const char* wifiPassword, bool force_commit)
 {
 	wifi_password = wifiPassword;
-	NVS.setString("passwd", wifi_password);
+	preferences.putString("passwd", wifiPassword);
 }
 
 /*bool Settings::isWifiUseIpv4 () const
@@ -313,68 +315,68 @@ void Settings::setWifiUseIpv6 (bool wifiUseIpv6)
 
 bool Settings::isFirstBoot(bool from_storage)
 {
-	return (from_storage) ? NVS.getInt("firstboot", first_boot) : first_boot;
+	return (from_storage) ? preferences.getBool("firstboot", first_boot) : first_boot;
 }
 
 void Settings::setFirstBoot(bool firstBoot, bool force_commit)
 {
 	first_boot = firstBoot;
-	NVS.setInt("firstboot", first_boot, force_commit);
+	preferences.putBool("firstboot", first_boot);
 }
 
 wifi_credentials_state_e Settings::getWifiCredentialsState(bool from_storage)
 {
 	return (from_storage)
-			? static_cast<wifi_credentials_state_e>(NVS.getInt("wifi_conn_ok", wifi_credentials_state))
+			? static_cast<wifi_credentials_state_e>(preferences.getBool("wifi_conn_ok", wifi_credentials_state))
 			: wifi_credentials_state;
 }
 
 void Settings::setWifiCredentialsState(wifi_credentials_state_e wifiCredentialsStateSettings, bool force_commit)
 {
 	wifi_credentials_state = wifiCredentialsStateSettings;
-	NVS.setInt("wifi_conn_ok", wifi_credentials_state, force_commit);
+	preferences.putBool("wifi_conn_ok", wifi_credentials_state);
 }
 
 uint16_t Settings::getChannel0CurrentLimit(bool from_storage)
 {
-	return (from_storage) ? NVS.getInt("current_limit0", channel_0_current_limit) : channel_0_current_limit;
+	return (from_storage) ? preferences.getUShort("current_limit0", channel_0_current_limit) : channel_0_current_limit;
 }
 
 void Settings::setChannel0CurrentLimit(uint16_t channel0CurrentLimit, bool force_commit)
 {
 	channel_0_current_limit = channel0CurrentLimit;
-	NVS.setInt("current_limit0", channel_0_current_limit, force_commit);
+	preferences.putUShort("current_limit0", channel_0_current_limit);
 }
 
 uint16_t Settings::getChannel0Voltage(bool from_storage)
 {
-	return (from_storage) ? NVS.getInt("voltage0", channel_0_voltage) : channel_0_voltage;
+	return (from_storage) ? preferences.getUShort("voltage0", channel_0_voltage) : channel_0_voltage;
 }
 
 void Settings::setChannel0Voltage(uint16_t channel0Voltage, bool force_commit)
 {
 	channel_0_voltage = channel0Voltage;
-	NVS.setInt("voltage0", channel_0_voltage, force_commit);
+	preferences.putUShort("voltage0", channel_0_voltage);
 }
 
 uint16_t Settings::getChannel1CurrentLimit(bool from_storage)
 {
-	return (from_storage) ? NVS.getInt("current_limit1", channel_1_current_limit) : channel_1_current_limit;
+	return (from_storage) ? preferences.getUShort("current_limit1", channel_1_current_limit) : channel_1_current_limit;
 }
 
 void Settings::setChannel1CurrentLimit(uint16_t channel1CurrentLimit, bool force_commit)
 {
 	channel_1_current_limit = channel1CurrentLimit;
-	NVS.setInt("current_limit1", channel_1_current_limit, force_commit);
+	preferences.putUShort("current_limit1", channel_1_current_limit);
 }
 
 uint16_t Settings::getChannel1Voltage(bool from_storage)
 {
-	return (from_storage) ? NVS.getInt("voltage1", channel_1_voltage) : channel_1_voltage;
+	return (from_storage) ? preferences.getUShort("voltage1", channel_1_voltage) : channel_1_voltage;
 }
 
 void Settings::setChannel1Voltage(uint16_t channel1Voltage, bool force_commit)
 {
 	channel_1_voltage = channel1Voltage;
-	NVS.setInt("voltage1", channel_1_voltage, force_commit);
+	preferences.putUShort("voltage1", channel_1_voltage);
 }

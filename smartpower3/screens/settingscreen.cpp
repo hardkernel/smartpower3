@@ -26,13 +26,13 @@ void SettingScreen::init()
 	}
 
 	tft->fillRect(0, 52, 480, 285, BG_COLOR);
-	tft->loadFont(NotoSansBold20);
+	tft->loadFont(getFont("NotoSansBold20"));
 	tft->drawString("Build date : ", x + 140, y + 215, 2);
 	tft->drawString(String(__DATE__), x + 260, y + 215, 2);
 	tft->drawString(String(__TIME__), x + 380, y + 215, 2);
 	tft->unloadFont();
 
-	tft->loadFont(ChewyRegular32);
+	tft->loadFont(getFont("ChewyRegular32"));
 	tft->drawString("Backlight Level", x, y, 4);
 	tft->drawString("Logging", x, y + Y_LOGGING, 4);
 	tft->drawString("Serial", x + 120, y + Y_LOGGING, 4);
@@ -60,7 +60,7 @@ void SettingScreen::init()
 	com_udp_port->init(TFT_WHITE, BG_COLOR, 1, MC_DATUM);
 	com_udp_port->setCoordinate(x + X_IPADDR + 175, y + Y_WIFI_INFO + 30);
 
-	tft->loadFont(ChewyRegular24);
+	tft->loadFont(getFont("ChewyRegular24"));
 	tft->drawString("Baud Rate  /", x + X_BAUD_RATE, y + Y_SERIAL);
 	tft->drawString("/", x + X_BAUD_RATE + 110, y + Y_SERIAL + 30);
 	tft->drawString(" Interval", x + X_LOG_LEVEL+100, y + Y_SERIAL);
@@ -480,32 +480,32 @@ void SettingScreen::deSelectSerialBaud(uint16_t color)
 
 void SettingScreen::drawLogIntervalValue(uint16_t log_value)
 {
-	com_log_interval->clearAndDrawWithFont(NotoSansBold20, (log_value == 0) ? "OFF" : String(log_value) + " ms");
+	com_log_interval->clearAndDrawWithFont(getFont("NotoSansBold20"), (log_value == 0) ? "OFF" : String(log_value) + " ms");
 }
 
 void SettingScreen::drawSerialBaud(uint32_t baud)
 {
-	com_serial_baud->clearAndDrawWithFont(NotoSansBold20, String(baud) + " bps");
+	com_serial_baud->clearAndDrawWithFont(getFont("NotoSansBold20"), String(baud) + " bps");
 }
 
 void SettingScreen::drawSSID(String ssid)
 {
-	com_ssid->clearAndDrawWithFont(NotoSansBold20, ssid);
+	com_ssid->clearAndDrawWithFont(getFont("NotoSansBold20"), ssid);
 }
 
 void SettingScreen::drawIpaddr(String ipaddr)
 {
-	com_ipaddr->clearAndDrawWithFont(NotoSansBold20, ipaddr);
+	com_ipaddr->clearAndDrawWithFont(getFont("NotoSansBold20"), ipaddr);
 }
 
 void SettingScreen::drawUDPIpaddr(String ipaddr)
 {
-	com_udp_ipaddr->clearAndDrawWithFont(NotoSansBold20, ipaddr);
+	com_udp_ipaddr->clearAndDrawWithFont(getFont("NotoSansBold20"), ipaddr);
 }
 
 void SettingScreen::drawUDPport(uint16_t port)
 {
-	com_udp_port->clearAndDrawWithFont(NotoSansBold20, (" : " + String(port)));
+	com_udp_port->clearAndDrawWithFont(getFont("NotoSansBold20"), (" : " + String(port)));
 }
 
 void SettingScreen::debug()

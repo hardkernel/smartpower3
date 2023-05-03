@@ -4,9 +4,6 @@
 #include "header.h"
 #include "settings.h"
 #include "wifimanager.h"
-#include "fonts/NotoSansBold20.h"
-#include "fonts/ChewyRegular24.h"
-#include "fonts/ChewyRegular32.h"
 
 #define STATE_NONE 0
 
@@ -64,6 +61,7 @@ public:
 	void setTime(uint32_t milisec);
 
 	void updateWifiInfo(void);
+	const uint8_t* getFont(const char* font_name);
 	void debug(void);
 protected:
 	TFT_eSPI *tft;

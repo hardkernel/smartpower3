@@ -102,7 +102,7 @@ private:
 			const char *denial_string
 	);
 	bool isDigitChar(char input_char);
-	void setNVSAPConnectionInfo(const char* ssid, const char* password,
+	void setStorageAPConnectionInfo(const char* ssid, const char* password,
 								wifi_credentials_state_e credentials_state);
 };
 

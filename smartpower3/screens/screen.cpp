@@ -1,4 +1,7 @@
 #include "screens/screen.h"
+#include "fonts/NotoSansBold20.h"
+#include "fonts/ChewyRegular24.h"
+#include "fonts/ChewyRegular32.h"
 
 
 Screen::Screen()
@@ -132,4 +135,22 @@ void Screen::updateWifiInfo(void)
 {
 	this->updated_wifi_info = true;
 	this->updated_wifi_icon = true;
+}
+
+/*
+ * A little trick method to prevent multiple inclusion of font header files (whole fonts) in individual screens.
+ * Otherwise the preprocessor would replace the include with the whole contents of font array in every file
+ * the screen header file is included in.
+ */
+const uint8_t* Screen::getFont(const char* font_name)
+{
+	if (font_name == "NotoSansBold20") {
+		return NotoSansBold20;
+	} else if (font_name == "ChewyRegular24") {
+		return ChewyRegular24;
+	} else if (font_name == "ChewyRegular32") {
+		return ChewyRegular32;
+	} else {
+		return 0x00;
+	}
 }
