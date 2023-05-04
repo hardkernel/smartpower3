@@ -15,8 +15,6 @@ public:
 	virtual const uint16_t iconWidth(void);
 	virtual const uint16_t iconHeight(void);
 	virtual const uint8_t* iconCharArray(void);
-protected:
-	icon_image_enum icon_image;
 };
 
 #endif

@@ -13,6 +13,14 @@ void Settings::init()
 	preferences.begin("storage", false);
 	delay(100);  // wait till storage initializes, otherwise the init may block indefinetly
 
+	// Clear old keys
+	if (!this->isNvsCleared(true)) {
+		Serial.println("About to clear preferences");
+		preferences.clear();
+		Serial.println("Preferences cleared");
+		this->setNvsCleared(true);
+	}
+
 	// Backlight level
 	this->backlight_level_index = this->getBacklightLevelIndex(true);
 	// Serial baud rate
@@ -148,7 +156,7 @@ void Settings::setSerialBaudRate(uint32_t serialBaudRate, bool force_commit)
 
 String Settings::getWifiAccessPointSsid(bool from_storage)
 {
-	if (from_storage) {
+	if (from_storage && preferences.isKey("ssid")) {
 		wifi_access_point_ssid = preferences.getString("ssid");
 	}
 	return wifi_access_point_ssid;
@@ -253,7 +261,7 @@ void Settings::setWifiIpv4SubnetMask (const IPAddress &wifiIpv4SubnetMask)
 IPAddress Settings::getWifiIpv4UdpLoggingServerIpAddress(bool from_storage)
 {
 	IPAddress ipaddress;
-	if (from_storage) {
+	if (from_storage && preferences.isKey("ipaddr_udp")) {
 		ipaddress.fromString(preferences.getString("ipaddr_udp"));
 		return ipaddress;
 	}
@@ -281,7 +289,7 @@ void Settings::setWifiIpv4UdpLoggingServerPort (uint16_t wifiIpv4UdpLoggingServe
 
 String Settings::getWifiPassword(bool from_storage)
 {
-	if (from_storage) {
+	if (from_storage && preferences.isKey("passwd")) {
 		wifi_password = preferences.getString("passwd");
 	}
 	return wifi_password;
@@ -379,4 +387,15 @@ void Settings::setChannel1Voltage(uint16_t channel1Voltage, bool force_commit)
 {
 	channel_1_voltage = channel1Voltage;
 	preferences.putUShort("voltage1", channel_1_voltage);
+}
+
+bool Settings::isNvsCleared(bool from_storage)
+{
+	return (from_storage) ? preferences.getBool("nvs_cleared", false) : nvs_cleared;
+}
+
+void Settings::setNvsCleared(bool nvsCleared)
+{
+	nvs_cleared = nvsCleared;
+	preferences.putBool("nvs_cleared", nvsCleared);
 }

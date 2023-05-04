@@ -93,9 +93,9 @@ public:
 	void drawBacklightLevel(uint8_t level);
 	void drawLogIntervalValue(uint16_t log_interval);
 	void drawSerialBaud(uint32_t serial_baud);
-	void popUp(void);
+	//void popUp(void);
 
-	void drawIpaddr(String ipaddr);
+	//void drawIpaddr(String ipaddr);
 	void drawUDPIpaddr(String ipaddr);
 	void drawUDPport(uint16_t port);
 	void drawSSID(String ssid);
@@ -106,7 +106,7 @@ public:
 	void debug(void);
 private:
 	setting_screen_mode_t mode = SETTING_SETTING;
-	TFT_eSprite *popup;
+	//TFT_eSprite *popup;
 	uint16_t x;
 	uint16_t y;
 	uint8_t backlight_level_preset = 0;
@@ -120,7 +120,7 @@ private:
 	uint32_t serial_baud_edit = 0;
 	Component *com_serial_baud;
 	Component *com_log_interval;
-	Component *com_ipaddr;
+	//Component *com_ipaddr;
 	Component *com_ssid;
 	Component *com_udp_ipaddr;
 	Component *com_udp_port;

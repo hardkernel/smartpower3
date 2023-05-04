@@ -47,10 +47,11 @@ void logTask(void *parameter)
 	char buffer_ch0[SIZE_LOG_BUFFER1];
 	char buffer_ch1[SIZE_LOG_BUFFER2];
 	char buffer_checksum[SIZE_CHECKSUM_BUFFER];
-	uint32_t log_interval = 0;
+	uint16_t log_interval = 0;
 	uint8_t checksum8 = 0;
 	uint8_t checksum8_xor = 0;
-	uint8_t *onoff;
+	SettingScreen *setting_screen = screen_manager.getSettingScreen();
+	VoltageScreen *voltage_screen = screen_manager.getVoltageScreen();
 
 	for (;;) {
 		if (interruptFlag > 0) {
@@ -58,10 +59,8 @@ void logTask(void *parameter)
 			interruptFlag--;
 			portEXIT_CRITICAL(&timerMux);
 
-			onoff = screen_manager.getOnOff();
-
-			if (log_interval != screen_manager.getSettingScreen()->getEnabledLogInterval()) {
-				log_interval = screen_manager.getSettingScreen()->getEnabledLogInterval();
+			if (log_interval != setting_screen->getEnabledLogInterval()) {
+				log_interval = setting_screen->getEnabledLogInterval();
 				if (log_interval == 0)
 					timerAlarmWrite(timer, 250000, true);
 				else
@@ -69,8 +68,8 @@ void logTask(void *parameter)
 			}
 			if ((log_interval > 0) && !wifi_manager->isCommandMode()) {
 				sprintf(buffer_input, "%010lu,%05d,%04d,%05d,%1d,", millis(), mCh0.V(),mCh0.A(log_interval), mCh0.W(log_interval), low_input);
-				sprintf(buffer_ch0, "%05d,%04d,%05d,%1d,%02x,", mCh1.V(), mCh1.A(log_interval), mCh1.W(log_interval), onoff[0], screen_manager.getVoltageScreen()->getIntStat(0));
-				sprintf(buffer_ch1, "%05d,%04d,%05d,%1d,%02x,", mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval), onoff[1], screen_manager.getVoltageScreen()->getIntStat(1));
+				sprintf(buffer_ch0, "%05d,%04d,%05d,%1d,%02x,", mCh1.V(), mCh1.A(log_interval), mCh1.W(log_interval), onoff[0], voltage_screen->getIntStat(0));
+				sprintf(buffer_ch1, "%05d,%04d,%05d,%1d,%02x,", mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval), onoff[1], voltage_screen->getIntStat(1));
 
 				checksum8 = 0;
 				checksum8_xor = 0;
@@ -196,7 +195,7 @@ void setup(void) {
 }
 
 void loop() {
-	//onoff = screen_manager.getOnOff();
+	onoff = screen_manager.getOnOff();
 
 	mChs.sample();
 

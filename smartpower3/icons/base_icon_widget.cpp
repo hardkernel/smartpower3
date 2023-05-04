@@ -3,6 +3,7 @@
 BaseIconWidget::BaseIconWidget(TFT_eSPI *tft)
 {
 	this->tft = tft;
+	ic = nullptr;
 }
 
 BaseIconWidget::~BaseIconWidget(void)

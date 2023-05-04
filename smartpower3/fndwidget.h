@@ -54,7 +54,7 @@ private:
 	TFT_eSPI *tft;
 	uint16_t value;
 	uint16_t old_value;
-	struct fnd *f;
+	struct fnd *f = nullptr;
 	uint16_t diff = 0;
 	bool set_current_limit = false;
 	bool set_monitor_voltage = false;

@@ -14,13 +14,13 @@ SettingScreen::SettingScreen(TFT_eSPI *tft, Header *header, Settings *settings, 
 	//com_ipaddr = new Component(tft, 220, 20, 2);
 	com_udp_ipaddr = new Component(tft, 170, 20, 2);
 	com_udp_port = new Component(tft, 60, 20, 2);
+
+	this->x = SETTING_SCREEN_INIT_POSITION_X;
+	this->y = SETTING_SCREEN_INIT_POSITION_Y;
 }
 
 void SettingScreen::init()
 {
-	this->x = SETTING_SCREEN_INIT_POSITION_X;
-	this->y = SETTING_SCREEN_INIT_POSITION_Y;
-
 	for (int i = 0; i < 2; i++) {
 		tft->drawLine(0, 50 + i, 480, 50 + i, TFT_DARKGREY);
 	}
@@ -272,13 +272,13 @@ void SettingScreen::deSelect()
 	header->deSelect(WIFI);
 }
 
-void SettingScreen::popUp(void)
+/*void SettingScreen::popUp(void)
 {
 	popup->fillSprite(TFT_DARKGREY);
 	popup->setTextDatum(MC_DATUM);
 	popup->drawString("Sprite", 200, 200, 4);
 	popup->pushSprite(200, 200);
-}
+}*/
 
 uint8_t SettingScreen::_setBacklightLevelPreset(uint8_t level_preset)
 {
@@ -493,10 +493,10 @@ void SettingScreen::drawSSID(String ssid)
 	com_ssid->clearAndDrawWithFont(getFont("NotoSansBold20"), ssid);
 }
 
-void SettingScreen::drawIpaddr(String ipaddr)
+/*void SettingScreen::drawIpaddr(String ipaddr)
 {
 	com_ipaddr->clearAndDrawWithFont(getFont("NotoSansBold20"), ipaddr);
-}
+}*/
 
 void SettingScreen::drawUDPIpaddr(String ipaddr)
 {

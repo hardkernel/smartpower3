@@ -20,7 +20,7 @@ public:
 	virtual void onWakeup(void);
 	virtual screen_t getType(void);
 private:
-	fs::FS *fs;
+	fs::FS *fs = nullptr;
 	void drawBmp(const char *filename, int16_t x, int16_t y);
 	uint16_t read16(fs::File &f);
 	uint32_t read32(fs::File &f);

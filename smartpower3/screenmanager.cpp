@@ -31,7 +31,7 @@ void ScreenManager::begin(Settings *settings, WiFiManager *wifi_manager, TwoWire
 
 	fsInit();
 	delay(2000); // approximate logo display time
-	header->init(5, 8);
+	header->init();
 }
 
 uint8_t* ScreenManager::getOnOff()
@@ -139,7 +139,7 @@ void ScreenManager::checkOnOff()
 			setting_screen->setLogInterval();
 			setting_screen->setBacklightLevelPreset();
 
-			header->init(5, 8);
+			header->init();
 
 			for (int i = 0; i < LAST_SCREEN_COUNT; i++) {
 				screens[i]->onWakeup();

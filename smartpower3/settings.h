@@ -79,6 +79,8 @@ public:
 	void setChannel1CurrentLimit (uint16_t channel1CurrentLimit, bool force_commit = true);
 	uint16_t getChannel1Voltage(bool from_storage = false);
 	void setChannel1Voltage (uint16_t channel1Voltage, bool force_commit = true);
+	bool isNvsCleared(bool from_storage = false);
+	void setNvsCleared(bool nvsCleared = false);
 
 private:
 	bool first_boot = false;
@@ -103,8 +105,8 @@ private:
 	bool wifi_enabled = true;
 /*	bool wifi_use_ipv4 = true;
 	bool wifi_use_ipv6 = false;*/
-	String wifi_access_point_ssid;
-	String wifi_password;
+	String wifi_access_point_ssid = "";
+	String wifi_password = "";
 	wifi_credentials_state_e wifi_credentials_state = WIFI_CREDENTIALS_STATE_OK;
 	bool wifi_ipv4_connect_automatically = true;
 	bool wifi_ipv4_dhcp_enabled = true;
@@ -113,9 +115,10 @@ private:
 	IPAddress wifi_ipv4_subnet_mask;
 	IPAddress wifi_ipv4_address_dns_1;
 	IPAddress wifi_ipv4_address_dns_2;*/
-	IPAddress wifi_ipv4_udp_logging_server_ip_address;
+	IPAddress wifi_ipv4_udp_logging_server_ip_address = IPAddress(0,0,0,0);
 	uint16_t wifi_ipv4_udp_logging_server_port = 0;
 	Preferences preferences;
+	bool nvs_cleared = false;
 };
 
 #endif /* SMARTPOWER3_SETTINGS_H_ */

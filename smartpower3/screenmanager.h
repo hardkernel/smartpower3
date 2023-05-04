@@ -46,13 +46,13 @@ public:
 	void setWiFiIconState(void);
 private:
 	TFT_eSPI tft = TFT_eSPI();
-	Header *header;
-	VoltageScreen *voltage_screen;
-	SettingScreen *setting_screen;
-	LogoScreen *logo_screen;
-	Settings *settings;
-	TwoWire *_wire;
-	WiFiManager *wifi_manager;
+	Header *header = nullptr;
+	VoltageScreen *voltage_screen = nullptr;
+	SettingScreen *setting_screen = nullptr;
+	LogoScreen *logo_screen = nullptr;
+	Settings *settings = nullptr;
+	TwoWire *_wire = nullptr;
+	WiFiManager *wifi_manager = nullptr;
 	uint32_t dial_time = 0;
 	uint32_t cur_time = 0;
 	uint8_t onoff[2] = {2, 2};
@@ -66,6 +66,6 @@ private:
 	bool updated_wifi_info = false;
 
 	screen_t screen = LOGO_SCREEN;  // default screen
-	Screen *screens[LAST_SCREEN_COUNT];
+	Screen *screens[LAST_SCREEN_COUNT] = {};
 	bool show_next_screen = false;
 };

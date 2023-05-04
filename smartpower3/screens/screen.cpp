@@ -144,11 +144,11 @@ void Screen::updateWifiInfo(void)
  */
 const uint8_t* Screen::getFont(const char* font_name)
 {
-	if (font_name == "NotoSansBold20") {
+	if (strcmp(font_name, "NotoSansBold20") == 0) {
 		return NotoSansBold20;
-	} else if (font_name == "ChewyRegular24") {
+	} else if (strcmp(font_name, "ChewyRegular24") == 0) {
 		return ChewyRegular24;
-	} else if (font_name == "ChewyRegular32") {
+	} else if (strcmp(font_name, "ChewyRegular32") == 0) {
 		return ChewyRegular32;
 	} else {
 		return 0x00;

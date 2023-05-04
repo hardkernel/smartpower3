@@ -10,7 +10,7 @@ Button::Button(uint8_t pin) : PIN(pin)
 void Button::isr_pol(void)
 {
 	if (pressed == 0 && digitalRead(PIN) == 0) {
-		debounceTimer = millis();
+		pressed_time = millis();
 		pressed = 1;
 	} else if (digitalRead(PIN) == 1 && pressed == 2) {
 		pressed = 0;
@@ -19,8 +19,8 @@ void Button::isr_pol(void)
 
 uint8_t Button::checkPressed(void)
 {
-	if (pressed == 1 && (millis() - debounceTimer >= DEBOUNCE_TIME)) {
-		if (millis() - debounceTimer >= LONG_PRESS_TIME) {
+	if (pressed == 1 && (millis() - pressed_time >= DEBOUNCE_TIME)) {
+		if (millis() - pressed_time >= LONG_PRESS_TIME) {
 			pressed = 2;
 			return 2;
 		} else if (digitalRead(PIN) == 1) {

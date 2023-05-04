@@ -25,7 +25,7 @@ class Header : public Component
 {
 public:
 	Header(TFT_eSPI *tft);
-	void init(uint16_t x, uint16_t y);
+	void init();
 	void select(void);
 	void select(icon_w icon);
 	void deSelect(void);
@@ -46,11 +46,11 @@ public:
 	Component *display_mode;
 private:
 	TFT_eSPI *tft;
-	uint16_t x;
-	uint16_t y;
+	uint16_t x = 5;
+	uint16_t y = 8;
 	uint16_t in_volt = 0;
 	uint16_t in_ampere = 0;
-	bool updated;
+	bool updated = true;
 	bool low_input = true;
 	uint8_t intPin = -1;
 	Component *mode;

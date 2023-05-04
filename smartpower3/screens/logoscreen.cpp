@@ -41,7 +41,7 @@ bool LogoScreen::draw()
 
 uint16_t LogoScreen::read16(fs::File &f)
 {
-	uint16_t result;
+	uint16_t result = 0;
 	((uint8_t *)&result)[0] = f.read(); // LSB
 	((uint8_t *)&result)[1] = f.read(); // MSB
 	return result;
@@ -49,7 +49,7 @@ uint16_t LogoScreen::read16(fs::File &f)
 
 uint32_t LogoScreen::read32(fs::File &f)
 {
-	uint32_t result;
+	uint32_t result = 0;
 	((uint8_t *)&result)[0] = f.read(); // LSB
 	((uint8_t *)&result)[1] = f.read();
 	((uint8_t *)&result)[2] = f.read();
@@ -69,11 +69,11 @@ void LogoScreen::drawBmp(const char *filename, int16_t x, int16_t y)
 		return;
 	}
 
-	uint32_t seekOffset;
-	uint16_t w, h, row, col;
-	uint8_t  r, g, b;
-
 	if (read16(bmpFS) == 0x4D42) {
+
+		uint32_t seekOffset;
+		uint16_t w, h;
+
 		read32(bmpFS);
 		read32(bmpFS);
 		seekOffset = read32(bmpFS);
@@ -82,13 +82,16 @@ void LogoScreen::drawBmp(const char *filename, int16_t x, int16_t y)
 		h = read32(bmpFS);
 
 		if ((read16(bmpFS) == 1) && (read16(bmpFS) == 24) && (read32(bmpFS) == 0)) {
+			uint16_t row, col;
+			uint8_t  r, g, b;
+
 			y += h - 1;
 
 			bool oldSwapBytes = tft->getSwapBytes();
 			tft->setSwapBytes(true);
 			bmpFS.seek(seekOffset);
 
-		uint16_t padding = (4 - ((w * 3) & 3)) & 3;
+			uint16_t padding = (4 - ((w * 3) & 3)) & 3;
 			uint8_t lineBuffer[w * 3 + padding];
 
 			for (row = 0; row < h; row++) {

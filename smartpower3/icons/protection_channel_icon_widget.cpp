@@ -2,6 +2,7 @@
 
 ProtectionChannelIconWidget::ProtectionChannelIconWidget(TFT_eSPI *tft, uint8_t channel, icon_image_enum icon_image) : ChannelIconWidget(tft, channel)
 {
+	this->protection = true;
 	this->icon_image = icon_image;
 }
 

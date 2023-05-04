@@ -34,8 +34,5 @@ TwoWire I2CB = TwoWire(1);
 
 struct dial_t dial;
 
-//uint16_t volt[3];
-//uint16_t amp[3];
-//uint16_t watt[3];
-//uint8_t *onoff;
+uint8_t *onoff;
 bool low_input;

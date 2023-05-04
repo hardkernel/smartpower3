@@ -14,11 +14,8 @@ Header::Header(TFT_eSPI *tft) : Component(tft)
 	icon_a = new UnitHeaderIconWidget(tft, SMALL_AMPERE);  //10
 }
 
-void Header::init(uint16_t x, uint16_t y)
+void Header::init()
 {
-	this->x = x;
-	this->y = y;
-
 	tft->fillRect(0, 0, 480, 52, BG_COLOR);
 
 	input_v->fnd_init(3, 1, true, x + 35, y, FG_COLOR, BG_COLOR, FND_FONT_16x32, 100);

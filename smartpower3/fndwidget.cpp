@@ -13,6 +13,7 @@ FndWidget::~FndWidget(void)
 struct fnd* FndWidget::fnd_init(uint8_t cnt, uint8_t dot_pos, bool rbo,
 		uint16_t x, uint16_t y, uint16_t fg_color, uint16_t bg_color, enum FND_FONT_SIZE f_size, uint32_t div)
 {
+	free(f);
 	f = (struct fnd *)malloc(sizeof(struct fnd));
 	if (f == NULL) {
 		Serial.printf("fnd struct allocation fail!\n\r");
