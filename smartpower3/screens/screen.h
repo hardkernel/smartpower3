@@ -10,6 +10,15 @@
 #define SETTING_SCREEN_INIT_POSITION_X 10
 #define SETTING_SCREEN_INIT_POSITION_Y 80
 
+#define COLOR_RECTANGLE_SELECTED TFT_GREEN
+#define COLOR_RECTANGLE_ACTIVATED TFT_YELLOW
+#define COLOR_RECTANGLE_DESELECTED TFT_BLACK
+#define COLOR_TEXT_SELECTED TFT_WHITE
+#define COLOR_TEXT_ACTIVATED TFT_YELLOW
+#define COLOR_TEXT_DESELECTED TFT_WHITE
+#define COLOR_TEXT_WARNING TFT_YELLOW
+#define COLOR_TEXT_ERROR TFT_RED
+
 
 enum screen_t {
 	LOGO_SCREEN = 0,
@@ -53,7 +62,6 @@ public:
 	virtual screen_t getType(void) = 0;
 
 	void pushButtonPress(uint8_t button_number, uint32_t dial_time, uint8_t flag_long_press);
-	void pushInputDial(int8_t dial_cnt, int8_t direct, uint8_t step, uint32_t milisec);
 	void pushTime(uint32_t cur_time);
 	void countDial(int8_t mode_count, int8_t direct, uint8_t step, uint32_t milisec);
 	void clearBtnEvent(void);

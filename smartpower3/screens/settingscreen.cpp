@@ -8,10 +8,9 @@ SettingScreen::SettingScreen(TFT_eSPI *tft, Header *header, Settings *settings, 
 	popup->createSprite(100, 100);
 	*/
 
-	com_serial_baud = new Component(tft, 115, 20, 2);
-	com_log_interval = new Component(tft, 85, 20, 2);
+	com_serial_baud = new Component(tft, BL_LEVEL_WIDTH, 24, 2);
+	com_log_interval = new Component(tft, BL_LEVEL_WIDTH, 24, 2);
 	com_ssid = new Component(tft, 284, 22, 2);
-	//com_ipaddr = new Component(tft, 220, 20, 2);
 	com_udp_ipaddr = new Component(tft, 170, 20, 2);
 	com_udp_port = new Component(tft, 60, 20, 2);
 
@@ -27,48 +26,40 @@ void SettingScreen::init()
 
 	tft->fillRect(0, 52, 480, 285, BG_COLOR);
 	tft->loadFont(getFont("NotoSansBold20"));
-	tft->drawString("Build date : ", x + 140, y + 215, 2);
-	tft->drawString(String(__DATE__), x + 260, y + 215, 2);
-	tft->drawString(String(__TIME__), x + 380, y + 215, 2);
-	tft->unloadFont();
+	tft->drawString("Build date : ", x + 128, y + 215, 2);
+	tft->drawString(String(__DATE__), x + 248, y + 215, 2);
+	tft->drawString(String(__TIME__), x + 378, y + 215, 2);
 
-	tft->loadFont(getFont("ChewyRegular32"));
 	tft->drawString("Backlight Level", x, y, 4);
-	tft->drawString("Logging", x, y + Y_LOGGING, 4);
-	tft->drawString("Serial", x + 120, y + Y_LOGGING, 4);
-	tft->drawString("WiFi Info", x, y + Y_WIFI_INFO + 10, 4);
+	tft->drawString("Serial Baud Rate", x, y + LINE_SPACING, 4);
+	tft->drawString("Logging Interval", x, y + 2*LINE_SPACING, 4);
+	tft->drawString("WiFi AP", x, y + 3*LINE_SPACING, 4);
+	tft->drawString("Logging target (UDP)", x, y + 4*LINE_SPACING, 4);
 	tft->unloadFont();
 
-	tft->fillRect(x + X_BL_LEVEL, y, 135, 26, BG_COLOR);
-	tft->drawRect(x + X_BL_LEVEL, y-1, 135, 28, TFT_YELLOW);
+	tft->fillRect(x + X_BL_LEVEL, y + Y_BL_LEVEL, BL_LEVEL_WIDTH, BL_LEVEL_HEIGHT, TFT_ORANGE);//BG_COLOR);
+	tft->drawRect(x + X_BL_LEVEL-1, y + Y_BL_LEVEL - 1, BL_LEVEL_WIDTH + 2, BL_LEVEL_HEIGHT + 2, TFT_GREEN);
 	changeBacklight(backlight_level_preset);
 
-	com_serial_baud->init(TFT_WHITE, BG_COLOR, 1, MC_DATUM);
-	com_serial_baud->setCoordinate(x + X_BAUD_RATE-10, y + 30 + Y_SERIAL);
-	com_log_interval->init(TFT_WHITE, BG_COLOR, 1, MC_DATUM);
-	com_log_interval->setCoordinate(x + X_BAUD_RATE + 130, y + 30 + Y_SERIAL);
+	com_serial_baud->init(TFT_WHITE, BG_COLOR, 1, MR_DATUM);
+	com_serial_baud->setCoordinate(x + X_BL_LEVEL, y + LINE_SPACING - 1);
+	com_log_interval->init(TFT_WHITE, BG_COLOR, 1, MR_DATUM);
+	com_log_interval->setCoordinate(x + X_BL_LEVEL, y + 2*LINE_SPACING - 1);
 
-	com_ssid->init(TFT_WHITE, BG_COLOR, 1, MC_DATUM);
-	com_ssid->setCoordinate(x + X_SSID, y + Y_WIFI_INFO);
+	com_ssid->init(TFT_WHITE, BG_COLOR, 1, MR_DATUM);
+	com_ssid->setCoordinate(x + X_SSID, y + 3*LINE_SPACING);  //y + Y_WIFI_INFO);
 
-	/*
-	com_ipaddr->init(TFT_WHITE, BG_COLOR, 1, MC_DATUM);
-	com_ipaddr->setCoordinate(x + X_IPADDR, y + Y_WIFI_INFO + 30);
-	*/
-	com_udp_ipaddr->init(TFT_WHITE, BG_COLOR, 1, MC_DATUM);
-	com_udp_ipaddr->setCoordinate(x + X_IPADDR + 10, y + Y_WIFI_INFO + 30);
-	com_udp_port->init(TFT_WHITE, BG_COLOR, 1, MC_DATUM);
-	com_udp_port->setCoordinate(x + X_IPADDR + 175, y + Y_WIFI_INFO + 30);
+	com_udp_ipaddr->init(TFT_WHITE, BG_COLOR, 1, MR_DATUM);
+	com_udp_ipaddr->setCoordinate(x + X_IPADDR, y + 4*LINE_SPACING);  //y + Y_WIFI_INFO + 30);
+	com_udp_port->init(TFT_WHITE, BG_COLOR, 1, MR_DATUM);
+	com_udp_port->setCoordinate(x + X_IPADDR + 170, y + 4*LINE_SPACING);  //y + Y_WIFI_INFO + 30);
 
-	tft->loadFont(getFont("ChewyRegular24"));
-	tft->drawString("Baud Rate  /", x + X_BAUD_RATE, y + Y_SERIAL);
-	tft->drawString("/", x + X_BAUD_RATE + 110, y + Y_SERIAL + 30);
-	tft->drawString(" Interval", x + X_LOG_LEVEL+100, y + Y_SERIAL);
-	tft->drawString("UDP : ", x + 180, y + Y_WIFI_INFO + 28, 4);
-	tft->unloadFont();
+	this->serial_baud_edit = this->serial_baud;
 
 	drawSerialBaud(this->serial_baud);
 	drawLogIntervalValue(log_value[log_interval]);
+
+	selected = dial_cnt = dial_cnt_old = STATE_NONE;
 
 	is_initialized = true;
 }
@@ -88,8 +79,13 @@ bool SettingScreen::draw(void)
 		case SETTING_SETTING_BL:
 			drawSettingBL();
 			break;
-		case SETTING_SETTING_LOG:
-			drawSettingLOG();
+		case SETTING_SETTING_BAUD_RATE:
+			drawSettingBaudRate();
+			break;
+		case SETTING_SETTING_LOG_INTERVAL:
+			drawSettingLogInterval();
+			break;
+		default:
 			break;
 	}
 
@@ -121,7 +117,7 @@ void SettingScreen::drawSetting()
 			deSelect();
 			show_next_screen = false;
 		}
-		selected = dial_cnt = STATE_NONE;
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
 	}
 	if (btn_pressed[1] == true) {
 		btn_pressed[1] = false;
@@ -132,70 +128,89 @@ void SettingScreen::drawSetting()
 		if (selected == STATE_BL) {
 			mode = SETTING_SETTING_BL;
 			dial_cnt = this->getBacklightLevel();
-			this->selectBLLevel(TFT_GREEN);
-		} else if (selected == STATE_LOG) {
-			mode = SETTING_SETTING_LOG;
+			this->selectBLLevel(COLOR_RECTANGLE_ACTIVATED);
+		} else if (selected == STATE_BAUD_RATE) {
+			mode = SETTING_SETTING_BAUD_RATE;
 			dial_cnt = this->getSerialBaudIndex();
-			this->selectSerialLogging(TFT_GREEN);
-			this->selectSerialBaud(TFT_YELLOW);
-		} else if (selected == STATE_SETTING_LOGGING) {
+			this->selectSerialBaud(COLOR_TEXT_SELECTED, COLOR_RECTANGLE_ACTIVATED);
+		} else if (selected == STATE_LOG_INTERVAL) {
+			mode = SETTING_SETTING_LOG_INTERVAL;
+			dial_cnt = this->getLogInterval();
+			this->selectLogInterval(COLOR_TEXT_SELECTED, COLOR_RECTANGLE_ACTIVATED);
+		} else if (selected == STATE_SETTING_LOGGING_ICON) {
 			settings->switchLogging();
-		} else if (selected == STATE_SETTING_WIFI) {
+		} else if (selected == STATE_SETTING_WIFI_ICON) {
 			settings->switchWifi();
 		}
 	}
 	dial_cnt_old = dial_cnt;
 }
 
-void SettingScreen::drawSettingLOG()
+void SettingScreen::drawSettingLogInterval()
 {
 	if ((cur_time - dial_time) > 10000) {
 		mode = SETTING_SETTING;
 		deSelect();
-		selected = dial_cnt = dial_cnt_old = dial_cnt_old = STATE_NONE;
-		this->deSelectSerialBaud(TFT_WHITE);
-		this->restoreSerialBaud();
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
 		this->deSelectLogInterval(TFT_WHITE);
 		this->restoreLogIntervalValue();
-		this->deSelectSerialLogging(TFT_YELLOW);
 	}
 	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
 		flag_long_press = 3;
 		btn_pressed[2] = false;
 		mode = SETTING_SETTING;
-		selected = dial_cnt = dial_cnt_old = STATE_LOG;
-		this->deSelectSerialBaud(TFT_WHITE);
-		this->restoreSerialBaud();
+		selected = dial_cnt = dial_cnt_old = STATE_LOG_INTERVAL;
 		this->deSelectLogInterval(TFT_WHITE);
 		this->restoreLogIntervalValue();
-		this->deSelectSerialLogging(TFT_YELLOW);
 		return;
 	}
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
-		if (selected == 5) {
-			mode = SETTING_SETTING;
-			this->setSerialBaud();
-			this->setLogInterval();
-			selected = dial_cnt = dial_cnt_old = STATE_LOG;
-			this->deSelectLogInterval(TFT_WHITE);
-			this->deSelectSerialLogging(TFT_YELLOW);
-		} else {
-			this->deSelectSerialBaud(TFT_WHITE);
-			this->selectLogInterval();
-			dial_cnt = dial_cnt_old = this->getLogInterval();
-			selected = 5;
-		}
+		mode = SETTING_SETTING;
+		this->setLogInterval();
+		this->selectLogInterval(COLOR_TEXT_SELECTED, COLOR_RECTANGLE_SELECTED);
+		selected = dial_cnt = dial_cnt_old = STATE_LOG_INTERVAL;
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
-		if (selected == 5) {
-			clampVariableToRange(0, 6, &dial_cnt);
-			this->changeLogInterval(dial_cnt);
-		} else {
-			clampVariableToRange(0, 9, &dial_cnt);
-			this->changeSerialBaud(dial_cnt);
-		}
+		clampVariableToRange(0, 6, &dial_cnt);
+		this->changeLogInterval(dial_cnt);
+		dial_cnt_old = dial_cnt;
+	}
+}
+
+void SettingScreen::drawSettingBaudRate()
+{
+	if ((cur_time - dial_time) > 10000) {
+		mode = SETTING_SETTING;
+		deSelect();
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
+		this->deSelectSerialBaud(COLOR_TEXT_DESELECTED);
+		this->restoreSerialBaud();
+		this->restoreLogIntervalValue();
+	}
+	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
+		flag_long_press = 3;
+		btn_pressed[2] = false;
+		mode = SETTING_SETTING;
+		selected = dial_cnt = dial_cnt_old = STATE_BAUD_RATE;
+		this->deSelectSerialBaud(COLOR_TEXT_DESELECTED);
+		this->restoreSerialBaud();
+		this->restoreLogIntervalValue();
+		return;
+	}
+	if (btn_pressed[3] == true) {
+		btn_pressed[3] = false;
+		mode = SETTING_SETTING;
+		this->setSerialBaud();
+		this->setLogInterval();
+		this->selectSerialBaud(COLOR_TEXT_SELECTED, COLOR_RECTANGLE_SELECTED);
+		selected = dial_cnt = dial_cnt_old = STATE_BAUD_RATE;
+		return;
+	}
+	if (dial_cnt != dial_cnt_old) {
+		clampVariableToRange(0, 9, &dial_cnt);
+		this->changeSerialBaud(dial_cnt);
 		dial_cnt_old = dial_cnt;
 	}
 }
@@ -224,7 +239,7 @@ void SettingScreen::drawSettingBL()
 		mode = SETTING_SETTING;
 		settings->setBacklightLevelIndex(this->setBacklightLevelPreset());
 		this->selectBLLevel();
-		selected = dial_cnt = STATE_BL;
+		selected = dial_cnt = dial_cnt_old = STATE_BL;
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
@@ -239,25 +254,28 @@ void SettingScreen::select()
 	if (dial_cnt == dial_cnt_old) {
 		return;
 	}
-	dial_cnt_old = dial_cnt;
-	// 4 is 1 based count of screen_state_setting elements, lower limit is 1 because 0 is used
+	// 5 is 1 based count of screen_state_setting elements, lower limit is 1 because 0 is used
 	// as a marker for non-selected item that should not be included in the "selection circle"
-	clampVariableToCircularRange(1, 4, dial_direct, &dial_cnt);
+	clampVariableToCircularRange(1, 5, dial_direct, &dial_cnt);
+	dial_cnt_old = dial_cnt;
 
 	deSelect();
 	selected = dial_cnt;
 	switch (dial_cnt) {
-		case STATE_BL:
-			this->selectBLLevel();
-			break;
-		case STATE_LOG:
-			this->selectSerialLogging();
-			break;
-		case STATE_SETTING_WIFI:
+		case STATE_SETTING_WIFI_ICON:
 			header->select(WIFI);
 			break;
-		case STATE_SETTING_LOGGING:
+		case STATE_SETTING_LOGGING_ICON:
 			header->select(LOGGING);
+			break;
+		case STATE_LOG_INTERVAL:
+			this->selectLogInterval();
+			break;
+		case STATE_BAUD_RATE:
+			this->selectSerialBaud();
+			break;
+		case STATE_BL:
+			this->selectBLLevel();
 			break;
 		default:
 			break;
@@ -267,7 +285,8 @@ void SettingScreen::select()
 void SettingScreen::deSelect()
 {
 	this->deSelectBLLevel();
-	this->deSelectSerialLogging();
+	this->deSelectSerialBaud();
+	this->deSelectLogInterval();
 	header->deSelect(LOGGING);
 	header->deSelect(WIFI);
 }
@@ -388,7 +407,7 @@ void SettingScreen::restoreLogIntervalValue()
 	log_interval_edit = this->log_interval;
 }
 
-void SettingScreen::changeLogInterval(uint8_t log_interval)
+void SettingScreen::changeLogInterval(uint8_t log_interval, bool color_changed_value)
 {
 	double ms = (1/static_cast<double>(this->serial_baud_edit/780))*1000;
 
@@ -398,8 +417,14 @@ void SettingScreen::changeLogInterval(uint8_t log_interval)
 			log_interval++;
 		}
 	}
-	drawLogIntervalValue(log_value[log_interval]);
-	log_interval_edit = log_interval;
+	if (log_interval != log_interval_edit) {
+		if (log_interval != this->log_interval && color_changed_value) {
+			com_log_interval->setTextColor(COLOR_TEXT_ERROR, BG_COLOR);
+		}
+		drawLogIntervalValue(log_value[log_interval]);
+		com_log_interval->setTextColor(COLOR_TEXT_DESELECTED, BG_COLOR);
+		log_interval_edit = log_interval;
+	}
 }
 
 void SettingScreen::restoreSerialBaud()
@@ -412,70 +437,60 @@ void SettingScreen::changeSerialBaud(uint8_t baud_level)
 {
 	drawSerialBaud(serial_value[baud_level]);
 	serial_baud_edit = serial_value[baud_level];
-	changeLogInterval(log_interval);
+	changeLogInterval(log_interval, true);
 }
 
-void SettingScreen::selectBLLevel(uint16_t color)
+void SettingScreen::selectBLLevel(uint16_t rectangle_color)
 {
-	for (int i = 1; i < SELECTION_BORDER_WIDTH+1; i++) {
-		tft->drawRect(x + X_BL_LEVEL-i, y-1-i, 135+i*2, 28+i*2, color);
+	for (int i = 0; i < SELECTION_BORDER_WIDTH; i++) {
+		tft->drawRect(x + X_BL_LEVEL-1-i, y+Y_BL_LEVEL-1-i, BL_LEVEL_WIDTH+2+i*2, BL_LEVEL_HEIGHT+2+i*2, rectangle_color);
 	}
 }
 
-void SettingScreen::selectSerialLogging(uint16_t color)
+void SettingScreen::selectLogInterval(uint16_t text_color, uint16_t rectangle_color)
 {
-	for (int i = 1; i < SELECTION_BORDER_WIDTH+1; i++) {
-		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + Y_SERIAL -10, 135+i*2+120, 28+i*2+40, color);
+	com_log_interval->select(rectangle_color);
+}
+
+void SettingScreen::deSelectBLLevel(uint16_t rectangle_color)
+{
+	for (int i = 1; i < SELECTION_BORDER_WIDTH; i++) {
+		tft->drawRect(x + X_BL_LEVEL-1-i, y+Y_BL_LEVEL-1-i, BL_LEVEL_WIDTH+2+i*2, BL_LEVEL_HEIGHT+2+i*2, rectangle_color);
 	}
 }
 
-void SettingScreen::selectLogInterval(uint16_t color)
+void SettingScreen::deSelectLogInterval(uint16_t text_color, uint16_t rectangle_color)
 {
-	com_log_interval->setTextColor(color, BG_COLOR);
-	com_log_interval->select();
-}
-
-void SettingScreen::deSelectBLLevel(uint16_t color)
-{
-	for (int i = 1; i < SELECTION_BORDER_WIDTH+1; i++) {
-		tft->drawRect(x + X_BL_LEVEL -i, y-1-i, 135+i*2, 28+i*2, color);
-	}
-}
-
-void SettingScreen::deSelectLogInterval(uint16_t color)
-{
-	com_log_interval->setTextColor(color, BG_COLOR);
-	drawLogIntervalValue(log_value[log_interval]);
-	com_log_interval->deSelect();
-}
-
-void SettingScreen::deSelectSerialLogging(uint16_t color)
-{
-	for (int i = 1; i < SELECTION_BORDER_WIDTH+1; i++) {
-		tft->drawRect(x + X_LOG_LEVEL -i-50, y-1-i + Y_SERIAL -10, 135+i*2+120, 28+i*2+40, color);
-	}
+	com_log_interval->deSelect(rectangle_color);
 }
 
 void SettingScreen::drawBacklightLevel(uint8_t level)
 {
-	tft->fillRect(x + X_BL_LEVEL + 2, y+1, 130, 24, BG_COLOR);
+	// clear inside space of level component
+	tft->fillRect(x + X_BL_LEVEL, y + Y_BL_LEVEL, BL_LEVEL_WIDTH, BL_LEVEL_HEIGHT, BG_COLOR);
 	for (int i = 0; i < level; i++) {
-		tft->fillRect(x + X_BL_LEVEL + 2 + (i*22), y + 1, 20, 24, TFT_YELLOW);
+		// draw individual level blocks
+		tft->fillRect(
+			// x start position + left inside space + (level_number * ((total_width - left_inside_space)/all_level_count))
+			x + X_BL_LEVEL + BL_LEVEL_SPACING + (i*((BL_LEVEL_WIDTH-BL_LEVEL_SPACING)/6)),
+			// y start_position + top_inside_space
+			y + Y_BL_LEVEL + BL_LEVEL_SPACING,
+			// block_width = ((total_width-left_inside_space)/all_level_count) - right_spacing_of_level_block
+			((BL_LEVEL_WIDTH-BL_LEVEL_SPACING)/6)-BL_LEVEL_SPACING,
+			// block_height = total_height - (top_spacing + bottom_spacing)
+			BL_LEVEL_HEIGHT-2*BL_LEVEL_SPACING,
+			TFT_GREEN);
 	}
 }
 
-void SettingScreen::selectSerialBaud(uint16_t color)
+void SettingScreen::selectSerialBaud(uint16_t text_color, uint16_t rectangle_color)
 {
-	com_serial_baud->setTextColor(color, BG_COLOR);
-	drawSerialBaud(this->serial_baud);
-	com_serial_baud->select();
+	com_serial_baud->select(rectangle_color);
 }
 
-void SettingScreen::deSelectSerialBaud(uint16_t color)
+void SettingScreen::deSelectSerialBaud(uint16_t text_color, uint16_t rectangle_color)
 {
-	com_serial_baud->setTextColor(color, BG_COLOR);
-	drawSerialBaud(this->serial_baud_edit);
-	com_serial_baud->deSelect();
+	com_serial_baud->deSelect(rectangle_color);
 }
 
 void SettingScreen::drawLogIntervalValue(uint16_t log_value)
@@ -493,11 +508,6 @@ void SettingScreen::drawSSID(String ssid)
 	com_ssid->clearAndDrawWithFont(getFont("NotoSansBold20"), ssid);
 }
 
-/*void SettingScreen::drawIpaddr(String ipaddr)
-{
-	com_ipaddr->clearAndDrawWithFont(getFont("NotoSansBold20"), ipaddr);
-}*/
-
 void SettingScreen::drawUDPIpaddr(String ipaddr)
 {
 	com_udp_ipaddr->clearAndDrawWithFont(getFont("NotoSansBold20"), ipaddr);
@@ -506,6 +516,16 @@ void SettingScreen::drawUDPIpaddr(String ipaddr)
 void SettingScreen::drawUDPport(uint16_t port)
 {
 	com_udp_port->clearAndDrawWithFont(getFont("NotoSansBold20"), (" : " + String(port)));
+}
+
+void SettingScreen::drawSerialLoggingEnabled(bool is_enabled)
+{
+	tft->drawRect(x + 155, y+2*LINE_SPACING, 20, 20, TFT_GREEN);
+}
+
+void SettingScreen::drawWifiLoggingEnabled(bool is_enabled)
+{
+	tft->drawRect(x + 245, y+2*LINE_SPACING, 20, 20, TFT_GREEN);
 }
 
 void SettingScreen::debug()

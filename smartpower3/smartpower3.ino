@@ -121,8 +121,10 @@ void inputTask(void *parameter)
 {
 	uint8_t pressed;
 	unsigned long cur_time;
+
 	for (;;) {
 		cur_time = millis();
+
 		for (int i = 0; i < 4; i++) {
 			pressed = button[i].checkPressed();
 			if (pressed == 1)
@@ -134,7 +136,7 @@ void inputTask(void *parameter)
 			screen_manager.getActiveScreen()->countDial(dial.cnt, dial.direct, dial.step, cur_time);
 			dial.cnt = 0;
 		}
-		screen_manager.setTime(cur_time);
+		screen_manager.getActiveScreen()->setTime(cur_time);
 		vTaskDelay(10);
 	}
 }

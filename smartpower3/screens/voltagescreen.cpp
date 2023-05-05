@@ -82,8 +82,8 @@ void VoltageScreen::select()
 	if (dial_cnt == dial_cnt_old) {
 		return;
 	}
-	dial_cnt_old = dial_cnt;
 	clampVariableToCircularRange(1, 6, dial_direct, &dial_cnt);  // 6 is 1 based count of screen_state_base elements
+	dial_cnt_old = dial_cnt;
 
 	deSelect();
 	selected = dial_cnt;
@@ -100,10 +100,10 @@ void VoltageScreen::select()
 		case STATE_VOLT1:
 			channel[1]->select(VOLT);
 			break;
-		case STATE_WIFI:
+		case STATE_WIFI_ICON:
 			header->select(WIFI);
 			break;
-		case STATE_LOGGING:
+		case STATE_LOGGING_ICON:
 			header->select(LOGGING);
 			break;
 		default:
@@ -172,11 +172,11 @@ void VoltageScreen::drawBaseMove()
 			mode = VOLTAGE_BASE_EDIT;
 			channel[1]->setCompColor(CURRENT);
 			current_limit = channel[1]->getCurrentLimit()/100;
-		} else if (selected == STATE_LOGGING) {
+		} else if (selected == STATE_LOGGING_ICON) {
 			// same as current state, but redraw will check selection timeout
 			mode = VOLTAGE_BASE_MOVE;
 			settings->switchLogging();
-		} else if (selected == STATE_WIFI) {
+		} else if (selected == STATE_WIFI_ICON) {
 			// same as current state, but redraw will check selection timeout
 			mode = VOLTAGE_BASE_MOVE;
 			settings->switchWifi();
