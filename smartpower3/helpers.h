@@ -8,6 +8,7 @@
 
 template<typename I, typename S> void clampVariableToRange(I, I, S*);
 void clampVariableToCircularRange(int lower_limit, int upper_limit, int8_t direction, int16_t *variable_to_clamp);
+void clampVoltageDialCountToRange(uint16_t current_volt_set, int16_t *dial_count);
 
 
 /*

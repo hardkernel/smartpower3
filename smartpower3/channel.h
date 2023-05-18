@@ -101,4 +101,5 @@ private:
 	uint16_t low_volt = 0;
 	uint8_t count_intr[8] = {0,};
 	uint8_t flag_clear_debug = 0;
+	uint16_t countVolt(float volt_set);
 };

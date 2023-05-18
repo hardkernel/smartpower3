@@ -638,9 +638,9 @@ void Screen::drawScreen()
 void Screen::changeVolt(screen_mode_t mode)
 {
 	if (selected == STATE_VOLT0) {
-		clampVariableToRange(-(volt_set/100 - 30), (200 - (volt_set/100)), &dial_cnt);
+		clampVoltageDialCountToRange(volt_set, &dial_cnt);
 		if (mode == BASE_MOVE) {
-			channel[0]->setVolt(dial_cnt); // this by default sets incremental difference to currently set value
+			channel[0]->setVolt(dial_cnt);  // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
 				NVS.setString("voltage0", String(channel[0]->getVolt()/1000.0));
 
@@ -651,7 +651,7 @@ void Screen::changeVolt(screen_mode_t mode)
 	} else if (selected == STATE_CURRENT0) {
 		clampVariableToRange(-(current_limit - 5), (30 - current_limit), &dial_cnt);
 		if (mode == BASE_MOVE) {
-			channel[0]->setCurrentLimit(dial_cnt);  // this by default sets absolute value
+			channel[0]->setCurrentLimit(dial_cnt); // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
 				NVS.setString("current_limit0", String(channel[0]->getCurrentLimit()/10.0));
 			}
@@ -660,9 +660,9 @@ void Screen::changeVolt(screen_mode_t mode)
 		}
 
 	} else if (selected == STATE_VOLT1) {
-		clampVariableToRange(-(volt_set/100 - 30), (200 - (volt_set/100)), &dial_cnt);
+		clampVoltageDialCountToRange(volt_set, &dial_cnt);
 		if (mode == BASE_MOVE) {
-			channel[1]->setVolt(dial_cnt); // this by default sets incremental difference to currently set value
+			channel[1]->setVolt(dial_cnt);  // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
 				NVS.setString("voltage1", String(channel[1]->getVolt()/1000.0));
 			}
@@ -672,7 +672,7 @@ void Screen::changeVolt(screen_mode_t mode)
 	} else if (selected == STATE_CURRENT1) {
 		clampVariableToRange(-(current_limit - 5), (30 - current_limit), &dial_cnt);
 		if (mode == BASE_MOVE) {
-			channel[1]->setCurrentLimit(dial_cnt);  // this by default sets absolute value
+			channel[1]->setCurrentLimit(dial_cnt); // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
 				NVS.setString("current_limit1", String(channel[1]->getCurrentLimit()/10.0));
 			}
