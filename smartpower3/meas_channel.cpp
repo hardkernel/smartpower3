@@ -92,3 +92,17 @@ void MeasChannels::sample()
 		}
 	}
 }
+
+MeasChannel* MeasChannels::getChannel(uint8_t channel_number)
+{
+	switch(channel_number) {
+		case 0:
+			return this->channel0;
+		case 1:
+			return this->channel1;
+		case 2:
+			return this->channel2;
+		default:
+			return NULL;
+	}
+}

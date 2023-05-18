@@ -25,6 +25,7 @@ class MeasChannels
 public:
 	MeasChannels (Microchip_PAC193x *mc, MeasChannel *Ch0, MeasChannel *Ch1, MeasChannel *Ch2, float rsense);
 	void sample ();
+	MeasChannel* getChannel(uint8_t channel_number);
 private:
 	Microchip_PAC193x *pac;  // Pointer to PAC
 	MeasChannel *channel0;

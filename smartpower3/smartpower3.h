@@ -1,9 +1,10 @@
 #include <meas_channel.h>
 #include <Microchip_PAC193x.h>
-#include <screenmanager.h>
+//#include <screenmanager.h>
 #include "inputmanager.h"
 #include "settings.h"
 #include "wifimanager.h"
+#include "scpimanager.h"
 
 #define BUTTON_MENU 36
 #define BUTTON_CH0 39
@@ -21,6 +22,7 @@ Button button[4] = {
 ScreenManager screen_manager = ScreenManager();
 Settings settings = Settings();
 WiFiManager *wifi_manager;
+SCPIManager *scpi_manager;
 
 Microchip_PAC193x PAC = Microchip_PAC193x(15000);
 

@@ -7,6 +7,21 @@
 #include <WiFiUdp.h>
 
 
+
+ESP_EVENT_DECLARE_BASE(SETTINGS_EVENTS);
+
+enum {
+    SETTINGS_VOLTAGE0_CHANGED_EVENT,
+	SETTINGS_CURRENT0_CHANGED_EVENT,
+	SETTINGS_VOLTAGE1_CHANGED_EVENT,
+	SETTINGS_CURRENT1_CHANGED_EVENT,
+	SETTINGS_LOGGING_PORT_CHANGED_EVENT,
+	SETTINGS_LOGGING_ADDRESS_CHANGED_EVENT,
+	SETTINGS_SCPI_PORT_CHANGED_EVENT,
+};
+
+
+
 enum wifi_credentials_state_e {
 	WIFI_CREDENTIALS_STATE_OK = 0,
 	WIFI_CREDENTIALS_STATE_INVALID = 1,
@@ -49,18 +64,18 @@ public:
 	void setWifiIpv4AddressDns2 (const IPAddress &wifiIpv4AddressDns2);*/
 	bool isWifiIpv4ConnectAutomatically () const;
 	void setWifiIpv4ConnectAutomatically (bool wifiIpv4ConnectAutomatically = true);
-	bool isWifiIpv4DhcpEnabled () const;
-	void setWifiIpv4DhcpEnabled (bool wifiIpv4DhcpEnabled = true);
-/*	const IPAddress& getWifiIpv4GatewayAddress () const;
-	void setWifiIpv4GatewayAddress (const IPAddress &wifiIpv4GatewayAddress);
-	const IPAddress& getWifiIpv4StaticIp () const;
-	void setWifiIpv4StaticIp (const IPAddress &wifiIpv4StaticIp);
-	const IPAddress& getWifiIpv4SubnetMask () const;
-	void setWifiIpv4SubnetMask (const IPAddress &wifiIpv4SubnetMask);*/
+	bool isWifiIpv4DhcpEnabled(void);
+	void setWifiIpv4DhcpEnabled(bool wifiIpv4DhcpEnabled = true);
+	IPAddress getWifiIpv4GatewayAddress(bool from_storage = false);
+	void setWifiIpv4GatewayAddress(IPAddress wifiIpv4GatewayAddress, bool set_from_settings = false, bool force_commit = true);
+	IPAddress getWifiIpv4StaticIp(bool from_storage = false);
+	void setWifiIpv4StaticIp(IPAddress wifiIpv4StaticIp, bool set_from_settings = false, bool force_commit = true);
+	IPAddress getWifiIpv4SubnetMask(bool from_storage = false);
+	void setWifiIpv4SubnetMask(IPAddress wifiIpv4SubnetMask, bool set_through_settings, bool force_commit = true);
 	IPAddress getWifiIpv4UdpLoggingServerIpAddress(bool from_storage = false);
-	void setWifiIpv4UdpLoggingServerIpAddress(IPAddress wifiIpv4UdpLoggingServerIpAddress, bool force_commit = true);
-	uint16_t getWifiIpv4UdpLoggingServerPort(bool from_storage);
-	void setWifiIpv4UdpLoggingServerPort (uint16_t wifiIpv4UdpLoggingServerPort = 0, bool force_commit = true);
+	void setWifiIpv4UdpLoggingServerIpAddress(IPAddress wifiIpv4UdpLoggingServerIpAddress, bool set_through_settings = false, bool force_commit = true);
+	uint16_t getWifiIpv4UdpLoggingServerPort(bool from_storage = false);
+	void setWifiIpv4UdpLoggingServerPort (uint16_t wifiIpv4UdpLoggingServerPort = 0, bool set_through_settings = false, bool force_commit = true);
 	String getWifiPassword(bool from_storage=false);
 	void setWifiPassword(const char* wifiPassword, bool force_commit = true);
 	bool isWifiUseIpv4 () const;
@@ -72,15 +87,21 @@ public:
 	wifi_credentials_state_e getWifiCredentialsState(bool from_storage = false);
 	void setWifiCredentialsState(wifi_credentials_state_e wifiCredentialsStateSettings, bool force_commit = false);
 	uint16_t getChannel0CurrentLimit(bool from_storage = false);
-	void setChannel0CurrentLimit(uint16_t channel0CurrentLimit, bool force_commit = true);
+	void setChannel0CurrentLimit(uint16_t channel0CurrentLimit, bool set_through_settings = false, bool force_commit = true);
 	uint16_t getChannel0Voltage(bool from_storage = false);
-	void setChannel0Voltage (uint16_t channel0Voltage, bool force_commit = true);
+	void setChannel0Voltage (uint16_t channel0Voltage, bool set_through_settings = false, bool force_commit = true);
 	uint16_t getChannel1CurrentLimit(bool from_storage = false);
-	void setChannel1CurrentLimit (uint16_t channel1CurrentLimit, bool force_commit = true);
+	void setChannel1CurrentLimit (uint16_t channel1CurrentLimit, bool set_through_settings = false, bool force_commit = true);
 	uint16_t getChannel1Voltage(bool from_storage = false);
-	void setChannel1Voltage (uint16_t channel1Voltage, bool force_commit = true);
+	void setChannel1Voltage (uint16_t channel1Voltage, bool set_through_settings = false, bool force_commit = true);
+	//helper methods
 	bool isNvsCleared(bool from_storage = false);
 	void setNvsCleared(bool nvsCleared = false);
+	esp_event_loop_handle_t& getEventLoopHandleAddress(void);
+	String getMacAddress(void);
+	void setMacAddress(String macAddress);
+	uint16_t getWifiIpv4SCPIServerPort(bool from_storage = false);
+	void setWifiIpv4SCPIServerPort(uint16_t wifiIpv4SCPIServerPort = 0, bool set_through_settings = false, bool force_commit = true);
 
 private:
 	bool first_boot = false;
@@ -102,6 +123,7 @@ private:
 	uint16_t log_interval_preset[7] = {0, 5, 10, 50, 100, 500, 1000};
 	uint8_t log_interval = 0;
 	// WiFI related
+	String mac_address;
 	bool wifi_enabled = true;
 /*	bool wifi_use_ipv4 = true;
 	bool wifi_use_ipv6 = false;*/
@@ -110,15 +132,18 @@ private:
 	wifi_credentials_state_e wifi_credentials_state = WIFI_CREDENTIALS_STATE_OK;
 	bool wifi_ipv4_connect_automatically = true;
 	bool wifi_ipv4_dhcp_enabled = true;
-/*	IPAddress wifi_ipv4_static_ip;
+	IPAddress wifi_ipv4_static_ip;
 	IPAddress wifi_ipv4_gateway_address;
 	IPAddress wifi_ipv4_subnet_mask;
-	IPAddress wifi_ipv4_address_dns_1;
+/*	IPAddress wifi_ipv4_address_dns_1;
 	IPAddress wifi_ipv4_address_dns_2;*/
 	IPAddress wifi_ipv4_udp_logging_server_ip_address = IPAddress(0,0,0,0);
 	uint16_t wifi_ipv4_udp_logging_server_port = 0;
+	uint16_t wifi_ipv4_SCPI_server_port = 0;
 	Preferences preferences;
 	bool nvs_cleared = false;
+	esp_event_loop_handle_t loop_with_task;
+	IPAddress getSettingIPAddress(bool from_storage, const char* setting_key, IPAddress* address_variable);
 };
 
 #endif /* SMARTPOWER3_SETTINGS_H_ */

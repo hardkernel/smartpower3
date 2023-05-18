@@ -44,6 +44,7 @@ public:
 	void getBtnPress(uint8_t idx, uint32_t cur_time, bool long_pressed = false);
 	void setTime(uint32_t milisec);
 	void setWiFiIconState(void);
+	Settings *getSettings();
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	Header *header = nullptr;
@@ -69,3 +70,5 @@ private:
 	Screen *screens[LAST_SCREEN_COUNT] = {};
 	bool show_next_screen = false;
 };
+
+//ScreenManager screen_manager;

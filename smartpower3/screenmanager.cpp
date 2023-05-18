@@ -354,3 +354,9 @@ void ScreenManager::setWiFiIconState()
 		header->offWiFi();
 	}
 }
+
+Settings* ScreenManager::getSettings()
+{
+	return this->settings;
+}
+

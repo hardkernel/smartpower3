@@ -1,12 +1,17 @@
 #include <Wire.h>
 #include "smartpower3.h"
 
+#include "esp_event.h"
+#include "esp_event_base.h"
+
 uint32_t ctime1 = 0;
 
 volatile int interruptFlag;
 
 hw_timer_t *timer = NULL;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+
+ESP_EVENT_DEFINE_BASE(SETTINGS_EVENTS);
 
 void IRAM_ATTR onTimer()
 {
@@ -39,6 +44,38 @@ void btnTask(void *parameter)
 			button[i].isr_pol();
 		vTaskDelay(10);
 	}
+}
+
+
+
+
+
+
+static void settings_voltage0_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
+{
+	screen_manager.getVoltageScreen()->getChannel(0)->setVolt(settings.getChannel0Voltage(true), 2);
+}
+
+static void settings_voltage1_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
+{
+	screen_manager.getVoltageScreen()->getChannel(1)->setVolt(settings.getChannel1Voltage(true), 2);
+}
+
+static void settings_current0_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
+{
+	screen_manager.getVoltageScreen()->getChannel(0)->setCurrentLimit(settings.getChannel0CurrentLimit(true), 2);
+}
+
+static void settings_current1_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
+{
+	screen_manager.getVoltageScreen()->getChannel(1)->setCurrentLimit(settings.getChannel1CurrentLimit(true), 2);
+}
+
+static void settings_visible_settings_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
+{
+	wifi_manager->update_udp_info = true;
+	wifi_manager->port_udp = settings.getWifiIpv4UdpLoggingServerPort(true);
+	wifi_manager->ipaddr_udp = settings.getWifiIpv4UdpLoggingServerIpAddress(true);
 }
 
 void logTask(void *parameter)
@@ -151,7 +188,7 @@ void wifiTask(void *parameter)
 		}
 		screen_manager.setWiFiIconState();
 
-		if (Serial.available()) {
+/*		if (Serial.available()) {
 			if (wifi_manager->isCommandMode())
 				wifi_manager->WiFiMenuMain(Serial.read());
 			else {
@@ -162,15 +199,46 @@ void wifiTask(void *parameter)
 					Serial.printf(">>> Unknown command <<<\n\r");
 				}
 			}
-		}
+		}*/
+		scpi_manager->processInput(Serial);
 		vTaskDelay(50);
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void setup(void) {
 	Serial.begin(115200);
 
 	settings.init();
+
+
+
+
+	esp_event_loop_args_t loop_with_task_args = {
+			.queue_size = 5,
+			.task_name = "loop_task", // task will be created
+			.task_priority = uxTaskPriorityGet(NULL),
+			.task_stack_size = 3072,
+			.task_core_id = tskNO_AFFINITY
+	};
+	esp_event_loop_handle_t& loop_with_task = settings.getEventLoopHandleAddress();
+
+	esp_event_loop_create(&loop_with_task_args, &loop_with_task);
+
+
+
 
 	I2CA.begin(15, 4, (uint32_t)10000);
 	I2CB.begin(21, 22, (uint32_t)800000);
@@ -178,6 +246,9 @@ void setup(void) {
 	wifi_manager = new WiFiManager(&settings);
 	screen_manager.begin(&settings, wifi_manager, &I2CA);
 	initEncoder(&dial);  // this also starts a task, without specified core
+	//scpi_manager = new SCPIManager(&settings);  //, &screen_manager);
+	scpi_manager = new SCPIManager(&screen_manager, &mChs);
+	scpi_manager->init();
 
 	pinMode(25, INPUT_PULLUP);
 	pinMode(26, INPUT_PULLUP);
@@ -194,6 +265,14 @@ void setup(void) {
 	xTaskCreatePinnedToCore(logTask, "Log Task", 8000, NULL, 1, NULL, 1);  // delay 10, 250 or 1 depending on logging interval and interrupt count
 	xTaskCreate(inputTask, "Input Task", 8000, NULL, 1, NULL);  // delay 10, also counts for screen
 	xTaskCreate(btnTask, "Button Task", 4000, NULL, 1, NULL);  // delay 10
+
+	//esp_event_loop_create_default();
+	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_VOLTAGE0_CHANGED_EVENT, settings_voltage0_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_VOLTAGE1_CHANGED_EVENT, settings_voltage1_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_CURRENT0_CHANGED_EVENT, settings_current0_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_CURRENT1_CHANGED_EVENT, settings_current1_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_LOGGING_PORT_CHANGED_EVENT, settings_visible_settings_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_LOGGING_ADDRESS_CHANGED_EVENT, settings_visible_settings_changed_handler, NULL, NULL);
 }
 
 void loop() {
