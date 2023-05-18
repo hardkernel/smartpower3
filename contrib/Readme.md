@@ -13,8 +13,7 @@ UDP-logging uses pure python3, serial-logging requires pyserial.
 
 Feedback from Windows-users would be appreciated!
 
-UDP-logging requires a post 1.8 firmware. The master-branch has all the
-necessary patches, but currently you have to compile your own firmware.
+UDP-logging requires a post 1.8 firmware.
 
 The script will not only capture the data, but allows also to add a
 timestamp (iso-format,unix-format,whatever) as an additional column.
