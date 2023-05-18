@@ -5,6 +5,3 @@
 [submodule "libraries/TFT_eSPI"]
 	path = libraries/TFT_eSPI
 	url = https://github.com/leeseungcheol/TFT_eSPI
-[submodule "libraries/ArduinoNvs"]
-	path = libraries/ArduinoNvs
-	url = https://github.com/rpolitex/ArduinoNvs

@@ -1,7 +1,9 @@
 #include <meas_channel.h>
 #include <Microchip_PAC193x.h>
-#include "screen.h"
+#include <screenmanager.h>
 #include "inputmanager.h"
+#include "settings.h"
+#include "wifimanager.h"
 
 #define BUTTON_MENU 36
 #define BUTTON_CH0 39
@@ -16,7 +18,10 @@ Button button[4] = {
 	Button(BUTTON_CH0), Button(BUTTON_CH1), Button(BUTTON_MENU), Button(BUTTON_DIAL)
 };
 
-Screen screen;
+ScreenManager screen_manager = ScreenManager();
+Settings settings = Settings();
+WiFiManager *wifi_manager;
+
 Microchip_PAC193x PAC = Microchip_PAC193x(15000);
 
 MeasChannel mCh0(&PAC, 0);
@@ -29,9 +34,5 @@ TwoWire I2CB = TwoWire(1);
 
 struct dial_t dial;
 
-uint16_t volt[3];
-uint16_t amp[3];
-uint16_t watt[3];
 uint8_t *onoff;
 bool low_input;
-

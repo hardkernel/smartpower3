@@ -14,8 +14,6 @@ public:
 	UnitChannelIconWidget(TFT_eSPI *tft, uint8_t channel, icon_image_enum icon_image);
 	virtual ~UnitChannelIconWidget(void);
 	virtual const uint8_t* iconCharArray(void);
-protected:
-	icon_image_enum icon_image;
 };
 
 #endif
