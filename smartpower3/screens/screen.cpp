@@ -1,7 +1,5 @@
 #include "screens/screen.h"
 #include "fonts/NotoSansBold20.h"
-#include "fonts/ChewyRegular24.h"
-#include "fonts/ChewyRegular32.h"
 
 
 Screen::Screen()
@@ -105,13 +103,6 @@ void Screen::pushButtonPress(uint8_t button_number, uint32_t dial_time, uint8_t 
 	this->flag_long_press = flag_long_press;
 }
 
-void Screen::pushInputDial(int8_t dial_cnt, int8_t direct, uint8_t step, uint32_t milisec)
-{
-	this->dial_cnt = dial_cnt;
-	this->dial_time = milisec;
-	this->dial_direct = direct;
-}
-
 void Screen::pushTime(uint32_t cur_time)
 {
 	this->cur_time = cur_time;
@@ -146,10 +137,6 @@ const uint8_t* Screen::getFont(const char* font_name)
 {
 	if (strcmp(font_name, "NotoSansBold20") == 0) {
 		return NotoSansBold20;
-	} else if (strcmp(font_name, "ChewyRegular24") == 0) {
-		return ChewyRegular24;
-	} else if (strcmp(font_name, "ChewyRegular32") == 0) {
-		return ChewyRegular32;
 	} else {
 		return 0x00;
 	}

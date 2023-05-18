@@ -176,9 +176,6 @@ void ScreenManager::setTime(uint32_t milisec)
 	this->getActiveScreen()->setTime(milisec);
 }
 
-
-
-
 void ScreenManager::disablePower()
 {
 	voltage_screen->getChannel(0)->disabled();
@@ -307,7 +304,8 @@ Screen* ScreenManager::getActiveScreen(void)
 
 void ScreenManager::setNextScreen()
 {
-	screen = max(static_cast<screen_t>((screen + 1) % LAST_SCREEN_COUNT), VOLTAGE_SCREEN);
+	  // next screen or second screen (first one is logo)
+	screen = max(static_cast<screen_t>((screen + 1) % LAST_SCREEN_COUNT), static_cast<screen_t>(1));
 }
 
 void ScreenManager::getBtnPress(uint8_t idx, uint32_t cur_time, bool long_pressed)

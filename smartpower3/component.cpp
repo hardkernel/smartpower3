@@ -1,4 +1,3 @@
-#include "helpers.h"
 #include "component.h"
 
 Component::Component(TFT_eSPI *tft, uint16_t width, uint16_t height, uint8_t font)
@@ -47,7 +46,7 @@ void Component::setCoordinate(uint16_t x, uint16_t y)
 	this->y = y;
 }
 
-void Component::drawOutLines(void)
+void Component::drawOutLines(uint16_t rectangle_color)
 {
 	for (int i = 0; i < SELECTION_BORDER_WIDTH; i++) {
 		tft->drawRect(
@@ -55,20 +54,13 @@ void Component::drawOutLines(void)
 				y-(SELECTION_BORDER_WIDTH-i),
 				width+(SELECTION_BORDER_WIDTH*2-i*2),
 				height+(SELECTION_BORDER_WIDTH*2-i*2),
-				TFT_YELLOW);
+				rectangle_color);
 	}
 }
 
-void Component::clearOutLines(void)
+void Component::clearOutLines(uint16_t rectangle_color)
 {
-	for (int i = 0; i < SELECTION_BORDER_WIDTH; i++) {
-		tft->drawRect(
-				x-(SELECTION_BORDER_WIDTH-i),
-				y-(SELECTION_BORDER_WIDTH-i),
-				width+(SELECTION_BORDER_WIDTH*2-i*2),
-				height+(SELECTION_BORDER_WIDTH*2-i*2),
-				BG_COLOR);
-	}
+	this->drawOutLines(rectangle_color);
 }
 
 void Component::loadFont(const uint8_t font[])
@@ -85,6 +77,8 @@ void Component::draw(const char s[])
 {
 	if (align == TR_DATUM)
 		img->drawString(s, width, 0, font);
+	else if (align == MR_DATUM)
+		img->drawString(s, width, height/2, font);
 	else
 		img->drawString(s, width/2, height/2, font);
 	img->pushSprite(x, y);
@@ -95,6 +89,8 @@ void Component::draw(String s)
 {
 	if (align == TR_DATUM)
 		img->drawString(s, width, 0, font);
+	else if (align == MR_DATUM)
+		img->drawString(s, width, height/2, font);
 	else
 		img->drawString(s, width/2, height/2, font);
 	img->pushSprite(x, y);
@@ -134,16 +130,16 @@ void Component::pushValue(uint16_t value)
 	this->value = value;
 }
 
-void Component::select(void)
+void Component::select(uint16_t rectangle_color)
 {
 	selected = true;
-	drawOutLines();
+	drawOutLines(rectangle_color);
 }
 
-void Component::deSelect(void)
+void Component::deSelect(uint16_t rectangle_color)
 {
 	if (selected) {
-		clearOutLines();
+		clearOutLines(rectangle_color);
 		selected = false;
 	}
 }

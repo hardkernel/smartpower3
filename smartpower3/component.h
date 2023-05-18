@@ -2,6 +2,7 @@
 #define COMPONENT_H
 
 #include <TFT_eSPI.h>
+#include "helpers.h"
 
 #define WAIT 1
 #define H_SEG 48
@@ -40,8 +41,8 @@ public:
 	void clear(void);
 	void setCoordinate(uint16_t x, uint16_t y);
 	void pushValue(uint16_t value);
-	void select(void);
-	void deSelect(void);
+	void select(uint16_t rectangle_color=TFT_YELLOW);
+	void deSelect(uint16_t rectangle_color=BG_COLOR);
 	void setTextColor(uint16_t fg_color, uint16_t bg_color);
 	void loadFont(const uint8_t font[]);
 	void unloadFont(void);
@@ -57,8 +58,8 @@ private:
 	TFT_eSPI *tft;
 	uint16_t value;
 	uint16_t value_old;
-	void drawOutLines(void);
-	void clearOutLines(void);
+	void drawOutLines(uint16_t rectangle_color=TFT_YELLOW);
+	void clearOutLines(uint16_t rectangle_color=BG_COLOR);
 	uint8_t align = TL_DATUM;
 };
 
