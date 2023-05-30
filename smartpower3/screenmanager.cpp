@@ -22,12 +22,14 @@ void ScreenManager::begin(Settings *settings, WiFiManager *wifi_manager, TwoWire
 
 	voltage_screen = new VoltageScreen(&tft, header, settings, theWire, wifi_manager, onoff);  // included object draw on screen :(
 	setting_screen = new SettingScreen(&tft, header, settings, wifi_manager, onoff);
+	network_screen = new NetworkScreen(&tft, header, settings, wifi_manager, onoff);
 	logo_screen = new LogoScreen(&tft, header, settings, wifi_manager, onoff);
 	logo_screen->init();
 
 	screens[LOGO_SCREEN] = logo_screen;
 	screens[VOLTAGE_SCREEN] = voltage_screen;
 	screens[SETTING_SCREEN] = setting_screen;
+	screens[NETWORK_SCREEN] = network_screen;
 
 	fsInit();
 	delay(2000); // approximate logo display time

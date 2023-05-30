@@ -24,6 +24,7 @@ enum screen_t {
 	LOGO_SCREEN = 0,
 	VOLTAGE_SCREEN,
 	SETTING_SCREEN,
+	NETWORK_SCREEN,
 	LAST_SCREEN_COUNT,  // added for easy counting of elements and other "hacks", should always stay at the end
 };
 

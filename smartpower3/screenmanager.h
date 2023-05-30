@@ -10,6 +10,7 @@
 #include "screens/voltagescreen.h"
 #include "screens/logoscreen.h"
 #include "screens/settingscreen.h"
+#include "screens/networkscreen.h"
 
 
 #define LED2	13
@@ -50,6 +51,7 @@ private:
 	Header *header = nullptr;
 	VoltageScreen *voltage_screen = nullptr;
 	SettingScreen *setting_screen = nullptr;
+	NetworkScreen *network_screen = nullptr;
 	LogoScreen *logo_screen = nullptr;
 	Settings *settings = nullptr;
 	TwoWire *_wire = nullptr;
