@@ -133,9 +133,9 @@ void Screen::updateWifiInfo(void)
  * Otherwise the preprocessor would replace the include with the whole contents of font array in every file
  * the screen header file is included in.
  */
-const uint8_t* Screen::getFont(const char* font_name)
+const uint8_t* Screen::getFont(font_t font_name)
 {
-	if (strcmp(font_name, "NotoSansBold20") == 0) {
+	if (font_name == NOTOSANSBOLD20) {
 		return NotoSansBold20;
 	} else {
 		return 0x00;

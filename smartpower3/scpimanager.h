@@ -22,6 +22,9 @@
 #define SCPI_IDN2 "SmartPower3"
 //#define SCPI_IDN3 "test"
 //#define SCPI_IDN4 "01-02"
+#define MAXROW 1    //maximum number of rows
+#define MAXCOL 3    //maximum number of columns
+#define MAXDIM 1    //maximum number of dimensions
 
 //extern const scpi_command_t scpi_commands[20];
 //extern scpi_interface_t scpi_interface;
@@ -101,11 +104,13 @@ public:
 	static scpi_result_t Reset(scpi_t * context);
 	static scpi_result_t Output_TurnOnOff(scpi_t *context);
 	static scpi_result_t Output_TurnOnOffQ(scpi_t *context);
-	static scpi_result_t DMM_MeasureVoltageDcQ(scpi_t *context);
+	static scpi_result_t DMM_FetchVoltageDcQ(scpi_t *context);
+	static scpi_result_t DMM_FetchCurrentDcQ(scpi_t *context);
+	static scpi_result_t DMM_FetchPowerDcQ(scpi_t *context);
 	static scpi_result_t DMM_ConfigureVoltage(scpi_t *context);
+	static scpi_result_t DMM_ConfigureVoltageQ(scpi_t *context);
 	static scpi_result_t DMM_ConfigureCurrent(scpi_t *context);
-
-
+	static scpi_result_t DMM_ConfigureCurrentQ(scpi_t *context);
 
 	char* getBuildDate(void);
 	const char* getMacAddress(void);
@@ -115,6 +120,17 @@ private:
 	static Settings* getSettings(scpi_t *context);
 	static scpi_result_t saveIpv4Address(scpi_t *context, void (Settings::*func)(IPAddress, bool, bool));
 	static scpi_result_t saveNetworkPort(scpi_t *context, void (Settings::*func)(uint16_t, bool, bool));
+	static float fetchChannelVoltage(uint8_t channel_number, float resolution, MeasChannels *channels);
+	static float fetchChannelCurrent(uint8_t channel_number, float resolution, MeasChannels *channels);
+	static float fetchChannelPower(uint8_t channel_number, float resolution, MeasChannels *channels);
+	static scpi_result_t DMM_MeasureUnitDcQ(scpi_t *context, scpi_unit_t allowed_unit,
+											float (*reading_method)(uint8_t, float, MeasChannels*));
+	static scpi_result_t processChannelList(scpi_t *context, scpi_parameter_t &channel_list_param, float resolution,
+											float (*reading_method)(uint8_t, float, MeasChannels*));
+	static scpi_result_t reprocessNumberParam(scpi_t *context, scpi_parameter_t &original_param,
+											  scpi_number_t *number_param, scpi_unit_t allowed_unit);
+	static void resetContext(scpi_t *context, char *pos, int_fast16_t input_count);
+
 	char build_date[34];
 	String mac_address;
 	char incoming_byte = 0; // for incoming serial data
@@ -154,26 +170,36 @@ private:
 		{ "SYSTem:CAPability?", DeviceCapability, 0 },
 
 		{"[SYSTem][:COMMunicate]:NETwork:MAC?", SCPI_NetworkMACQ, 0 },
-		//This query returns the MAC address of the Ethernet module. MAC address consist of two number groups: the first three bytes are known as the Organizationally Unique Identifier (OUI), which is distributed by the IEEE, and the last three bytes are the device’s unique serial number. The six bytes are separated by hyphens. The MAC address is unique to the instrument and cannot be altered by the user.
+		// This query returns the MAC address of the Ethernet module. MAC address consist of two number groups:
+		// the first three bytes are known as the Organizationally Unique Identifier (OUI),
+		// which is distributed by the IEEE, and the last three bytes are the device’s unique serial number.
+		// The six bytes are separated by hyphens. The MAC address is unique to the instrument
+		// and cannot be altered by the user.
 		// Return Param <XX-XX-XX-YY-YY-YY>
 		{"[SYSTem][:COMMunicate]:NETwork:ADDRess", SCPI_NetworkAddress, 0 },
-		//This command sets the static address of the Ethernet module of the MagnaDC power supply. In absence of a DHCP server, the address automatically selects 169.254.###.###
+		// This command sets the static address of the Ethernet module of the power supply.
 		{"[SYSTem][:COMMunicate]:NETwork:ADDRess?",  SCPI_NetworkAddressQ, 0 },
 		{"[SYSTem][:COMMunicate]:NETwork:GATE", SCPI_NetworkGate, 0 },
 		{"[SYSTem][:COMMunicate]:NETwork:GATE?", SCPI_NetworkGateQ, 0 },
-		// This command sets the Gateway IP address of the Ethernet module of the MagnaDC power supply. The Gateway IP defaults to 0.0.0.0 in absence of a DHCP server.
+		// This command sets the Gateway IP address of the Ethernet module of the power supply.
+		// The Gateway IP defaults to 0.0.0.0 in absence of a DHCP server.
 	    // Gateway IP address is represented with 4 bytes each having a range of 0-255 separated by dots
 		{"[SYSTem][:COMMunicate]:NETwork:SUBNet <string>", SCPI_NetworkSubnet, 0 },
 		{"[SYSTem][:COMMunicate]:NETwork:SUBNet?", SCPI_NetworkSubnetQ, 0 },
-		// This command sets the subnet IP Mask address of the Ethernet module of the MagnaDC power supply. The factory subnet mask setting is 255.255.255.0.
+		// This command sets the subnet IP Mask address of the Ethernet module of the power supply.
+		// The factory subnet mask setting is 255.255.255.0.
 		{"[SYSTem][:COMMunicate]:NETwork:PORT", SCPI_NetworkPort, 0 },
 		{"[SYSTem][:COMMunicate]:NETwork:PORT?", SCPI_NetworkPortQ, 0 },
-		// This command sets the Socket (Port) of the Ethernet module of the MagnaDC power supply. The factory default port setting is 50505. The factory recommends port values greater than 49151 to avoid conflicts with registered Ethernet port functions.
+		// This command sets the Socket (Port) of the Ethernet module of the power supply.
+		// The factory default port setting is 50505. The factory recommends port values greater than 49151
+		// to avoid conflicts with registered Ethernet port functions.
 		//{"[SYSTem][:COMMunicate]:NETwork:HOSTname?", SCPI_NetworkHostnameQ, 0 },
 		// This query reads the host name of the Ethernet communications module.
 		{"[SYSTem][:COMMunicate]:NETwork:DHCP", SCPI_NetworkDHCP, 0 },
 		{"[SYSTem][:COMMunicate]:NETwork:DHCP?", SCPI_NetworkDHCPQ, 0 },
-		// This command sets the DHCP operating mode of the Ethernet module. If DHCP is set to 1, the module will allow its IP address to be automatically set by the DHCP server on the network. If DHCP is set to 0, the default IP address is set according to .
+		// This command sets the DHCP operating mode of the Ethernet module. If DHCP is set to 1,
+		// the module will allow its IP address to be automatically set by the DHCP server on the network.
+		// If DHCP is set to 0, the default IP address is set according to .
 		{"[SYSTem][:COMMunicate]:SOCKet#:ADDRess", SCPI_SocketIPAddress, 0 },
 		{"[SYSTem][:COMMunicate]:SOCKet#:ADDRess?", SCPI_SocketIPAddressQ, 0 },
 		{"[SYSTem][:COMMunicate]:SOCKet:PORT", SCPI_SocketPort, 0 },
@@ -193,37 +219,19 @@ private:
 		{ "STATus:PRESet", SCPI_StatusPreset, 0 },
 
 		/* DMM */
-		{ "MEASure[:SCALar]:VOLTage:DC?", DMM_MeasureVoltageDcQ, 0 },
+		{ "FETCh[:SCALar]:VOLTage[:DC]?", DMM_FetchVoltageDcQ, 0 },
+		{ "FETCh[:SCALar]:CURRent[:DC]?", DMM_FetchCurrentDcQ, 0 },
+		{ "FETCh[:SCALar]:POWer[:DC]?", DMM_FetchPowerDcQ, 0 },
 
-		{"[SOURce]:CURRent", DMM_ConfigureCurrent, 0 },
-		{"[SOURce]:VOLTage", DMM_ConfigureVoltage, 0 },
+		{"[SOURce#]:CURRent", DMM_ConfigureCurrent, 0 },
+		{"[SOURce#]:CURRent?", DMM_ConfigureCurrentQ, 0 },
+		{"[SOURce#]:VOLTage", DMM_ConfigureVoltage, 0 },
+		{"[SOURce#]:VOLTage?", DMM_ConfigureVoltageQ, 0 },
 
-/*		{ "CONFigure:VOLTage:DC", DMM_ConfigureVoltageDc, 0 },
-		{ "MEASure:VOLTage:DC:RATio?", SCPI_StubQ, 0 },
-		{ "MEASure:VOLTage:AC?", DMM_MeasureVoltageAcQ, 0 },
-		{ "MEASure:CURRent:DC?", SCPI_StubQ, 0 },
-		{ "MEASure:CURRent:AC?", SCPI_StubQ, 0 },
-		{ "MEASure:RESistance?", SCPI_StubQ, 0 },
-		{ "MEASure:FRESistance?", SCPI_StubQ, 0 },
-		{ "MEASure:FREQuency?", SCPI_StubQ, 0 },
-		{ "MEASure:PERiod?", SCPI_StubQ, 0 },*/
-
-		//{ "INSTrument:NSELect", INST_SelectByNumber, 0 },
-		//{ "INSTrument:SELect", INST_SelectByIdentifier, 0 },
-
-		{ "OUTPut[:STATe]", Output_TurnOnOff, 0 },
-		{ "OUTPut[:STATe]?", Output_TurnOnOffQ, 0 },
+		{ "OUTPut#[:STATe]", Output_TurnOnOff, 0 },
+		{ "OUTPut#[:STATe]?", Output_TurnOnOffQ, 0 },
 
 		/*{ "SYSTem:COMMunication:TCPIP:CONTROL?", SCPI_SystemCommTcpipControlQ, 0 },*/
-
-		/*{ "TEST:BOOL", TEST_Bool, 0 },
-		{ "TEST:CHOice?", TEST_ChoiceQ, 0 },
-		{ "TEST#:NUMbers#", TEST_Numbers, 0 },
-		{ "TEST:TEXT", TEST_Text, 0 },
-		{ "TEST:ARBitrary?", TEST_ArbQ, 0 },
-		{ "TEST:CHANnellist", TEST_Chanlst, 0 },*/
-
-
 
 		SCPI_CMD_LIST_END
 	};

@@ -19,6 +19,14 @@
 #define COLOR_TEXT_WARNING TFT_YELLOW
 #define COLOR_TEXT_ERROR TFT_RED
 
+#define LINE_SPACING 42
+#define RIGHT_POSITION_X 460
+
+
+enum font_t {
+	NOTOSANSBOLD20 = 0,
+};
+
 
 enum screen_t {
 	LOGO_SCREEN = 0,
@@ -70,7 +78,7 @@ public:
 	void setTime(uint32_t milisec);
 
 	void updateWifiInfo(void);
-	const uint8_t* getFont(const char* font_name);
+	const uint8_t* getFont(font_t font);
 	void debug(void);
 protected:
 	TFT_eSPI *tft;

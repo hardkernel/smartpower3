@@ -16,17 +16,17 @@ LogoScreen::~LogoScreen(void)
 void LogoScreen::init()
 {
 	if (!SPIFFS.begin(false)) {
-		Serial.println("SPIFFS mount error");
+		Serial.println(F("SPIFFS mount error"));
 	}
 	fs = &SPIFFS;
 
 	tft->setRotation(0);
-	drawBmp("/logo_hardkernel.bmp", 0, 0);
+	drawBmp(F("/logo_hardkernel.bmp"), 0, 0);
 	tft->setRotation(3);
-	tft->loadFont(getFont("NotoSansBold20"));
-	tft->drawString("Build date : ", 80, 295, 2);
-	tft->drawString(String(__DATE__), 200, 295, 2);
-	tft->drawString(String(__TIME__), 320, 295, 2);
+	tft->loadFont(getFont(NOTOSANSBOLD20));
+	tft->drawString(F("Build date : "), 80, 295, 2);
+	tft->drawString(F(__DATE__), 200, 295, 2);
+	tft->drawString(F(__TIME__), 320, 295, 2);
 	tft->unloadFont();
 }
 
@@ -65,7 +65,7 @@ void LogoScreen::drawBmp(const char *filename, int16_t x, int16_t y)
 	fs::File bmpFS = fs->open(filename, "r");
 	if (!bmpFS)
 	{
-		Serial.println("File not found");
+		Serial.println(F("File not found"));
 		return;
 	}
 
@@ -112,7 +112,7 @@ void LogoScreen::drawBmp(const char *filename, int16_t x, int16_t y)
 			}
 			tft->setSwapBytes(oldSwapBytes);
 		}
-		else Serial.println("BMP format not recognized.");
+		else Serial.println(F("BMP format not recognized."));
 	}
 	bmpFS.close();
 }

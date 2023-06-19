@@ -4,7 +4,7 @@ Settings::Settings()
 {
 	// reserve space for Strings to minimize fragmentation
 	this->wifi_access_point_ssid.reserve(256);
-	this->wifi_password.reserve(64);  // the longes password currently possible
+	this->wifi_password.reserve(64);  // the longest password currently possible
 	this->mac_address.reserve(17);
 }
 
@@ -12,13 +12,11 @@ void Settings::init()
 {
 	  // "storage" is default ArduinoNVS namespace, default nvs partition (ArduinoNVS used the first suitable partition)
 	preferences.begin("storage", false);
-	delay(100);  // wait till storage initializes, otherwise the init may block indefinetly
+	delay(100);  // wait till storage initializes, otherwise the init may block indefinitely
 
 	// Clear old keys
 	if (!this->isNvsCleared(true)) {
-		Serial.println("About to clear preferences");
 		preferences.clear();
-		Serial.println("Preferences cleared");
 		this->setNvsCleared(true);
 	}
 
@@ -30,6 +28,8 @@ void Settings::init()
 	this->logging_enabled = this->isLoggingEnabled(true);
 	//this->log_interval_index = this->getLogIntervalIndex(true);
 	this->log_interval = this->getLogInterval(true);
+	this->wifi_ipv4_udp_logging_server_ip_address = this->getWifiIpv4UdpLoggingServerIpAddress(true);
+	this->wifi_ipv4_udp_logging_server_port = this->getWifiIpv4UdpLoggingServerPort(true);
 	// WiFI related
 	this->wifi_enabled = this->isWifiEnabled(true);
 	this->mac_address = this->getMacAddress();
@@ -40,15 +40,12 @@ void Settings::init()
 //TODO: add settings/checking CREDENTIALS_STATE
 	/*this->wifi_credentials_checked = this->isWifiCredentialsChecked();
 	this->wifi_ipv4_connect_automatically = true;*/
-	this->wifi_ipv4_dhcp_enabled = true;
+	this->wifi_ipv4_dhcp_enabled = this->isWifiIpv4DhcpEnabled(true);
 	this->wifi_ipv4_static_ip = this->getWifiIpv4StaticIp(true);
-	//IPAddress wifi_ipv4_gateway_address;
 	this->wifi_ipv4_gateway_address = this->getWifiIpv4GatewayAddress(true);
-	//IPAddress wifi_ipv4_subnet_mask;
-	//IPAddress wifi_ipv4_address_dns_1;
-	//IPAddress wifi_ipv4_address_dns_2;
-	this->wifi_ipv4_udp_logging_server_ip_address = this->getWifiIpv4UdpLoggingServerIpAddress(true);
-	this->wifi_ipv4_udp_logging_server_port = this->getWifiIpv4UdpLoggingServerPort(true);
+	this->wifi_ipv4_subnet_mask = this->getWifiIpv4SubnetMask(true);
+	this->wifi_ipv4_address_dns_1 = this->getWifiIpv4AddressDns1(true);
+	this->wifi_ipv4_address_dns_2 = this->getWifiIpv4AddressDns2(true);
 	// Various
 	this->first_boot = this->isFirstBoot(true);
 	this->wifi_credentials_state = this->getWifiCredentialsState(true);
@@ -57,7 +54,9 @@ void Settings::init()
 	this->channel_0_current_limit = this->getChannel0CurrentLimit(true);
 	this->channel_1_voltage = this->getChannel1Voltage(true);
 	this->channel_1_current_limit = this->getChannel1CurrentLimit(true);
+	// SCPI related
 	this->wifi_ipv4_SCPI_server_port = this->getWifiIpv4SCPIServerPort(true);
+	this->operation_mode = this->getOperationMode(true);
 }
 
 uint8_t Settings::getBacklightLevelIndex(bool from_storage)
@@ -75,23 +74,6 @@ const uint8_t* Settings::getBacklightLevelPreset () const
 {
 	return backlight_level_preset;
 }
-
-/*uint8_t Settings::getLogIntervalIndex(bool from_storage)
-{
-	return log_interval_index;
-}
-
-void Settings::setLogIntervalIndex (uint8_t logIntervalIndex)
-{
-	log_interval_index = logIntervalIndex;
-}
-*/
-/*
-const uint16_t* Settings::getLogIntervalPreset () const
-{
-	return log_interval_preset;
-}
-*/
 
 uint8_t Settings::getLogInterval(bool from_storage)
 {
@@ -141,12 +123,6 @@ uint8_t Settings::getSerialBaudRateIndex(bool from_storage)
 	return 0;
 }
 
-/*void Settings::setSerialBaudRateIndex (uint8_t serialBaudRateIndex, bool force_commit)
-{
-	serial_baud_rate_index = serialBaudRateIndex;
-	NVS.setInt("serial_baud", serial_baud_rate_index, force_commit);
-}*/
-
 uint32_t Settings::getSerialBaudRate(bool from_storage)
 {
 	return (from_storage) ? preferences.getUInt("serial_baud", serial_baud_rate) : serial_baud_rate;
@@ -192,86 +168,45 @@ void Settings::switchWifi(bool from_storage)
 	}
 }
 
-/*const IPAddress& Settings::getWifiIpv4AddressDns1 () const
+IPAddress Settings::getWifiIpv4AddressDns1(bool from_storage)
 {
-	return wifi_ipv4_address_dns_1;
-}*/
+	return this->getSettingIPAddress(from_storage, "ipaddr_dns1", &wifi_ipv4_address_dns_1);
+}
 
-/*void Settings::setWifiIpv4AddressDns1 (const IPAddress &wifiIpv4AddressDns1)
+void Settings::setWifiIpv4AddressDns1(IPAddress wifiIpv4AddressDns1, bool set_through_settings, bool force_commit)
 {
 	wifi_ipv4_address_dns_1 = wifiIpv4AddressDns1;
+	preferences.putString("ipaddr_dns1", wifi_ipv4_address_dns_1.toString());
 }
 
-const IPAddress& Settings::getWifiIpv4AddressDns2 () const
+IPAddress Settings::getWifiIpv4AddressDns2(bool from_storage)
 {
-	return wifi_ipv4_address_dns_2;
+	return this->getSettingIPAddress(from_storage, "ipaddr_dns2", &wifi_ipv4_address_dns_2);
 }
 
-void Settings::setWifiIpv4AddressDns2 (const IPAddress &wifiIpv4AddressDns2)
+void Settings::setWifiIpv4AddressDns2(IPAddress wifiIpv4AddressDns2, bool set_through_settings, bool force_commit)
 {
 	wifi_ipv4_address_dns_2 = wifiIpv4AddressDns2;
-}*/
-
-bool Settings::isWifiIpv4ConnectAutomatically () const
-{
-	return wifi_ipv4_connect_automatically;
+	preferences.putString("ipaddr_dns2", wifi_ipv4_address_dns_2.toString());
 }
 
-void Settings::setWifiIpv4ConnectAutomatically (bool wifiIpv4ConnectAutomatically)
+bool Settings::isWifiIpv4DhcpEnabled(bool from_storage)
 {
-	wifi_ipv4_connect_automatically = wifiIpv4ConnectAutomatically;
-}
-
-bool Settings::isWifiIpv4DhcpEnabled()
-{
+	return (from_storage) ?
+			preferences.getBool("dhcp_enabled", wifi_ipv4_dhcp_enabled)
+			: wifi_ipv4_dhcp_enabled;
 	return wifi_ipv4_dhcp_enabled;
 }
 
 void Settings::setWifiIpv4DhcpEnabled(bool wifiIpv4DhcpEnabled)
 {
 	wifi_ipv4_dhcp_enabled = wifiIpv4DhcpEnabled;
-	//preferences.putBool("dhcp_enabled", wifi_ipv4_dhcp_enabled);
+	preferences.putBool("dhcp_enabled", wifi_ipv4_dhcp_enabled);
 }
-
-/*const IPAddress& Settings::getWifiIpv4GatewayAddress () const
-{
-	return wifi_ipv4_gateway_address;
-}
-
-void Settings::setWifiIpv4GatewayAddress (const IPAddress &wifiIpv4GatewayAddress)
-{
-	wifi_ipv4_gateway_address = wifiIpv4GatewayAddress;
-}
-
-const IPAddress& Settings::getWifiIpv4StaticIp () const
-{
-	return wifi_ipv4_static_ip;
-}
-
-void Settings::setWifiIpv4StaticIp (const IPAddress &wifiIpv4StaticIp)
-{
-	wifi_ipv4_static_ip = wifiIpv4StaticIp;
-}
-
-const IPAddress& Settings::getWifiIpv4SubnetMask () const
-{
-	return wifi_ipv4_subnet_mask;
-}
-
-void Settings::setWifiIpv4SubnetMask (const IPAddress &wifiIpv4SubnetMask)
-{
-	wifi_ipv4_subnet_mask = wifiIpv4SubnetMask;
-}*/
 
 IPAddress Settings::getWifiIpv4UdpLoggingServerIpAddress(bool from_storage)
 {
 	return this->getSettingIPAddress(from_storage, "ipaddr_udp", &wifi_ipv4_udp_logging_server_ip_address);
-/*	IPAddress ipaddress;
-	if (from_storage && preferences.isKey("ipaddr_udp")) {
-		ipaddress.fromString(preferences.getString("ipaddr_udp"));
-		return ipaddress;
-	}
-	return wifi_ipv4_udp_logging_server_ip_address;*/
 }
 
 void Settings::setWifiIpv4UdpLoggingServerIpAddress(IPAddress wifiIpv4UdpLoggingServerIpAddress, bool set_through_settings, bool force_commit)
@@ -279,8 +214,7 @@ void Settings::setWifiIpv4UdpLoggingServerIpAddress(IPAddress wifiIpv4UdpLogging
 	wifi_ipv4_udp_logging_server_ip_address = wifiIpv4UdpLoggingServerIpAddress;
 	preferences.putString("ipaddr_udp", wifi_ipv4_udp_logging_server_ip_address.toString());
 	if (set_through_settings) {
-		esp_event_post_to((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS,
-						  SETTINGS_LOGGING_ADDRESS_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+		esp_event_post(SETTINGS_EVENTS, SETTINGS_LOGGING_ADDRESS_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
 	}
 }
 
@@ -297,8 +231,7 @@ void Settings::setWifiIpv4UdpLoggingServerPort(uint16_t wifiIpv4UdpLoggingServer
 	preferences.putUShort("port_udp", wifi_ipv4_udp_logging_server_port);
 	delay(100);
 	if (set_through_settings) {
-		esp_event_post_to((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS,
-						  SETTINGS_LOGGING_PORT_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+		esp_event_post(SETTINGS_EVENTS, SETTINGS_LOGGING_PORT_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
 	}
 }
 
@@ -315,26 +248,6 @@ void Settings::setWifiPassword(const char* wifiPassword, bool force_commit)
 	wifi_password = wifiPassword;
 	preferences.putString("passwd", wifiPassword);
 }
-
-/*bool Settings::isWifiUseIpv4 () const
-{
-	return wifi_use_ipv4;
-}
-
-void Settings::setWifiUseIpv4 (bool wifiUseIpv4)
-{
-	wifi_use_ipv4 = wifiUseIpv4;
-}
-
-bool Settings::isWifiUseIpv6 () const
-{
-	return wifi_use_ipv6;
-}
-
-void Settings::setWifiUseIpv6 (bool wifiUseIpv6)
-{
-	wifi_use_ipv6 = wifiUseIpv6;
-}*/
 
 bool Settings::isFirstBoot(bool from_storage)
 {
@@ -370,7 +283,7 @@ void Settings::setChannel0CurrentLimit(uint16_t channel0CurrentLimit, bool set_t
 	channel_0_current_limit = channel0CurrentLimit;
 	preferences.putUShort("current_limit0", channel_0_current_limit);
 	if (set_through_settings) {
-		esp_event_post_to((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_CURRENT0_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+		esp_event_post(SETTINGS_EVENTS, SETTINGS_CURRENT0_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
 	}
 }
 
@@ -385,7 +298,7 @@ void Settings::setChannel0Voltage(uint16_t channel0Voltage, bool set_through_set
 	preferences.putUShort("voltage0", channel_0_voltage);
 	delay(100);
 	if (set_through_settings) {
-		esp_event_post_to((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_VOLTAGE0_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+		esp_event_post(SETTINGS_EVENTS, SETTINGS_VOLTAGE0_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
 	}
 }
 
@@ -399,7 +312,7 @@ void Settings::setChannel1CurrentLimit(uint16_t channel1CurrentLimit, bool set_t
 	channel_1_current_limit = channel1CurrentLimit;
 	preferences.putUShort("current_limit1", channel_1_current_limit);
 	if (set_through_settings) {
-		esp_event_post_to((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_CURRENT1_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+		esp_event_post(SETTINGS_EVENTS, SETTINGS_CURRENT1_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
 	}
 }
 
@@ -414,7 +327,7 @@ void Settings::setChannel1Voltage(uint16_t channel1Voltage, bool set_through_set
 	preferences.putUShort("voltage1", channel_1_voltage);
 	delay(100);
 	if (set_through_settings) {
-		esp_event_post_to((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_VOLTAGE1_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+		esp_event_post(SETTINGS_EVENTS, SETTINGS_VOLTAGE1_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
 	}
 }
 
@@ -427,11 +340,6 @@ void Settings::setNvsCleared(bool nvsCleared)
 {
 	nvs_cleared = nvsCleared;
 	preferences.putBool("nvs_cleared", nvsCleared);
-}
-
-esp_event_loop_handle_t& Settings::getEventLoopHandleAddress()
-{
-	return loop_with_task;
 }
 
 String Settings::getMacAddress()
@@ -447,15 +355,10 @@ void Settings::setMacAddress(String macAddress)
 
 IPAddress Settings::getWifiIpv4GatewayAddress(bool from_storage)
 {
-	IPAddress ipaddress;
-	if (from_storage && preferences.isKey("ipaddr_gate")) {
-		ipaddress.fromString(preferences.getString("ipaddr_gate"));
-		return ipaddress;
-	}
-	return wifi_ipv4_gateway_address;
+	return this->getSettingIPAddress(from_storage, "ipaddr_gate", &wifi_ipv4_gateway_address);
 }
 
-void Settings::setWifiIpv4GatewayAddress (IPAddress wifiIpv4GatewayAddress, bool set_from_settings, bool force_commit)
+void Settings::setWifiIpv4GatewayAddress(IPAddress wifiIpv4GatewayAddress, bool set_through_settings, bool force_commit)
 {
 	wifi_ipv4_gateway_address = wifiIpv4GatewayAddress;
 	preferences.putString("ipaddr_gate", wifi_ipv4_gateway_address.toString());
@@ -463,15 +366,10 @@ void Settings::setWifiIpv4GatewayAddress (IPAddress wifiIpv4GatewayAddress, bool
 
 IPAddress Settings::getWifiIpv4StaticIp(bool from_storage)
 {
-	IPAddress ipaddress;
-	if (from_storage && preferences.isKey("ipaddr_static")) {
-		ipaddress.fromString(preferences.getString("ipaddr_static"));
-		return ipaddress;
-	}
-	return wifi_ipv4_static_ip;
+	return this->getSettingIPAddress(from_storage, "ipaddr_static", &wifi_ipv4_static_ip);
 }
 
-void Settings::setWifiIpv4StaticIp (IPAddress wifiIpv4StaticIp, bool set_from_settings, bool force_commit)
+void Settings::setWifiIpv4StaticIp (IPAddress wifiIpv4StaticIp, bool set_through_settings, bool force_commit)
 {
 	wifi_ipv4_static_ip = wifiIpv4StaticIp;
 	preferences.putString("ipaddr_static", wifi_ipv4_static_ip.toString());
@@ -480,12 +378,6 @@ void Settings::setWifiIpv4StaticIp (IPAddress wifiIpv4StaticIp, bool set_from_se
 IPAddress Settings::getWifiIpv4SubnetMask (bool from_storage)
 {
 	return this->getSettingIPAddress(from_storage, "subnet", &wifi_ipv4_subnet_mask);
-/*	IPAddress ipaddress;
-	if (from_storage && preferences.isKey("subnet")) {
-		ipaddress.fromString(preferences.getString("subnet"));
-		return ipaddress;
-	}
-	return wifi_ipv4_subnet_mask;*/
 }
 
 void Settings::setWifiIpv4SubnetMask(IPAddress wifiIpv4SubnetMask, bool set_through_settings, bool force_commit)
@@ -511,14 +403,29 @@ uint16_t Settings::getWifiIpv4SCPIServerPort(bool from_storage)
 			: wifi_ipv4_SCPI_server_port;
 }
 
-void Settings::setWifiIpv4SCPIServerPort(uint16_t wifiIpv4SCPIServerPort, bool set_through_settings,
-											bool force_commit)
+void Settings::setWifiIpv4SCPIServerPort(uint16_t wifiIpv4SCPIServerPort, bool set_through_settings, bool force_commit)
 {
 	wifi_ipv4_udp_logging_server_port = wifiIpv4SCPIServerPort;
 	preferences.putUShort("port_scpi", wifi_ipv4_SCPI_server_port);
 	delay(100);
 	if (set_through_settings) {
-		esp_event_post_to((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS,
-						  SETTINGS_SCPI_PORT_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+		esp_event_post(SETTINGS_EVENTS, SETTINGS_SCPI_PORT_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+	}
+}
+
+device_operation_mode Settings::getOperationMode(bool from_storage)
+{
+	return (from_storage) ?
+			static_cast<device_operation_mode>(preferences.getUChar("oper_mode", static_cast<uint8_t>(operation_mode)))
+			: operation_mode;
+}
+
+void Settings::setOperationMode(device_operation_mode operationMode, bool set_through_settings, bool force_commit)
+{
+	operation_mode = operationMode;
+	preferences.putUChar("oper_mode", operation_mode);
+	delay(100);
+	if (set_through_settings) {
+//TODO: add event and its handling
 	}
 }

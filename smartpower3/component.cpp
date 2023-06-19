@@ -23,13 +23,13 @@ Component::~Component(void)
 	img = NULL;
 }
 
-void Component::init(uint16_t fg_color, uint16_t bg_color, uint8_t size, uint8_t align)
+void Component::init(uint16_t fg_color, uint16_t bg_color, uint8_t text_size, uint8_t align)
 {
 	img->setColorDepth(16);
 	img->fillSprite(BG_COLOR);
 	img->createSprite(width, height);
 	img->setTextColor(fg_color, bg_color);
-	img->setTextSize(size);
+	img->setTextSize(text_size);
 	img->setTextDatum(align);
 	this->align = align;
 }
@@ -117,7 +117,16 @@ void Component::clear(void)
 	img->fillSprite(BG_COLOR);
 }
 
-void Component::clearAndDrawWithFont(const uint8_t font[], String string_to_draw)
+void Component::clearAndDrawWithColoredFont(const uint8_t font[], uint16_t fg_color, const char* string_to_draw)
+{
+	this->clear();
+	this->loadFont(font);
+	this->setTextColor(fg_color, BG_COLOR);
+	this->draw(string_to_draw);
+	this->unloadFont();
+}
+
+void Component::clearAndDrawWithFont(const uint8_t font[], const char* string_to_draw)
 {
 	this->clear();
 	this->loadFont(font);

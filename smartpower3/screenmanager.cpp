@@ -212,7 +212,7 @@ void ScreenManager::fsInit(void)
 
 	//NOTE: When all relevant values have defaults in Settings, this block could be removed
 	if (settings->isFirstBoot(true)) {
-		Serial.println("First boot!!!");
+		Serial.println(F("First boot!!!"));
 		settings->setBacklightLevelIndex(backlight_level_preset);
 		settings->setSerialBaudRate(serial_baud);
 		settings->setLogInterval(log_interval);
@@ -297,6 +297,11 @@ VoltageScreen* ScreenManager::getVoltageScreen(void)
 SettingScreen* ScreenManager::getSettingScreen(void)
 {
 	return this->setting_screen;
+}
+
+NetworkScreen* ScreenManager::getNetworkScreen(void)
+{
+	return this->network_screen;
 }
 
 Screen* ScreenManager::getActiveScreen(void)

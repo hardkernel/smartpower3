@@ -6,9 +6,9 @@
 #include "screens/screen.h"
 
 
-#define BL_LCD	17
-#define FREQ	50000
-#define RESOLUTION	8
+#define BL_LCD 17
+#define FREQ 50000
+#define RESOLUTION 8
 
 #define BL_LEVEL_WIDTH 277
 #define BL_LEVEL_HEIGHT 22
@@ -27,8 +27,8 @@
 #define X_IPADDR 226
 #define X_SSID 172
 
-#define LINE_SPACING 42
-#define RIGHT_POSITION_X 460
+/*#define LINE_SPACING 42
+#define RIGHT_POSITION_X 460*/
 
 
 enum setting_screen_mode_t {
@@ -36,12 +36,14 @@ enum setting_screen_mode_t {
 	SETTING_SETTING_BL,
 	SETTING_SETTING_BAUD_RATE,
 	SETTING_SETTING_LOG_INTERVAL,
+	SETTING_SETTING_OPERATION_MODE,
 };
 
 
 enum screen_state_setting {
 	STATE_SETTING_WIFI_ICON = 1,
 	STATE_SETTING_LOGGING_ICON,
+	STATE_OPERATION_MODE,
 	STATE_LOG_INTERVAL,
 	STATE_BAUD_RATE,
 	STATE_BL,
@@ -68,6 +70,7 @@ public:
 	void turnOffBacklight(void);
 	uint8_t setLogInterval(void);
 	void setLogInterval(uint8_t val);
+	device_operation_mode setOperationMode();
 	uint16_t getEnabledLogInterval(void);
 
 	uint8_t getBacklightLevel(void);
@@ -77,6 +80,7 @@ public:
 	uint32_t setSerialBaud(uint32_t baud);
 	uint32_t setSerialBaud();
 	uint8_t getSerialBaudIndex(void);
+	uint16_t getOperationMode(void);
 
 	void changeBacklight(uint8_t level=255);
 	void restoreBacklight();
@@ -84,14 +88,18 @@ public:
 	void changeSerialBaud(uint8_t baud_level);
 	void restoreSerialBaud(void);
 	void restoreLogIntervalValue(void);
+	void restoreOperationMode(void);
+	void changeOperationMode(device_operation_mode operation_mode);
 
 	void selectBLLevel(uint16_t rectangle_color=COLOR_RECTANGLE_SELECTED);
 	void selectLogInterval(uint16_t text_color=COLOR_TEXT_SELECTED, uint16_t rectangle_color=COLOR_RECTANGLE_SELECTED);
 	void selectSerialBaud(uint16_t text_color=COLOR_TEXT_SELECTED, uint16_t rectangle_color=COLOR_RECTANGLE_SELECTED);
+	void selectOperationMode(uint16_t text_color=COLOR_TEXT_SELECTED, uint16_t rectangle_color=COLOR_RECTANGLE_SELECTED);
 
 	void deSelectBLLevel(uint16_t rectangle_color=COLOR_RECTANGLE_DESELECTED);
 	void deSelectLogInterval(uint16_t text_color=COLOR_TEXT_DESELECTED, uint16_t rectangle_color=COLOR_RECTANGLE_DESELECTED);
 	void deSelectSerialBaud(uint16_t text_color=COLOR_TEXT_DESELECTED, uint16_t rectangle_color=COLOR_RECTANGLE_DESELECTED);
+	void deSelectOperationMode(uint16_t text_color=COLOR_TEXT_DESELECTED, uint16_t rectangle_color=COLOR_RECTANGLE_DESELECTED);
 
 	void drawBacklightLevel(uint8_t level);
 	void drawLogIntervalValue(uint16_t log_interval);
@@ -100,9 +108,10 @@ public:
 	void drawWifiLoggingEnabled(bool is_enabled=true);
 	//void popUp(void);
 
-	void drawUDPIpaddr(String ipaddr);
+	void drawUDPIpaddr(const char* ipaddr);
 	void drawUDPport(uint16_t port);
-	void drawSSID(String ssid);
+	void drawSSID(const char* ssid);
+	void drawMode(device_operation_mode operation_mode = OPERATION_MODE_DEFAULT);
 
 	void selectAndDrawSSIDText(void);
 	void drawUDPIpaddrAndPort(void);
@@ -122,14 +131,19 @@ private:
 	uint32_t serial_value[10] = {9600, 19200, 38400, 57600, 115200, 230400, 460800, 500000, 576000, 921600};
 	uint32_t serial_baud = 0;
 	uint32_t serial_baud_edit = 0;
+	device_operation_mode operation_mode;
+	device_operation_mode operation_mode_edit;
+	//device_operation_mode operation_mode = OPERATION_MODE_DEFAULT;
 	Component *com_serial_baud;
 	Component *com_log_interval;
 	Component *com_ssid;
 	Component *com_udp_ipaddr;
 	Component *com_udp_port;
+	Component *com_mode;
 	uint8_t _setBacklightLevelPreset(uint8_t level_preset);
 	void drawSetting(void);
 	void drawSettingBL(void);
 	void drawSettingBaudRate(void);
 	void drawSettingLogInterval(void);
+	void drawOperationMode(void);
 };

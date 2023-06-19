@@ -13,6 +13,7 @@ SettingScreen::SettingScreen(TFT_eSPI *tft, Header *header, Settings *settings, 
 	com_ssid = new Component(tft, 284, 22, 2);
 	com_udp_ipaddr = new Component(tft, 170, 20, 2);
 	com_udp_port = new Component(tft, 60, 20, 2);
+	com_mode = new Component(tft, BL_LEVEL_WIDTH, 20, 2);
 
 	this->x = SETTING_SCREEN_INIT_POSITION_X;
 	this->y = SETTING_SCREEN_INIT_POSITION_Y;
@@ -25,19 +26,20 @@ void SettingScreen::init()
 	}
 
 	tft->fillRect(0, 52, 480, 285, BG_COLOR);
-	tft->loadFont(getFont("NotoSansBold20"));
-	tft->drawString("Build date : ", x + 128, y + 215, 2);
-	tft->drawString(String(__DATE__), x + 248, y + 215, 2);
-	tft->drawString(String(__TIME__), x + 378, y + 215, 2);
+	tft->loadFont(getFont(NOTOSANSBOLD20));
+/*	tft->drawString(F("Build date : "), x + 128, y + 215, 2);
+	tft->drawString(F(__DATE__), x + 248, y + 215, 2);
+	tft->drawString(F(__TIME__), x + 378, y + 215, 2);*/
 
 	tft->drawString("Backlight Level", x, y, 4);
 	tft->drawString("Serial Baud Rate", x, y + LINE_SPACING, 4);
 	tft->drawString("Logging Interval", x, y + 2*LINE_SPACING, 4);
 	tft->drawString("WiFi AP", x, y + 3*LINE_SPACING, 4);
 	tft->drawString("Logging target (UDP)", x, y + 4*LINE_SPACING, 4);
+	tft->drawString("Mode", x, y + 5*LINE_SPACING, 4);
 	tft->unloadFont();
 
-	tft->fillRect(x + X_BL_LEVEL, y + Y_BL_LEVEL, BL_LEVEL_WIDTH, BL_LEVEL_HEIGHT, TFT_ORANGE);//BG_COLOR);
+	tft->fillRect(x + X_BL_LEVEL, y + Y_BL_LEVEL, BL_LEVEL_WIDTH, BL_LEVEL_HEIGHT, BG_COLOR);
 	tft->drawRect(x + X_BL_LEVEL-1, y + Y_BL_LEVEL - 1, BL_LEVEL_WIDTH + 2, BL_LEVEL_HEIGHT + 2, TFT_GREEN);
 	changeBacklight(backlight_level_preset);
 
@@ -54,10 +56,14 @@ void SettingScreen::init()
 	com_udp_port->init(TFT_WHITE, BG_COLOR, 1, MR_DATUM);
 	com_udp_port->setCoordinate(x + X_IPADDR + 170, y + 4*LINE_SPACING);  //y + Y_WIFI_INFO + 30);
 
+	com_mode->init(TFT_WHITE, BG_COLOR, 1, MR_DATUM);
+	com_mode->setCoordinate(x + X_BL_LEVEL, y + 5*LINE_SPACING);
+
 	this->serial_baud_edit = this->serial_baud;
 
-	drawSerialBaud(this->serial_baud);
-	drawLogIntervalValue(log_value[log_interval]);
+	this->drawSerialBaud(this->serial_baud);
+	this->drawLogIntervalValue(log_value[log_interval]);
+	this->drawMode(this->operation_mode);
 
 	selected = dial_cnt = dial_cnt_old = STATE_NONE;
 
@@ -85,6 +91,9 @@ bool SettingScreen::draw(void)
 		case SETTING_SETTING_LOG_INTERVAL:
 			drawSettingLogInterval();
 			break;
+		case SETTING_SETTING_OPERATION_MODE:
+			drawOperationMode();
+			break;
 		default:
 			break;
 	}
@@ -96,6 +105,10 @@ bool SettingScreen::draw(void)
 	if (wifi_manager->update_udp_info) {
 		wifi_manager->update_udp_info = false;
 		this->drawUDPIpaddrAndPort();
+	}
+	if (wifi_manager->update_mode_info) {
+		wifi_manager->update_mode_info = false;
+		this->drawMode(settings->getOperationMode());
 	}
 
 	header->draw();
@@ -137,6 +150,10 @@ void SettingScreen::drawSetting()
 			mode = SETTING_SETTING_LOG_INTERVAL;
 			dial_cnt = this->getLogInterval();
 			this->selectLogInterval(COLOR_TEXT_SELECTED, COLOR_RECTANGLE_ACTIVATED);
+		} else if (selected == STATE_OPERATION_MODE) {
+			mode = SETTING_SETTING_OPERATION_MODE;
+			dial_cnt = this->getOperationMode();
+			this->selectOperationMode(COLOR_TEXT_SELECTED, COLOR_RECTANGLE_ACTIVATED);
 		} else if (selected == STATE_SETTING_LOGGING_ICON) {
 			settings->switchLogging();
 		} else if (selected == STATE_SETTING_WIFI_ICON) {
@@ -175,6 +192,39 @@ void SettingScreen::drawSettingLogInterval()
 	if (dial_cnt != dial_cnt_old) {
 		clampVariableToRange(0, 6, &dial_cnt);
 		this->changeLogInterval(dial_cnt);
+		dial_cnt_old = dial_cnt;
+	}
+}
+
+void SettingScreen::drawOperationMode()
+{
+	if ((cur_time - dial_time) > 10000) {
+		mode = SETTING_SETTING;
+		deSelect();
+		selected = dial_cnt = dial_cnt_old = STATE_NONE;
+		this->deSelectOperationMode(TFT_WHITE);
+		this->restoreOperationMode();
+	}
+	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
+		flag_long_press = 3;
+		btn_pressed[2] = false;
+		mode = SETTING_SETTING;
+		selected = dial_cnt = dial_cnt_old = STATE_OPERATION_MODE;
+		this->deSelectOperationMode(TFT_WHITE);
+		this->restoreOperationMode();
+		return;
+	}
+	if (btn_pressed[3] == true) {
+		btn_pressed[3] = false;
+		mode = SETTING_SETTING;
+		this->setOperationMode();
+		this->selectOperationMode(COLOR_TEXT_SELECTED, COLOR_RECTANGLE_SELECTED);
+		selected = dial_cnt = dial_cnt_old = STATE_OPERATION_MODE;
+		return;
+	}
+	if (dial_cnt != dial_cnt_old) {
+		clampVariableToRange(0, 1, &dial_cnt);
+		this->changeOperationMode(static_cast<device_operation_mode>(dial_cnt));
 		dial_cnt_old = dial_cnt;
 	}
 }
@@ -254,9 +304,9 @@ void SettingScreen::select()
 	if (dial_cnt == dial_cnt_old) {
 		return;
 	}
-	// 5 is 1 based count of screen_state_setting elements, lower limit is 1 because 0 is used
+	// 6 is 1 based count of screen_state_setting elements, lower limit is 1 because 0 is used
 	// as a marker for non-selected item that should not be included in the "selection circle"
-	clampVariableToCircularRange(1, 5, dial_direct, &dial_cnt);
+	clampVariableToCircularRange(1, 6, dial_direct, &dial_cnt);
 	dial_cnt_old = dial_cnt;
 
 	deSelect();
@@ -267,6 +317,9 @@ void SettingScreen::select()
 			break;
 		case STATE_SETTING_LOGGING_ICON:
 			header->select(LOGGING);
+			break;
+		case STATE_OPERATION_MODE:
+			this->selectOperationMode();
 			break;
 		case STATE_LOG_INTERVAL:
 			this->selectLogInterval();
@@ -287,6 +340,7 @@ void SettingScreen::deSelect()
 	this->deSelectBLLevel();
 	this->deSelectSerialBaud();
 	this->deSelectLogInterval();
+	this->deSelectOperationMode();
 	header->deSelect(LOGGING);
 	header->deSelect(WIFI);
 }
@@ -360,6 +414,12 @@ uint32_t SettingScreen::setSerialBaud(uint32_t baud)
 	return serial_baud = baud;
 }
 
+device_operation_mode SettingScreen::setOperationMode()
+{
+	settings->setOperationMode(operation_mode_edit);
+	return this->operation_mode = this->operation_mode_edit;
+}
+
 uint8_t SettingScreen::getBacklightLevel(void)
 {
 	return backlight_level_preset;
@@ -384,6 +444,12 @@ uint8_t SettingScreen::getSerialBaudIndex(void)
 {
 	serial_baud_edit = serial_baud;
 	return settings->getSerialBaudRateIndex();
+}
+
+uint16_t SettingScreen::getOperationMode(void)
+{
+	operation_mode_edit = operation_mode;
+	return static_cast<uint16_t>(settings->getOperationMode());
 }
 
 void SettingScreen::restoreBacklight()
@@ -440,6 +506,18 @@ void SettingScreen::changeSerialBaud(uint8_t baud_level)
 	changeLogInterval(log_interval, true);
 }
 
+void SettingScreen::restoreOperationMode()
+{
+	drawMode(settings->getOperationMode());
+}
+
+void SettingScreen::changeOperationMode(device_operation_mode operation_mode)
+{
+	drawMode(operation_mode);
+	operation_mode_edit = operation_mode;
+	//changeOperationMode(operation_mode);
+}
+
 void SettingScreen::selectBLLevel(uint16_t rectangle_color)
 {
 	for (int i = 0; i < SELECTION_BORDER_WIDTH; i++) {
@@ -493,29 +571,49 @@ void SettingScreen::deSelectSerialBaud(uint16_t text_color, uint16_t rectangle_c
 	com_serial_baud->deSelect(rectangle_color);
 }
 
+void SettingScreen::selectOperationMode(uint16_t text_color, uint16_t rectangle_color)
+{
+	com_mode->select(rectangle_color);
+}
+
+void SettingScreen::deSelectOperationMode(uint16_t text_color, uint16_t rectangle_color)
+{
+	com_mode->deSelect(rectangle_color);
+}
+
 void SettingScreen::drawLogIntervalValue(uint16_t log_value)
 {
-	com_log_interval->clearAndDrawWithFont(getFont("NotoSansBold20"), (log_value == 0) ? "OFF" : String(log_value) + " ms");
+	if (log_value == 0) {
+		com_log_interval->clearAndDrawWithFont(getFont(NOTOSANSBOLD20), F("OFF"));
+	} else {
+		char output_log_value[9];
+		snprintf(output_log_value, 9, F("%u ms"), log_value);
+		com_log_interval->clearAndDrawWithFont(getFont(NOTOSANSBOLD20), output_log_value);
+	}
 }
 
 void SettingScreen::drawSerialBaud(uint32_t baud)
 {
-	com_serial_baud->clearAndDrawWithFont(getFont("NotoSansBold20"), String(baud) + " bps");
+	char baud_buffer[11];
+	snprintf(baud_buffer, 11, F("%u bps"), baud);
+	com_serial_baud->clearAndDrawWithFont(getFont(NOTOSANSBOLD20), baud_buffer);
 }
 
-void SettingScreen::drawSSID(String ssid)
+void SettingScreen::drawSSID(const char* ssid)
 {
-	com_ssid->clearAndDrawWithFont(getFont("NotoSansBold20"), ssid);
+	com_ssid->clearAndDrawWithFont(getFont(NOTOSANSBOLD20), ssid);
 }
 
-void SettingScreen::drawUDPIpaddr(String ipaddr)
+void SettingScreen::drawUDPIpaddr(const char* ipaddr)
 {
-	com_udp_ipaddr->clearAndDrawWithFont(getFont("NotoSansBold20"), ipaddr);
+	com_udp_ipaddr->clearAndDrawWithFont(getFont(NOTOSANSBOLD20), ipaddr);
 }
 
 void SettingScreen::drawUDPport(uint16_t port)
 {
-	com_udp_port->clearAndDrawWithFont(getFont("NotoSansBold20"), (" : " + String(port)));
+	char port_buffer[9];
+	snprintf(port_buffer, 9, " : %u", port);
+	com_udp_port->clearAndDrawWithFont(getFont(NOTOSANSBOLD20), port_buffer);
 }
 
 void SettingScreen::drawSerialLoggingEnabled(bool is_enabled)
@@ -526,6 +624,13 @@ void SettingScreen::drawSerialLoggingEnabled(bool is_enabled)
 void SettingScreen::drawWifiLoggingEnabled(bool is_enabled)
 {
 	tft->drawRect(x + 245, y+2*LINE_SPACING, 20, 20, TFT_GREEN);
+}
+
+void SettingScreen::drawMode(device_operation_mode default_mode)
+{
+	com_mode->clearAndDrawWithFont(
+			getFont(NOTOSANSBOLD20),
+			(default_mode == OPERATION_MODE_DEFAULT) ? F("Default") : F("SCPI"));
 }
 
 void SettingScreen::debug()
@@ -571,9 +676,9 @@ void SettingScreen::onEnter(void)
 void SettingScreen::selectAndDrawSSIDText(void)
 {
 	if (WiFi.status() == WL_CONNECTED) {
-		this->drawSSID(wifi_manager->apInfoConnected());
+		this->drawSSID(wifi_manager->apInfoConnected().c_str());
 	} else if (wifi_manager->hasSavedConnectionInfo()) {
-		this->drawSSID(wifi_manager->apInfoSaved());
+		this->drawSSID(wifi_manager->apInfoSaved().c_str());
 	} else {
 		this->drawSSID("WiFi not saved");
 	}
@@ -581,7 +686,7 @@ void SettingScreen::selectAndDrawSSIDText(void)
 
 void SettingScreen::drawUDPIpaddrAndPort(void)
 {
-	this->drawUDPIpaddr(wifi_manager->ipaddr_udp.toString());
+	this->drawUDPIpaddr(wifi_manager->ipaddr_udp.toString().c_str());
 	this->drawUDPport(wifi_manager->port_udp);
 }
 

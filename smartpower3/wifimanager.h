@@ -18,24 +18,20 @@
 #define SERIAL_N            0x6E
 #define CONNECT_RETRY_CNT   20
 
-#define EMPTY_IPADDRESS "0.0.0.0"
+#define EMPTY_IPADDRESS F("0.0.0.0")
 #define EMPTY_PORT 0
 
-#define WIFI_CMD_MENU_CNT   (sizeof(wifi_cmd_menu)/sizeof(wifi_cmd_menu[0]))
+
+class WiFiManager;  // forward declaration to be able to use WiFiManager in the following struct
 
 
-const char wifi_cmd_menu[][50] = {
-	"[ WIFI Command mode menu ]",
-	"1. Connection AP Info",
-	"2. Connection UDP server Info",
-	"3. Scan & Connection AP",
-	"4. Set IP address of UDP server for data logging",
-	"5. Forget Connection AP",
-	"6. Forget UDP server IP address",
-	"7. (Dis)Connect WiFi connection",
-	"8. Switch logging ON or OFF",
-	"9. WiFi Command mode exit"
+typedef void (WiFiManager::*wifiman_member_function)();
+
+struct menu_item {
+	const char* label;
+	wifiman_member_function callback;
 };
+
 
 class WiFiManager
 {
@@ -54,13 +50,15 @@ public:
 	void apDisconnectAndTurnWiFiOff(void);
 	void apInfo(void);
 	String apInfoSaved(void);
+	//char* apInfoSaved(void);
 	String apInfoConnected(void);
+	//char apInfoConnected(void);
 	void udpServerInfo();
 	void udpServerForget(void);
 	void switchWiFiConnection(void);
 	void WiFiMenuMain(char idata);
 	bool isCommandMode(void);
-	void setCommandMode(void);
+	void enterCommandMode(void);
 	bool isConnected(void);
 	bool canConnect(void);
 	bool hasSavedConnectionInfo(void);
@@ -70,11 +68,26 @@ public:
 	void switchWifiState(bool from_storage);
 	void setUdp();
 	void switchLoggingOnOff(void);
+	void switchDhcpOnOff(void);
+	void setStaticIPAddress(void);
+	void setGatewayAddress(void);
+	void setSubnetMask(void);
+	void setDnsServers(void);
+	void switchMode(void);
 	uint16_t port_udp = 0;
 	IPAddress ipaddr_udp;
 	bool update_udp_info = true;
 	bool update_wifi_info = true;
+
+	bool update_dhcp_info = true;
+	bool update_static_ip_info = true;
+	bool update_subnet_info = true;
+	bool update_gateway_address_info = true;
+	bool update_dns_info = true;
+	bool update_mode_info = true;
+
 	void runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3);
+	device_operation_mode getOperationMode(bool from_storage = false);
 private:
 	WiFiUDP udp;
 	WiFiClient client;
@@ -84,6 +97,7 @@ private:
 	void doUdpServerForget(void);
 	void doSwitchWiFiState(void);
 	void doSwitchLogging(void);
+	void doSwitchDhcp(void);
 	void serialPrintCtrlCNotice(void);
 	IPAddress serialGetUdpServerAddress(void);
 	uint16_t serialGetUdpServerPort(void);
@@ -104,6 +118,45 @@ private:
 	bool isDigitChar(char input_char);
 	void setStorageAPConnectionInfo(const char* ssid, const char* password,
 								wifi_credentials_state_e credentials_state);
+	IPAddress serialGetIPAddress(const char* serial_message);
+	void goToMainMenu(void);
+	void exitCommandMode(void);
+	uint8_t serialGetInt(void);
+	void checkAndSetDhcpSettings(void);
+	uint8_t current_menu_level = 0;
+	uint8_t selected_submenu = 0;
+	uint8_t current_submenu_item_count = 0;
+	menu_item main_cmd_menu[5][7] PROGMEM = {
+		{{F("1. Network Settings"), nullptr},
+			{F("	1. Go back to Main Menu"), &WiFiManager::goToMainMenu},
+			{F("	2. Switch DHCP ON or OFF"), &WiFiManager::switchDhcpOnOff},
+			{F("	3. Set Static IP Address"), &WiFiManager::setStaticIPAddress},
+			{F("	4. Set Gateway IP Address"), &WiFiManager::setGatewayAddress},
+			{F("	5. Set Subnet Mask"), &WiFiManager::setSubnetMask},
+			{F("	6. Set DNS Servers"), &WiFiManager::setDnsServers},
+		},
+		{{F("2. WiFi Settings"), nullptr},
+			{F("	1. Go back to Main Menu"), &WiFiManager::goToMainMenu},
+			{F("	2. Connection AP Info"), &WiFiManager::apInfo},
+			{F("	3. Scan & Connection AP"), &WiFiManager::apSelectAndConnect},
+			{F("	4. Switch WiFi connection ON or OFF"), &WiFiManager::switchWiFiConnection},
+			{F("	5. Forget Connection AP"), &WiFiManager::apForget}
+		},
+		{{F("3. Logging Settings"), nullptr},
+			{F("	1. Go back to Main Menu"), &WiFiManager::goToMainMenu},
+			{F("	2. Connection UDP server Info"), &WiFiManager::udpServerInfo},
+			{F("	3. Set IP address of UDP server for data logging"), &WiFiManager::setUdp},
+			{F("	4. Switch logging ON or OFF"), &WiFiManager::switchLoggingOnOff},
+			{F("	5. Forget UDP server IP address"), &WiFiManager::udpServerForget}
+		},
+		{{F("4. Mode settings"), nullptr},
+			{F("	1. Go back to Main Menu"), &WiFiManager::goToMainMenu},
+			{F("	2. Switch operation mode (default/SCPI)"), &WiFiManager::switchMode}
+		},
+		{{F("5. Command Mode exit"), &WiFiManager::exitCommandMode}
+		}
+	};
 };
+
 
 #endif

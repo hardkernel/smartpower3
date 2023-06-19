@@ -16,20 +16,20 @@ struct fnd* FndWidget::fnd_init(uint8_t cnt, uint8_t dot_pos, bool rbo,
 	free(f);
 	f = (struct fnd *)malloc(sizeof(struct fnd));
 	if (f == NULL) {
-		Serial.printf("fnd struct allocation fail!\n\r");
+		Serial.print(F("fnd struct allocation fail!\n\r"));
 		return NULL;
 	}
 
 	f->dd = (struct display_data *)malloc(cnt * sizeof(struct display_data));
 	if (f->dd == NULL) {
-		Serial.printf("fnd_init display data buffer allocation fail!\n\r");
+		Serial.print(F("fnd_init display data buffer allocation fail!\n\r"));
 		free(f);
 		return NULL;
 	}
 
 	f->f_info = (struct font_info *)malloc(sizeof(struct font_info));
 	if (f->f_info == NULL) {
-		Serial.printf("fnd_init fnd frame buffer allocation fail!\n\r");
+		Serial.print(F("fnd_init fnd frame buffer allocation fail!\n\r"));
 		free(f->f_info);
 		free(f->dd);
 		free(f);
@@ -39,7 +39,7 @@ struct fnd* FndWidget::fnd_init(uint8_t cnt, uint8_t dot_pos, bool rbo,
 
 	f->fb = (uint16_t *)malloc(f->f_info->w * f->f_info->h * sizeof(uint16_t));
 	if (f->fb == NULL) {
-		Serial.printf("fnd_init fnd frame buffer allocation fail!\n\r");
+		Serial.print(F("fnd_init fnd frame buffer allocation fail!\n\r"));
 		free(f->f_info);
 		free(f->dd);
 		free(f);

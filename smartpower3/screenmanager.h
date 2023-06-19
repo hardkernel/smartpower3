@@ -40,6 +40,7 @@ public:
 	void dimmingLED(uint8_t led);
 	VoltageScreen* getVoltageScreen(void);
 	SettingScreen* getSettingScreen(void);
+	NetworkScreen* getNetworkScreen(void);
 	Screen* getActiveScreen(void);
 	void setNextScreen(void);
 	void getBtnPress(uint8_t idx, uint32_t cur_time, bool long_pressed = false);
