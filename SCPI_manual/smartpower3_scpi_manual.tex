@@ -1,0 +1,295 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[left=2.5cm,right=2.5cm,top=2cm]{geometry}
+%\usepackage[T1]{fontenc}
+\usepackage{fontenc}
+\usepackage{lmodern}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{textcomp}
+\usepackage{listings}
+\usepackage{hyperref}
+%\usepackage{glossaries}
+%\usepackage{parskip}
+
+\title{Hardkernel SmartPower3 SCPI manual}
+\author{Lukáš Říha}
+\date{\today}
+
+\begin{document}
+\renewcommand{\labelenumii}{\arabic{enumi}.\arabic{enumii}}
+\renewcommand{\labelenumiii}{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}}
+\renewcommand{\labelenumiv}{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}}
+
+\maketitle
+\tableofcontents
+
+\begin{abstract}
+\end{abstract}
+
+\section{Introduction and Basic Syntax}
+
+\section{Commands}
+
+\begin{enumerate}
+\item IEEE Mandated Commands
+    \begin{description}
+        \item These commands are required in any SCPI implementation (SCPI std V1999.0 4.1.1).
+    \end{description}
+    \begin{enumerate}
+        \item \hypertarget{cls}{} 
+            \begin{verbatim}*CLS\end{verbatim}
+            \begin{description}
+                Longer command description
+            \end{description}
+        \item \begin{verbatim}*ESE\end{verbatim}
+		\item \begin{verbatim}*ESE?\end{verbatim}
+		\item \begin{verbatim}*ESR?\end{verbatim}
+		\item \begin{verbatim}*IDN?\end{verbatim}
+		\item \begin{verbatim}*OPC\end{verbatim}
+		\item \begin{verbatim}*OPC?\end{verbatim}
+        \item \begin{verbatim}*RST\end{verbatim}
+            \begin{description}
+                Device reset - return device to defined known state.
+            \end{description}
+        \item \begin{verbatim}*SRE\end{verbatim}
+        \item \begin{verbatim}*SRE?\end{verbatim}
+        \item \begin{verbatim}*STB?\end{verbatim}
+        \item \begin{verbatim}*TST?\end{verbatim}
+        \item \begin{verbatim}*WAI"\end{verbatim}
+    \end{enumerate}
+\item Required SCPI Commands
+    \begin{description}
+        \item Commands required by Required SCPI commands (SCPI std V1999.0 4.2.1) 
+    \end{description}
+    \begin{enumerate}
+        \item 
+            \begin{verbatim}SYSTem:ERRor[:NEXT]?\end{verbatim}
+            \begin{description}
+                Query removes the last error from error buffer and reports it. Repeatedly calling this query eventually causes the error buffer to become empty.
+            \end{description}
+        \item 
+            \begin{verbatim}SYSTem:ERRor:COUNt?\end{verbatim}
+            \begin{description}
+                Query reports number of errors since device start-up or last device clear (Please see \hyperlink{cls}{*CLS} command).
+            \end{description}
+        \item 
+            \begin{verbatim}SYSTem:VERSion?\end{verbatim}
+            \begin{description}
+                Query that reports SCPI standard version this device should adhere to.
+            \end{description}
+    \end{enumerate}
+\item Non-Required SCPI Commands
+    \begin{description}
+        \item Some description
+    \end{description}
+    \begin{enumerate}
+        \item
+            \begin{verbatim}SYSTem:CAPability?\end{verbatim}
+            \begin{description}
+                Some desc.
+            \end{description}
+        \item 
+            \begin{verbatim}[SYSTem]}[:COMMunicate]:NETwork:MAC?\end{verbatim}
+            \begin{description}
+                This query returns the MAC address of the Ethernet module. MAC address consist of two number groups: the first three bytes are known as the Organizationally Unique Identifier (OUI), which is distributed by the IEEE, and the last three bytes are the device’s unique serial number. The six bytes are separated by hyphens. The MAC address is unique to the instrument and cannot be altered by the user.
+                \newline
+                Return Param <XX-XX-XX-YY-YY-YY>
+		    \end{description}
+		\item 
+		    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:ADDRess\end{verbatim}
+		    \begin{description}
+		        This command sets the static address of the Ethernet module of the power supply.
+		    \end{description}
+		\item 
+		    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:ADDRess?\end{verbatim}
+		    \begin{description}
+		        •
+		    \end{description}
+		\item 
+		    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:GATE\end{verbatim}
+		    \begin{description}
+		        This command sets the Gateway IP address of the Ethernet module of the power supply. The Gateway IP defaults to 0.0.0.0 in absence of a DHCP server. Gateway IP address is represented with 4 bytes each having a range of 0-255 separated by dots.
+		    \end{description}
+		\item 
+		    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:GATE?\end{verbatim}
+		    \begin{description}
+		        *
+	        \end{description}
+	    \item 
+	        \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:SUBNet <string>\end{verbatim}
+	        \begin{description}
+	            This command sets the subnet IP Mask of the power supply.
+	        \end{description}
+	    \item 
+	        \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:SUBNet?\end{verbatim}
+	        \begin{description}
+		        Queries the value of manually set network subnet mask.
+		    \end{description}
+		%\item 
+		%    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:PORT\end{verbatim}
+		%    \begin{description}
+		%        This command sets the Port of the Ethernet module of the power supply.
+		%    \end{description}
+		%\item
+		%    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:PORT?\end{verbatim}
+		%    \begin{description}
+		%        *
+		%    \end{description}
+		%\item 
+		%    \begin{verbatim}// [SYSTem][:COMMunicate]:NETwork:HOSTname?\end{verbatim}
+		%    \begin{description}
+		%        This query reads the host name of the Ethernet communications module.
+		%    \end{description}
+		\item 
+		    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:DHCP\end{verbatim}
+		    \begin{description}
+		        This command sets the DHCP operating mode of the Ethernet module. If DHCP is set to 1, the module will allow its IP address to be automatically set by the DHCP server on the network. If DHCP is set to 0, the default IP address is set according to .
+		    \end{description}
+		\item 
+		    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:DHCP?\end{verbatim}
+		    \begin{description}
+		        This query reports the DHCP operating mode currently set.
+		    \end{description}
+		\item 
+		    \begin{verbatim}[SYSTem][:COMMunicate]:SOCKet\#:ADDRess\end{verbatim}
+		    \begin{description}
+		        •
+		    \end{description}
+		\item 
+		    \begin{verbatim}[SYSTem][:COMMunicate]:SOCKet\#:ADDRess?\end{verbatim}
+		    \begin{description}
+		        •
+		    \end{description}
+		\item
+		    \begin{verbatim}[SYSTem][:COMMunicate]:SOCKet:PORT\end{verbatim}
+		    \begin{description}
+		        •
+		    \end{description}
+		\item 
+		    \begin{verbatim}[SYSTem][:COMMunicate]:SOCKet:PORT?\end{verbatim}
+		    \begin{description}
+		        •
+		    \end{description}
+
+		% STATus:OPERation?
+		% STATus:OPERation:EVENt?
+		% STATus:OPERation:CONDition?
+		% STATus:OPERation:ENABle
+		% STATus:OPERation:ENABle?
+
+		\item 
+		    \begin{verbatim}STATus:QUEStionable[:EVENt]?\end{verbatim}
+		    \begin{description}
+		        •
+		    \end{description}
+		\item
+		    \begin{verbatim}// STATus:QUEStionable:CONDition?\end{verbatim}
+		    \begin{description}
+		        •
+		    \end{description}
+		\item 
+		    \begin{verbatim}STATus:QUEStionable:ENABle\end{verbatim}
+		    \begin{description}
+		        •
+		    \end{description}
+		\item 
+		    \begin{verbatim}STATus:QUEStionable:ENABle?\end{verbatim}
+		    \begin{description}
+		        •
+		    \end{description}
+
+		\item 
+		    \begin{verbatim}STATus:PRESet\end{verbatim}
+		    \begin{description}
+		        •
+		    \end{description}
+
+		%/* DMM */
+		\item \hypertarget{FETCh}{}
+		    \begin{verbatim}FETCh[:SCALar]:VOLTage[:DC]? [expected_value, [resolution,]] <channel_list>\end{verbatim}
+		    \begin{description}
+		        Command allows reading voltage on channel specified by \verb|channel list|. Parameter \verb|expected value| has no use in this case and is included for reasons of compatibility. Parameter \verb|resolution| allows specifying the resolution of the result. If ommited, the result is returned in Volts. Parameter \verb|<channel_list>| allows specifying which channel(s) result should be read. The order of the channels is important - results are returned in that order.
+		        \newline If all parameters are ommited, the command will return value for channel 1, in Volts.
+		        \item Example 1:
+		            \begin{verbatim}FETCh:VOLTage? 1 V, 0.001V, (@1:3)\end{verbatim} will return voltage read on all three channels (including the power supply supply channel), in milliVolts, in order of channel 1, 2, 3.
+		        \item Example 2:
+		            \begin{verbatim}FETCh:VOLTage? (@3,1)\end{verbatim} will return voltage read on channels 3 and 1 (in that order), in units of Volts.
+		    \end{description}
+		\item 
+		    \begin{verbatim}FETCh[:SCALar]:CURRent[:DC]? [expected_value, [resolution,]] <channel_list>\end{verbatim}
+		    \begin{description}
+		        Command allows reading of current on channel specified by \verb|<channel_list>|, averaged over 2 samples. If \verb|resolution| is not specified, the value is returned in Amperes.
+		        Parameter \verb|<channel_list>| allows specifying which channel(s) result should be read. The order of the channels is important - results are returned in that order.
+		        \newline If all parameters are ommited, the command will return value for channel 1, in Amperes.
+		        \item Example 1:
+		            \begin{verbatim}FETCh:CURRent? 1 A, 0.001A, (@1:3)\end{verbatim} will return current read on all three channels (including the power supply supply channel), in milliAmperes, in order of channel 1, 2, 3.
+		        \item Example 2:
+		            \begin{verbatim}FETCh:CURRent? (@3,1)\end{verbatim} will return current read on channels 3 and 1 (in that order), in units of Amperes.
+		    \end{description}
+		\item 
+		    \begin{verbatim}FETCh[:SCALar]:POWer[:DC]? [expected_value, [resolution,]] <channel_list>\end{verbatim}
+		    \begin{description}
+		        Command allows reading power on channel specified by \verb|channel list|. Parameter \verb|expected value| has no use in this case and is included for reasons of compatibility. Parameter \verb|resolution| allows specifying the resolution of the result. If ommited, the result is returned in Watts. Parameter \verb|<channel_list>| allows specifying which channel(s) result should be read. The order of the channels is important - results are returned in that order.
+		        \newline If all parameters are ommited, the command will return value for channel 1, in Watts.
+		        \item Example 1:
+		            \begin{verbatim}FETCh:POWer? 1 V, 0.001V, (@1:3)\end{verbatim} will return power read on all three channels (including the power supply supply channel), in milliWatts, in order of channel 1, 2, 3.
+		        \item Example 2:
+		            \begin{verbatim}FETCh:POWer? (@3,1)\end{verbatim} will return power read on channels 3 and 1 (in that order), in units of Watts.
+		    \end{description}
+
+		\item
+		    \begin{verbatim}[SOURce#]:CURRent <numeric_value>\end{verbatim}
+		    \begin{description}
+		        Sets output current on source \verb|#|. If \verb|#| is ommited, the default value is 1.
+		        \newline
+		        \verb|<numeric_value>| is the value that should be set on the device. Default unit is Amperes. Other possible values include \verb!MIN|MAX!, which set minimum and maximum persmissible value, respectively. Another option, if you decide to use \verb|A| unit is to specify units as fractions, such as \verb|mA| (milliAmperes) or \verb|UA| (microAmperes). 
+		    \end{description}
+		\item 
+		    \begin{verbatim}[SOURce#]:CURRent?\end{verbatim}
+		    \begin{description}
+		        Querries the output current set on channel \verb|#|. Note that this differs from the \hyperlink{FETCh}{FETCh} series of commands in that no measurements are taken and value set by \verb|[SOURce#]:CURRent| is returned.
+		        \newline
+		        Returns value in Amperes.
+		    \end{description}
+		\item 
+		    \begin{verbatim}[SOURce#]:VOLTage <numeric_value>\end{verbatim}
+		    \begin{description}
+		        Sets output voltage on source \verb|#|. If \verb|#| is ommited, the default value is 1.
+		        \newline
+		        \verb|<numeric_value>| is the value that should be set on the device. Default unit is Volts. Other possible values include \verb!MIN|MAX!, which set minimum and maximum persmissible value, respectively. Another option, if you decide to use \verb|V| unit is to specify units as fractions, such as \verb|mV| (milliVolts) or \verb|UV| (microVolts). 
+		    \end{description}
+		\item 
+		    \begin{verbatim}[SOURce#]:VOLTage?\end{verbatim}
+		    \begin{description}
+		        Querries the output voltage set on channel \verb|#|. Note that this differs from the \hyperlink{FETCh}{FETCh} series of commands in that no measurements are taken and value set by \verb|[SOURce#]:VOLTage| is returned.
+		        \newline
+		        Returns value in Amperes.
+		    \end{description}
+
+		\item 
+		    \begin{verbatim}OUTPut#[:STATe] <parameter>\end{verbatim}
+		    \begin{description}
+		        This command turns the output channel \verb!#! on or off. If \verb|#| is ommited, the command defaults to channel number 1.
+		        \newline Possible parameter value is one of \verb!ON|1|OFF|0!.
+		    \end{description}
+		\item 
+		    \begin{verbatim}OUTPut#[:STATe]?\end{verbatim}
+		    \begin{description}
+		        This query returns the output states of channel \verb!#!. Returns 0 or 1.
+		    \end{description}
+
+		%/*{ "SYSTem:COMMunication:TCPIP:CONTROL?", SCPI_SystemCommTcpipControlQ, 0 },*/
+    
+    \end{enumerate}
+\end{enumerate}
+
+\end{document}
