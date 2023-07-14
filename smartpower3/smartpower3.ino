@@ -80,7 +80,6 @@ static void settings_visible_settings_changed_handler(void *handler_args, esp_ev
 
 static void wifi_disconnected_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
 {
-	Serial.println("WiFi disconnected");
 }
 
 void logTask(void *parameter)
@@ -205,7 +204,7 @@ void wifiTask(void *parameter)
 			} else if (wifi_manager->getOperationMode() == OPERATION_MODE_SCPI) {
 				scpi_manager->processInput(Serial);
 			} else {
-				if (Serial.read() == SERIAL_CTRL_C) {
+				if (Serial.read() == SERIAL_CTRL_C && wifi_manager->getOperationMode() == OPERATION_MODE_DEFAULT) {
 					wifi_manager->enterCommandMode();
 					wifi_manager->viewMainMenu();
 				} else {

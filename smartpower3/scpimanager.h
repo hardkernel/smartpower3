@@ -96,6 +96,9 @@ public:
 	static scpi_result_t SCPI_SocketIPAddress(scpi_t * context);
 	static scpi_result_t SCPI_SocketIPAddressQ(scpi_t * context);
 
+	static scpi_result_t SCPI_SocketConnect(scpi_t * context);
+	static scpi_result_t SCPI_SocketDisconnect(scpi_t * context);
+
 
 	static scpi_result_t My_CoreTstQ(scpi_t * context);
 	static scpi_result_t INST_SelectByNumber(scpi_t * context);
@@ -169,41 +172,51 @@ private:
 		/* Non required SYSTem commands */
 		{ "SYSTem:CAPability?", DeviceCapability, 0 },
 
-		{"[SYSTem][:COMMunicate]:NETwork:MAC?", SCPI_NetworkMACQ, 0 },
+		{"SYSTem:COMMunicate:NETwork:MAC?", SCPI_NetworkMACQ, 0 },
 		// This query returns the MAC address of the Ethernet module. MAC address consist of two number groups:
 		// the first three bytes are known as the Organizationally Unique Identifier (OUI),
 		// which is distributed by the IEEE, and the last three bytes are the device’s unique serial number.
 		// The six bytes are separated by hyphens. The MAC address is unique to the instrument
 		// and cannot be altered by the user.
 		// Return Param <XX-XX-XX-YY-YY-YY>
-		{"[SYSTem][:COMMunicate]:NETwork:ADDRess", SCPI_NetworkAddress, 0 },
+		{"SYSTem:COMMunicate:NETwork:ADDRess", SCPI_NetworkAddress, 0 },
 		// This command sets the static address of the Ethernet module of the power supply.
-		{"[SYSTem][:COMMunicate]:NETwork:ADDRess?",  SCPI_NetworkAddressQ, 0 },
-		{"[SYSTem][:COMMunicate]:NETwork:GATE", SCPI_NetworkGate, 0 },
-		{"[SYSTem][:COMMunicate]:NETwork:GATE?", SCPI_NetworkGateQ, 0 },
+		{"SYSTem:COMMunicate:NETwork:ADDRess?",  SCPI_NetworkAddressQ, 0 },
+		{"SYSTem:COMMunicate:NETwork:GATE", SCPI_NetworkGate, 0 },
+		{"SYSTem:COMMunicate:NETwork:GATE?", SCPI_NetworkGateQ, 0 },
 		// This command sets the Gateway IP address of the Ethernet module of the power supply.
 		// The Gateway IP defaults to 0.0.0.0 in absence of a DHCP server.
 	    // Gateway IP address is represented with 4 bytes each having a range of 0-255 separated by dots
-		{"[SYSTem][:COMMunicate]:NETwork:SUBNet <string>", SCPI_NetworkSubnet, 0 },
-		{"[SYSTem][:COMMunicate]:NETwork:SUBNet?", SCPI_NetworkSubnetQ, 0 },
+		{"SYSTem:COMMunicate:NETwork:SUBNet <string>", SCPI_NetworkSubnet, 0 },
+		{"SYSTem:COMMunicate:NETwork:SUBNet?", SCPI_NetworkSubnetQ, 0 },
 		// This command sets the subnet IP Mask address of the Ethernet module of the power supply.
 		// The factory subnet mask setting is 255.255.255.0.
-		{"[SYSTem][:COMMunicate]:NETwork:PORT", SCPI_NetworkPort, 0 },
-		{"[SYSTem][:COMMunicate]:NETwork:PORT?", SCPI_NetworkPortQ, 0 },
+		{"SYSTem:COMMunicate:NETwork:PORT", SCPI_NetworkPort, 0 },
+		{"SYSTem:COMMunicate:NETwork:PORT?", SCPI_NetworkPortQ, 0 },
 		// This command sets the Socket (Port) of the Ethernet module of the power supply.
 		// The factory default port setting is 50505. The factory recommends port values greater than 49151
 		// to avoid conflicts with registered Ethernet port functions.
 		//{"[SYSTem][:COMMunicate]:NETwork:HOSTname?", SCPI_NetworkHostnameQ, 0 },
 		// This query reads the host name of the Ethernet communications module.
-		{"[SYSTem][:COMMunicate]:NETwork:DHCP", SCPI_NetworkDHCP, 0 },
-		{"[SYSTem][:COMMunicate]:NETwork:DHCP?", SCPI_NetworkDHCPQ, 0 },
+		{"SYSTem:COMMunicate:NETwork:DHCP", SCPI_NetworkDHCP, 0 },
+		{"SYSTem:COMMunicate:NETwork:DHCP?", SCPI_NetworkDHCPQ, 0 },
 		// This command sets the DHCP operating mode of the Ethernet module. If DHCP is set to 1,
 		// the module will allow its IP address to be automatically set by the DHCP server on the network.
 		// If DHCP is set to 0, the default IP address is set according to .
-		{"[SYSTem][:COMMunicate]:SOCKet#:ADDRess", SCPI_SocketIPAddress, 0 },
-		{"[SYSTem][:COMMunicate]:SOCKet#:ADDRess?", SCPI_SocketIPAddressQ, 0 },
-		{"[SYSTem][:COMMunicate]:SOCKet:PORT", SCPI_SocketPort, 0 },
-		{"[SYSTem][:COMMunicate]:SOCKet:PORT?", SCPI_SocketPortQ, 0 },
+		{"SYSTem:COMMunicate:SOCKet:ADDRess", SCPI_SocketIPAddress, 0 },
+		{"SYSTem:COMMunicate:SOCKet:ADDRess?", SCPI_SocketIPAddressQ, 0 },
+		{"SYSTem:COMMunicate:SOCKet:PORT", SCPI_SocketPort, 0 },
+		{"SYSTem:COMMunicate:SOCKet:PORT?", SCPI_SocketPortQ, 0 },
+		// This is done as SOCket (as opposed to network, becouse it enables forward compatibility, should there be
+		// more sockets used, with different mechanisms.
+		{"SYSTem:COMMunicate:SOCKet:CONNect", SCPI_SocketConnect, 0},
+		{"SYSTem:COMMunicate:SOCKet:DISConnect", SCPI_SocketDisconnect, 0},
+
+		//{"[SYSTem][:COMMunicate]:SERial:FEED", SCPI_SocketPortQ, 0 }
+		//{"[SYSTem][:COMMunicate]:SERial:FEED?", SCPI_SocketPortQ, 0 }
+		//{"[SYSTem][:COMMunicate]:SOCKet:FEED", SCPI_SocketPort, 0 },
+		//{"[SYSTem][:COMMunicate]:SOCKet:FEED?", SCPI_SocketPortQ, 0 },
+
 
 		//{"STATus:OPERation?", scpi_stub_callback, 0},
 		//{"STATus:OPERation:EVENt?", scpi_stub_callback, 0},

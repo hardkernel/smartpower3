@@ -98,39 +98,39 @@
                 Some desc.
             \end{description}
         \item 
-            \begin{verbatim}[SYSTem]}[:COMMunicate]:NETwork:MAC?\end{verbatim}
+            \begin{verbatim}SYSTem:COMMunicate:NETwork:MAC?\end{verbatim}
             \begin{description}
                 This query returns the MAC address of the Ethernet module. MAC address consist of two number groups: the first three bytes are known as the Organizationally Unique Identifier (OUI), which is distributed by the IEEE, and the last three bytes are the device’s unique serial number. The six bytes are separated by hyphens. The MAC address is unique to the instrument and cannot be altered by the user.
                 \newline
                 Return Param <XX-XX-XX-YY-YY-YY>
 		    \end{description}
 		\item 
-		    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:ADDRess\end{verbatim}
+		    \begin{verbatim}SYSTem:COMMunicate:NETwork:ADDRess\end{verbatim}
 		    \begin{description}
 		        This command sets the static address of the Ethernet module of the power supply.
 		    \end{description}
 		\item 
-		    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:ADDRess?\end{verbatim}
+		    \begin{verbatim}SYSTem:COMMunicate:NETwork:ADDRess?\end{verbatim}
 		    \begin{description}
 		        •
 		    \end{description}
 		\item 
-		    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:GATE\end{verbatim}
+		    \begin{verbatim}SYSTem:COMMunicate:NETwork:GATE\end{verbatim}
 		    \begin{description}
 		        This command sets the Gateway IP address of the Ethernet module of the power supply. The Gateway IP defaults to 0.0.0.0 in absence of a DHCP server. Gateway IP address is represented with 4 bytes each having a range of 0-255 separated by dots.
 		    \end{description}
 		\item 
-		    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:GATE?\end{verbatim}
+		    \begin{verbatim}SYSTem:COMMunicate:NETwork:GATE?\end{verbatim}
 		    \begin{description}
 		        *
 	        \end{description}
 	    \item 
-	        \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:SUBNet <string>\end{verbatim}
+	        \begin{verbatim}SYSTem:COMMunicate:NETwork:SUBNet <string>\end{verbatim}
 	        \begin{description}
 	            This command sets the subnet IP Mask of the power supply.
 	        \end{description}
 	    \item 
-	        \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:SUBNet?\end{verbatim}
+	        \begin{verbatim}SYSTem:COMMunicate:NETwork:SUBNet?\end{verbatim}
 	        \begin{description}
 		        Queries the value of manually set network subnet mask.
 		    \end{description}
@@ -150,35 +150,47 @@
 		%        This query reads the host name of the Ethernet communications module.
 		%    \end{description}
 		\item 
-		    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:DHCP\end{verbatim}
+		    \begin{verbatim}SYSTem:COMMunicate:NETwork:DHCP\end{verbatim}
 		    \begin{description}
 		        This command sets the DHCP operating mode of the Ethernet module. If DHCP is set to 1, the module will allow its IP address to be automatically set by the DHCP server on the network. If DHCP is set to 0, the default IP address is set according to .
 		    \end{description}
 		\item 
-		    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:DHCP?\end{verbatim}
+		    \begin{verbatim}SYSTem:COMMunicate:NETwork:DHCP?\end{verbatim}
 		    \begin{description}
 		        This query reports the DHCP operating mode currently set.
 		    \end{description}
 		\item 
-		    \begin{verbatim}[SYSTem][:COMMunicate]:SOCKet\#:ADDRess\end{verbatim}
+		    \begin{verbatim}SYSTem:COMMunicate:SOCKet:ADDRess\end{verbatim}
 		    \begin{description}
-		        •
+		        Command sets logging target IP address (UDP logging server address). 
 		    \end{description}
 		\item 
-		    \begin{verbatim}[SYSTem][:COMMunicate]:SOCKet\#:ADDRess?\end{verbatim}
+		    \begin{verbatim}SYSTem:COMMunicate:SOCKet:ADDRess?\end{verbatim}
 		    \begin{description}
-		        •
+		        Queries logging target IP address (UDP logging server address).
 		    \end{description}
 		\item
-		    \begin{verbatim}[SYSTem][:COMMunicate]:SOCKet:PORT\end{verbatim}
+		    \begin{verbatim}SYSTem:COMMunicate:SOCKet:PORT\end{verbatim}
 		    \begin{description}
-		        •
+		        Command sets logging target port (UDP logging server port).
 		    \end{description}
 		\item 
-		    \begin{verbatim}[SYSTem][:COMMunicate]:SOCKet:PORT?\end{verbatim}
+		    \begin{verbatim}SYSTem:COMMunicate:SOCKet:PORT?\end{verbatim}
 		    \begin{description}
-		        •
+		        Queries logging target port (UDP logging server port).
 		    \end{description}
+
+		\item
+		    \begin{verbatim}SYSTem:COMMunicate:SOCKet:CONNect\end{verbatim}
+		    \begin{description}
+		        Command connects to the target socket. In case of SmartPower3 and UDP WiFi logging, this basically means connecting to WiFi network, the same way one can connect by moving cursor over WiFi icon when disconnected and pressing encoder button.
+		    \end{description}
+		\item 
+		    \begin{verbatim}SYSTem:COMMunicate:SOCKet:DISConnect\end{verbatim}
+		    \begin{description}
+		        Command disconnects to the target socket. In case of SmartPower3 and UDP WiFi logging, this basically means disconnecting from WiFi network, the same way one can disconnect by moving cursor over WiFi icon when connected and pressing encoder button.
+		    \end{description}
+
 
 		% STATus:OPERation?
 		% STATus:OPERation:EVENt?

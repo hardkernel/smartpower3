@@ -65,7 +65,6 @@ public:
 	bool isWiFiEnabled(void);
 	void disableWiFi(void);
 	void enableWiFi(void);
-	void switchWifiState(bool from_storage);
 	void setUdp();
 	void switchLoggingOnOff(void);
 	void switchDhcpOnOff(void);

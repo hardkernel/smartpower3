@@ -686,6 +686,22 @@ scpi_result_t SCPIManager::SCPI_SocketIPAddressQ(scpi_t *context)
 	return SCPI_RES_OK;
 }
 
+scpi_result_t SCPIManager::SCPI_SocketConnect(scpi_t * context)
+{
+	Settings *settings = (static_cast<UserContext *>(context->user_context))->settings;
+
+	settings->setWifiEnabled(true);
+	return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIManager::SCPI_SocketDisconnect(scpi_t * context)
+{
+	Settings *settings = (static_cast<UserContext *>(context->user_context))->settings;
+
+	settings->setWifiEnabled(false);
+	return SCPI_RES_OK;
+}
+
 Settings* SCPIManager::getSettings(scpi_t *context)
 {
 	return static_cast<UserContext *>(context->user_context)->settings;
