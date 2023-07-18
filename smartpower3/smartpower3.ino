@@ -46,11 +46,6 @@ void btnTask(void *parameter)
 	}
 }
 
-
-
-
-
-
 static void settings_voltage0_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
 {
 	screen_manager.getVoltageScreen()->getChannel(0)->setVolt(settings.getChannel0Voltage(true), 2);
@@ -93,6 +88,7 @@ void logTask(void *parameter)
 	uint8_t checksum8_xor = 0;
 	SettingScreen *setting_screen = screen_manager.getSettingScreen();
 	VoltageScreen *voltage_screen = screen_manager.getVoltageScreen();
+	device_operation_mode operation_mode = settings.getOperationMode();
 
 	for (;;) {
 		if (interruptFlag > 0) {
@@ -108,6 +104,7 @@ void logTask(void *parameter)
 					timerAlarmWrite(timer, 1000*log_interval, true);
 			}
 			if ((log_interval > 0) && !wifi_manager->isCommandMode()) {
+				operation_mode = settings.getOperationMode();
 				// this has a few interesting points:
 				// %04d specifier is max 4 digits for uint16_t - which might be 5 digits
 				// %1d specifier for uint8_t - which might be 3 digits
@@ -131,13 +128,23 @@ void logTask(void *parameter)
 					checksum8 += buffer_ch1[i];
 					checksum8_xor ^= buffer_ch1[i];
 				}
-				snprintf(buffer_checksum, SIZE_CHECKSUM_BUFFER, "%02x,%02x\r\n", static_cast<byte>((~checksum8)+1), checksum8_xor);
-
-				Serial.printf(buffer_input);
-				Serial.printf(buffer_ch0);
-				Serial.printf(buffer_ch1);
-				Serial.printf(buffer_checksum);
-				wifi_manager->runWiFiLogging(buffer_input, buffer_ch0, buffer_ch1, buffer_checksum);
+				snprintf(buffer_checksum, SIZE_CHECKSUM_BUFFER, "%02x,%02x\r\n", static_cast<byte>((~checksum8)+1),
+						 checksum8_xor);
+				if (
+						operation_mode == OPERATION_MODE_DEFAULT
+						|| (operation_mode == OPERATION_MODE_SCPI && settings.isScpiSerialLoggingEnabled())
+				) {
+					Serial.printf(buffer_input);
+					Serial.printf(buffer_ch0);
+					Serial.printf(buffer_ch1);
+					Serial.printf(buffer_checksum);
+				}
+				if (
+						operation_mode == OPERATION_MODE_DEFAULT
+						|| (operation_mode == OPERATION_MODE_SCPI && settings.isScpiSocketLoggingEnabled())
+				) {
+					wifi_manager->runWiFiLogging(buffer_input, buffer_ch0, buffer_ch1, buffer_checksum);
+				}
 			} else {
 				vTaskDelay(10);
 			}
@@ -198,7 +205,6 @@ void wifiTask(void *parameter)
 		screen_manager.setWiFiIconState();
 
 		if (Serial.available()) {
-//TODO: Check the functionality of Serial in SCPI and non-SCPI mode
 			if (wifi_manager->isCommandMode()) {
 				wifi_manager->WiFiMenuMain(Serial.read());
 			} else if (wifi_manager->getOperationMode() == OPERATION_MODE_SCPI) {
@@ -221,16 +227,6 @@ void setup(void) {
 
 	settings.init();
 
-/*	esp_event_loop_args_t loop_with_task_args = {
-			.queue_size = 5,
-			.task_name = "loop_task", // task will be created
-			.task_priority = uxTaskPriorityGet(NULL),
-			.task_stack_size = 3072,
-			.task_core_id = tskNO_AFFINITY
-	};*/
-	//esp_event_loop_handle_t& loop_with_task = settings.getEventLoopHandleAddress();
-
-	//esp_event_loop_create(&loop_with_task_args, &loop_with_task);
 	esp_event_loop_create_default();
 
 	I2CA.begin(15, 4, (uint32_t)10000);
@@ -257,14 +253,6 @@ void setup(void) {
 	xTaskCreatePinnedToCore(logTask, "Log Task", 2048, NULL, 1, &log_handle, 1);  // delay 10, 250 or 1 depending on logging interval and interrupt count
 	xTaskCreate(inputTask, "Input Task", 672, NULL, 1, &input_handle);  // delay 10, also counts for screen
 	xTaskCreate(btnTask, "Button Task", 672, NULL, 1, &button_handle);  // delay 10
-
-	//esp_event_loop_create_default();
-	/*esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_VOLTAGE0_CHANGED_EVENT, settings_voltage0_changed_handler, NULL, NULL);
-	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_VOLTAGE1_CHANGED_EVENT, settings_voltage1_changed_handler, NULL, NULL);
-	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_CURRENT0_CHANGED_EVENT, settings_current0_changed_handler, NULL, NULL);
-	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_CURRENT1_CHANGED_EVENT, settings_current1_changed_handler, NULL, NULL);
-	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_LOGGING_PORT_CHANGED_EVENT, settings_visible_settings_changed_handler, NULL, NULL);
-	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_LOGGING_ADDRESS_CHANGED_EVENT, settings_visible_settings_changed_handler, NULL, NULL);*/
 
 	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_VOLTAGE0_CHANGED_EVENT, settings_voltage0_changed_handler, NULL, NULL);
 	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_VOLTAGE1_CHANGED_EVENT, settings_voltage1_changed_handler, NULL, NULL);

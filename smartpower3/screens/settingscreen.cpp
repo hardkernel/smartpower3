@@ -27,9 +27,6 @@ void SettingScreen::init()
 
 	tft->fillRect(0, 52, 480, 285, BG_COLOR);
 	tft->loadFont(getFont(NOTOSANSBOLD20));
-/*	tft->drawString(F("Build date : "), x + 128, y + 215, 2);
-	tft->drawString(F(__DATE__), x + 248, y + 215, 2);
-	tft->drawString(F(__TIME__), x + 378, y + 215, 2);*/
 
 	tft->drawString("Backlight Level", x, y, 4);
 	tft->drawString("Serial Baud Rate", x, y + LINE_SPACING, 4);
@@ -344,14 +341,6 @@ void SettingScreen::deSelect()
 	header->deSelect(LOGGING);
 	header->deSelect(WIFI);
 }
-
-/*void SettingScreen::popUp(void)
-{
-	popup->fillSprite(TFT_DARKGREY);
-	popup->setTextDatum(MC_DATUM);
-	popup->drawString("Sprite", 200, 200, 4);
-	popup->pushSprite(200, 200);
-}*/
 
 uint8_t SettingScreen::_setBacklightLevelPreset(uint8_t level_preset)
 {

@@ -34,28 +34,18 @@ const char *MSG_CMD_SET_OPERAION_MODE = F("Switch Operation Mode. [Default=0, SC
 const char *MSG_YN_REDO_SELECTION_REQUEST = F("\n\rPlease enter \"y\" or \"n\" & Enter or press Ctrl+C: ");
 // UDP server forget
 const char *MSG_YN_UDP_FORGET_CONFIRMATION = F("Do you really want to forget the UDP server settings? (y/n & Enter): ");
-//const char *MSG_YN_UDP_FORGET_SUCCESS = F("\n\rUDP server settings have been erased.");
-//const char *MSG_YN_UDP_FORGET_FAILURE = F("\n\rUDP server settings have NOT been erased.");
 // WiFi AP forget
 const char *MSG_YN_AP_FORGET_CONFIRMATION = F("Do you really want to forget the network settings? (y/n & Enter): ");
-//const char *MSG_YN_AP_FORGET_SUCCESS = F("\n\rWiFi access point data have been erased.");
-//const char *MSG_YN_AP_FORGET_FAILURE = F("\n\rWiFi access point data have NOT been erased.");
 // UDP server setting string
 const char *MSG_UDP_SERVER_IP_ADDRESS = F("Input your IP address of UDP server (for example \"192.168.0.5\"): ");
 const char *MSG_UDP_SERVER_IP_ADDRESS_PORT = F("Input your port number of UDP server (for example \"6000\"): ");
 const char *MSG_UDP_SERVER_UPDATE_SUCCESS = F("Successfully set UDP server address and port: %s:%d\r\n");
 // Switch WiFi state setting string
 const char *MSG_YN_WIFI_SWITCH_STATE_CONFIRMATION = F("Do you really want to switch WiFi state? (y/n & Enter): ");
-//const char *MSG_YN_WIFI_SWITCH_STATE_SUCCESS = F("\n\rWiFi state successfully changed.");
-//const char *MSG_YN_WIFI_SWITCH_STATE_FAILURE = F("\n\rWiFi state not changed.");
 // Switch logging on/off
 const char *MSG_YN_LOGGING_SWITCH_STATE_CONFIRMATION = F("Do you really want to switch logging state? (y/n & Enter): ");
-//const char *MSG_YN_LOGGING_SWITCH_STATE_SUCCESS = F("\n\rLogging state successfully changed.");
-//const char *MSG_YN_LOGGING_SWITCH_STATE_FAILURE = F("\n\rLogging state not changed.");
 // Switch DHCP on/off
 const char *MSG_YN_DHCP_SWITCH_STATE_CONFIRMATION = F("Do you really want to switch DHCP state? (y/n & Enter): ");
-//const char *MSG_YN_DHCP_SWITCH_STATE_SUCCESS = F("\n\rDHCP state successfully changed.");
-//const char *MSG_YN_DHCP_SWITCH_STATE_FAILURE = F("\n\rDHCP state not changed.");
 // Switch Operation mode
 const char *MSG_OPERATION_MODE_UPDATE_SUCCESS = F("Device operation mode successfully set to %s.\r\n");
 // Set Static IP

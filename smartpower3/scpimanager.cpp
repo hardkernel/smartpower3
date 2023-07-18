@@ -31,7 +31,6 @@ void SCPIManager::init(void)
 		scpi_commands,
 		&scpi_interface,
 		scpi_units_def,
-		//SCPI_IDN1, SCPI_IDN2, this->user_context->settings->getMacAddress().c_str(), this->getBuildDate(),
 		SCPI_IDN1, SCPI_IDN2, this->getMacAddress(), this->getBuildDate(),
 		scpi_input_buffer, SCPI_INPUT_BUFFER_LENGTH,
 		scpi_error_queue_data, SCPI_ERROR_QUEUE_SIZE);
@@ -41,7 +40,6 @@ void SCPIManager::init(void)
 	Serial.end();
 	Serial.begin(115200);
 	while (!Serial); // wait for serial to finish initializing
-	Serial.println(F("SCPI Interactive demo"));
 }
 
 size_t SCPIManager::SCPI_Write(scpi_t *context, const char *data, size_t len)
@@ -112,15 +110,14 @@ scpi_result_t SCPIManager::SCPI_SystemCommTcpipControlQ(scpi_t *context)
 
 scpi_result_t SCPIManager::My_CoreTstQ(scpi_t * context)
 {
-//TODO: test low_power for connected power supply
+//TODO: test low_power for connected power supply?
 	SCPI_ResultInt32(context, 0);
 	return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIManager::DeviceCapability(scpi_t * context)
 {
-	SCPI_ResultMnemonic(context, "DCPSUPPLY&MEASURE&MULTIPLE");
-	//Serial.print ("**SRQ: 0x");
+	SCPI_ResultMnemonic(context, "DCPSUPPLY&MEASURE");
 	return SCPI_RES_OK;
 }
 
@@ -130,6 +127,10 @@ scpi_result_t SCPIManager::Reset(scpi_t * context)
 	// Should be a safe state in the sense that connected devices are not damaged or destroyed
 	// for example by setting high output voltage
 	uint8_t *onoff = (static_cast<UserContext *>(context->user_context))->screen_manager->getOnOff();
+	Settings *settings = (static_cast<UserContext *>(context->user_context))->settings;
+
+	settings->setScpiSocketLoggingEnabled(false);
+	settings->setScpiSerialLoggingEnabled(false);
 
 	for (int idx = 0; idx < 2; idx++) {
 		if (onoff[idx] == 1) {
@@ -137,8 +138,6 @@ scpi_result_t SCPIManager::Reset(scpi_t * context)
 		}
 	}
 	return SCPI_CoreRst(context);
-
-//	return SCPI_RES_OK;
 }
 
 struct _scpi_channel_value_t {
@@ -188,7 +187,6 @@ scpi_result_t SCPIManager::reprocessNumberParam(scpi_t *context, scpi_parameter_
 			return SCPI_RES_ERR;
 		}
 	}
-	//SCPI_ErrorPush(context, SCPI_ERROR_INVALID_CHARACTER);
 	resetContext(context, saved_position, saved_input_count);
 	return SCPI_RES_ERR;
 }
@@ -604,9 +602,6 @@ scpi_result_t SCPIManager::SCPI_NetworkAddressQ (scpi_t *context)
 {
 	SCPI_ResultMnemonic(context, getSettings(context)->getWifiIpv4StaticIp(true).toString().c_str());
 	return SCPI_RES_OK;
-
-	//SCPI_ResultMnemonic(context, WiFi.localIP().toString().c_str());
-	//return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIManager::SCPI_NetworkGate (scpi_t *context)
@@ -618,9 +613,6 @@ scpi_result_t SCPIManager::SCPI_NetworkGateQ (scpi_t *context)
 {
 	SCPI_ResultMnemonic(context, getSettings(context)->getWifiIpv4GatewayAddress(true).toString().c_str());
 	return SCPI_RES_OK;
-
-	//SCPI_ResultMnemonic(context, WiFi.gatewayIP().toString().c_str());
-	//return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIManager::SCPI_NetworkSubnet (scpi_t *context)
@@ -632,9 +624,6 @@ scpi_result_t SCPIManager::SCPI_NetworkSubnetQ (scpi_t *context)
 {
 	SCPI_ResultMnemonic(context, getSettings(context)->getWifiIpv4SubnetMask(true).toString().c_str());
 	return SCPI_RES_OK;
-
-	//SCPI_ResultMnemonic(context, WiFi.subnetMask().toString().c_str());
-	//return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIManager::SCPI_NetworkPort (scpi_t *context)
@@ -698,7 +687,68 @@ scpi_result_t SCPIManager::SCPI_SocketDisconnect(scpi_t * context)
 {
 	Settings *settings = (static_cast<UserContext *>(context->user_context))->settings;
 
+	settings->setScpiSocketLoggingEnabled(false);
 	settings->setWifiEnabled(false);
+	return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIManager::SCPI_SocketFeed(scpi_t * context)
+{
+	scpi_bool_t res;
+	scpi_parameter_t param;
+	int32_t value = 0;
+
+	scpi_choice_def_t bool_options[] = {
+		{"NONE", 0},
+		{"LOG", 1},
+		SCPI_CHOICE_LIST_END
+	};
+
+	res = SCPI_Parameter(context, &param, FALSE);
+
+	if (res && param.type == SCPI_TOKEN_PROGRAM_MNEMONIC) {
+		if (SCPI_ParamToChoice(context, &param, bool_options, &value)) {
+			getSettings(context)->setScpiSocketLoggingEnabled(value);
+			return SCPI_RES_OK;
+		}
+	}
+	SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	return SCPI_RES_ERR;
+}
+
+scpi_result_t SCPIManager::SCPI_SocketFeedQ (scpi_t *context)
+{
+	SCPI_ResultMnemonic(context, getSettings(context)->isScpiSocketLoggingEnabled() ? "LOG" : "NONE");
+	return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIManager::SCPI_SerialFeed(scpi_t * context)
+{
+	scpi_bool_t res;
+	scpi_parameter_t param;
+	int32_t value = 0;
+
+	scpi_choice_def_t bool_options[] = {
+		{"NONE", 0},
+		{"LOG", 1},
+		SCPI_CHOICE_LIST_END
+	};
+
+	res = SCPI_Parameter(context, &param, FALSE);
+
+	if (res && param.type == SCPI_TOKEN_PROGRAM_MNEMONIC) {
+		if (SCPI_ParamToChoice(context, &param, bool_options, &value)) {
+			getSettings(context)->setScpiSerialLoggingEnabled(value);
+			return SCPI_RES_OK;
+		}
+	}
+	SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	return SCPI_RES_ERR;
+}
+
+scpi_result_t SCPIManager::SCPI_SerialFeedQ (scpi_t *context)
+{
+	SCPI_ResultMnemonic(context, getSettings(context)->isScpiSerialLoggingEnabled() ? "LOG" : "NONE");
 	return SCPI_RES_OK;
 }
 

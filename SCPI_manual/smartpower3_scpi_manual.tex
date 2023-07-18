@@ -32,10 +32,23 @@
 \maketitle
 \tableofcontents
 
-\begin{abstract}
-\end{abstract}
 
-\section{Introduction and Basic Syntax}
+\section{Introduction}
+
+SmartPower3 is a small power supply designed to provide power supply to up to two connected devices and measure and log the connected devices power consumption. The first firmware versions allowed control of the SmartPower3 via devices buttons, rotary encoder and display. As the system became more mature, some users showed interest in remote control of the power supply. New versions added more refined functionality and SCPI (Standard Commands for Programmable Instruments) capability - effectively enabling (at least partial) remote control of the SmartPower3. This manual tries to describe the commands available in SCPI device mode. 
+
+For more information regarding SCPI and its usage please see the online specification and description available at:\newline\href{http://www.ivifoundation.org/docs/scpi-99.pdf}{http://www.ivifoundation.org/docs/scpi-99.pdf}\newline
+and other online resources.
+
+\section{Device modes}
+
+The SmartPower3 device can basically be used in two modes - the default original "buttons and screen" mode and SCPI mode. The default (original) mode tries to be compatible in function with the previous firmware version, while SCPI mode allows programming of the device via serial using SCPI commands and (like the default mode) optionally output logging information to WiFi connected UDP target.
+
+The mode is changed via screen and encoder, on the second device screen, near the bottom. The option is (surprisingly) called \verb|Mode| and allows setting two options:
+\begin{enumerate}
+    \item Default - provides re-worked two level serial menu that enables setting SmartPower3 functionality.
+    \item SCPI - reserves serial connection for SCPI control of the device.
+\end{enumerate}
 
 \section{Commands}
 
@@ -48,7 +61,7 @@
         \item \hypertarget{cls}{} 
             \begin{verbatim}*CLS\end{verbatim}
             \begin{description}
-                Longer command description
+                Command clears all registers and error queues.
             \end{description}
         \item \begin{verbatim}*ESE\end{verbatim}
 		\item \begin{verbatim}*ESE?\end{verbatim}
@@ -58,7 +71,7 @@
 		\item \begin{verbatim}*OPC?\end{verbatim}
         \item \begin{verbatim}*RST\end{verbatim}
             \begin{description}
-                Device reset - return device to defined known state.
+                Device reset - return device to defined known state. Turns output voltage off and stops logging output.
             \end{description}
         \item \begin{verbatim}*SRE\end{verbatim}
         \item \begin{verbatim}*SRE?\end{verbatim}
@@ -89,7 +102,7 @@
     \end{enumerate}
 \item Non-Required SCPI Commands
     \begin{description}
-        \item Some description
+        \item This section contains commands specific to the device and query or control its main functionality.
     \end{description}
     \begin{enumerate}
         \item
@@ -100,29 +113,29 @@
         \item 
             \begin{verbatim}SYSTem:COMMunicate:NETwork:MAC?\end{verbatim}
             \begin{description}
-                This query returns the MAC address of the Ethernet module. MAC address consist of two number groups: the first three bytes are known as the Organizationally Unique Identifier (OUI), which is distributed by the IEEE, and the last three bytes are the device’s unique serial number. The six bytes are separated by hyphens. The MAC address is unique to the instrument and cannot be altered by the user.
+                This query returns the MAC address of the power supply. MAC address consist of two number groups: the first three bytes are known as the Organizationally Unique Identifier (OUI), which is distributed by the IEEE, and the last three bytes are the device’s unique serial number. The six bytes are separated by hyphens. The MAC address is unique to the instrument and cannot be altered by the user.
                 \newline
                 Return Param <XX-XX-XX-YY-YY-YY>
 		    \end{description}
 		\item 
 		    \begin{verbatim}SYSTem:COMMunicate:NETwork:ADDRess\end{verbatim}
 		    \begin{description}
-		        This command sets the static address of the Ethernet module of the power supply.
+		        This command sets the static address of the power supply.
 		    \end{description}
 		\item 
 		    \begin{verbatim}SYSTem:COMMunicate:NETwork:ADDRess?\end{verbatim}
 		    \begin{description}
-		        •
+		        Queries the static IP address of the power supply.
 		    \end{description}
 		\item 
 		    \begin{verbatim}SYSTem:COMMunicate:NETwork:GATE\end{verbatim}
 		    \begin{description}
-		        This command sets the Gateway IP address of the Ethernet module of the power supply. The Gateway IP defaults to 0.0.0.0 in absence of a DHCP server. Gateway IP address is represented with 4 bytes each having a range of 0-255 separated by dots.
+		        This command sets the Gateway IP address of the power supply. Gateway IP address is represented with 4 bytes each having a range of 0-255 separated by dots.
 		    \end{description}
 		\item 
 		    \begin{verbatim}SYSTem:COMMunicate:NETwork:GATE?\end{verbatim}
 		    \begin{description}
-		        *
+		        Queries the Gateway IP address of the power supply.
 	        \end{description}
 	    \item 
 	        \begin{verbatim}SYSTem:COMMunicate:NETwork:SUBNet <string>\end{verbatim}
@@ -191,45 +204,77 @@
 		        Command disconnects to the target socket. In case of SmartPower3 and UDP WiFi logging, this basically means disconnecting from WiFi network, the same way one can disconnect by moving cursor over WiFi icon when connected and pressing encoder button.
 		    \end{description}
 
-
-		% STATus:OPERation?
-		% STATus:OPERation:EVENt?
+        \item
+            \begin{verbatim}SYSTem:COMMunicate:SOCKet:FEED <data_handle>\end{verbatim}
+            \begin{description}
+                Connect or disconnect the logging output to connected socket - WiFi.
+                The data handle parameter can be one of two values:
+                    \item \verb|LOG| - connect the logging output
+                    \item \verb|NONE| - disconnect the logging output
+            \end{description}
+        \item
+            \begin{verbatim}SYSTem:COMMunicate:SOCKet:FEED?\end{verbatim}
+            \begin{description}
+                Report what data source is connected to the logging output.
+                The result can be one of the following values:
+                    \item \verb|LOG|
+                    \item \verb|NONE|
+            \end{description}
+        \item
+            \begin{verbatim}SYSTem:COMMunicate:SERial:FEED <data_handle>\end{verbatim}
+            \begin{description}
+                Connect the logging output to connected serial port.
+                The data handle parameter can be one of two values:
+                    \item \verb|LOG| - connect the logging output
+                    \item \verb|NONE| - disconnect the logging output
+            \end{description}
+        \item
+            \begin{verbatim}SYSTem:COMMunicate:SERial:FEED?\end{verbatim}
+            \begin{description}
+                Report what data source is connected to the logging output.
+                The result can be one of the following values:
+                    \item \verb|LOG|
+                    \item \verb|NONE|
+            \end{description}
+            
+            
+            
 		% STATus:OPERation:CONDition?
 		% STATus:OPERation:ENABle
 		% STATus:OPERation:ENABle?
 
-		\item 
-		    \begin{verbatim}STATus:QUEStionable[:EVENt]?\end{verbatim}
-		    \begin{description}
-		        •
-		    \end{description}
-		\item
-		    \begin{verbatim}// STATus:QUEStionable:CONDition?\end{verbatim}
-		    \begin{description}
-		        •
-		    \end{description}
-		\item 
-		    \begin{verbatim}STATus:QUEStionable:ENABle\end{verbatim}
-		    \begin{description}
-		        •
-		    \end{description}
-		\item 
-		    \begin{verbatim}STATus:QUEStionable:ENABle?\end{verbatim}
-		    \begin{description}
-		        •
-		    \end{description}
+		%\item 
+		%    \begin{verbatim}STATus:QUEStionable[:EVENt]?\end{verbatim}
+		%    \begin{description}
+		%        TBD
+		%    \end{description}
+		%\item
+		%    \begin{verbatim}// STATus:QUEStionable:CONDition?\end{verbatim}
+		%    \begin{description}
+		%        TBD
+		%    \end{description}
+		%\item 
+		%    \begin{verbatim}STATus:QUEStionable:ENABle\end{verbatim}
+		%    \begin{description}
+		%        TBD
+		%    \end{description}
+		%\item 
+		%    \begin{verbatim}STATus:QUEStionable:ENABle?\end{verbatim}
+		%    \begin{description}
+		%        TBD
+		%    \end{description}
 
-		\item 
-		    \begin{verbatim}STATus:PRESet\end{verbatim}
-		    \begin{description}
-		        •
-		    \end{description}
+		%\item 
+		%    \begin{verbatim}STATus:PRESet\end{verbatim}
+		%    \begin{description}
+		%        TBD
+		%    \end{description}
 
 		%/* DMM */
 		\item \hypertarget{FETCh}{}
 		    \begin{verbatim}FETCh[:SCALar]:VOLTage[:DC]? [expected_value, [resolution,]] <channel_list>\end{verbatim}
 		    \begin{description}
-		        Command allows reading voltage on channel specified by \verb|channel list|. Parameter \verb|expected value| has no use in this case and is included for reasons of compatibility. Parameter \verb|resolution| allows specifying the resolution of the result. If ommited, the result is returned in Volts. Parameter \verb|<channel_list>| allows specifying which channel(s) result should be read. The order of the channels is important - results are returned in that order.
+		        Command allows reading voltage on channel specified by \verb|<channel_list>|. Parameter \verb|expected_value| has no use in this case and is included for reasons of compatibility. Parameter \verb|resolution| allows specifying the resolution of the result. If ommited, the result is returned in Volts. Parameter \verb|<channel_list>| allows specifying which channel(s) result should be read. The order of the channels is important - results are returned in that order.
 		        \newline If all parameters are ommited, the command will return value for channel 1, in Volts.
 		        \item Example 1:
 		            \begin{verbatim}FETCh:VOLTage? 1 V, 0.001V, (@1:3)\end{verbatim} will return voltage read on all three channels (including the power supply supply channel), in milliVolts, in order of channel 1, 2, 3.
@@ -250,7 +295,7 @@
 		\item 
 		    \begin{verbatim}FETCh[:SCALar]:POWer[:DC]? [expected_value, [resolution,]] <channel_list>\end{verbatim}
 		    \begin{description}
-		        Command allows reading power on channel specified by \verb|channel list|. Parameter \verb|expected value| has no use in this case and is included for reasons of compatibility. Parameter \verb|resolution| allows specifying the resolution of the result. If ommited, the result is returned in Watts. Parameter \verb|<channel_list>| allows specifying which channel(s) result should be read. The order of the channels is important - results are returned in that order.
+		        Command allows reading power on channel specified by \verb|<channel_list>|. Parameter \verb|expected_value| has no use in this case and is included for reasons of compatibility. Parameter \verb|resolution| allows specifying the resolution of the result. If ommited, the result is returned in Watts. Parameter \verb|<channel_list>| allows specifying which channel(s) result should be read. The order of the channels is important - results are returned in that order.
 		        \newline If all parameters are ommited, the command will return value for channel 1, in Watts.
 		        \item Example 1:
 		            \begin{verbatim}FETCh:POWer? 1 V, 0.001V, (@1:3)\end{verbatim} will return power read on all three channels (including the power supply supply channel), in milliWatts, in order of channel 1, 2, 3.

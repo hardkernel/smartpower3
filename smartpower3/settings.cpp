@@ -88,7 +88,11 @@ void Settings::setLogInterval(uint8_t logInterval, bool force_commit)
 
 bool Settings::isLoggingEnabled(bool from_storage)
 {
-	return (from_storage) ? preferences.getBool("logging_enabled", logging_enabled) : logging_enabled;
+	if (this->getOperationMode(from_storage) == OPERATION_MODE_SCPI) {
+		return scpi_socket_logging_enabled || scpi_serial_logging_enabled;
+	} else {
+		return (from_storage) ? preferences.getBool("logging_enabled", logging_enabled) : logging_enabled;
+	}
 }
 
 void Settings::setLoggingEnabled(bool loggingEnabled, bool force_commit)
@@ -426,6 +430,26 @@ void Settings::setOperationMode(device_operation_mode operationMode, bool set_th
 	preferences.putUChar("oper_mode", operation_mode);
 	delay(100);
 	if (set_through_settings) {
-//TODO: add event and its handling
+//TODO: add event and its handling?
 	}
+}
+
+bool Settings::isScpiSerialLoggingEnabled()
+{
+	return scpi_serial_logging_enabled;
+}
+
+void Settings::setScpiSerialLoggingEnabled(bool scpiSerialLoggingEnabled)
+{
+	scpi_serial_logging_enabled = scpiSerialLoggingEnabled;
+}
+
+bool Settings::isScpiSocketLoggingEnabled()
+{
+	return scpi_socket_logging_enabled;
+}
+
+void Settings::setScpiSocketLoggingEnabled(bool scpiSocketLoggingEnabled)
+{
+	scpi_socket_logging_enabled = scpiSocketLoggingEnabled;
 }

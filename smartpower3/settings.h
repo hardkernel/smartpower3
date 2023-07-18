@@ -99,6 +99,10 @@ public:
 	void setWifiIpv4SCPIServerPort(uint16_t wifiIpv4SCPIServerPort = 0, bool set_through_settings = false, bool force_commit = true);
 	device_operation_mode getOperationMode(bool from_storage=false);
 	void setOperationMode(device_operation_mode operationMode = OPERATION_MODE_DEFAULT, bool set_through_settings=false, bool force_commit=true);
+	bool isScpiSerialLoggingEnabled(void);
+	void setScpiSerialLoggingEnabled(bool scpiSerialLoggingEnabled = false);
+	bool isScpiSocketLoggingEnabled(void);
+	void setScpiSocketLoggingEnabled(bool scpiSocketLoggingEnabled = false);
 
 private:
 	bool first_boot = false;
@@ -136,6 +140,8 @@ private:
 	device_operation_mode operation_mode = OPERATION_MODE_DEFAULT;
 	Preferences preferences;
 	bool nvs_cleared = false;
+	bool scpi_socket_logging_enabled = false;
+	bool scpi_serial_logging_enabled = false;
 	IPAddress getSettingIPAddress(bool from_storage, const char* setting_key, IPAddress* address_variable);
 };
 
