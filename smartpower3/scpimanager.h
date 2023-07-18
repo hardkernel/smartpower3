@@ -134,7 +134,6 @@ private:
 		{ "*OPC", SCPI_CoreOpc, 0 },
 		{ "*OPC?", SCPI_CoreOpcQ, 0 },
 //TODO: Check if reset is complete or needs rework
-		//{ "*RST", SCPI_CoreRst, 0 },
 		{ "*RST", Reset, 0 },
 		{ "*SRE", SCPI_CoreSre, 0 },
 		{ "*SRE?", SCPI_CoreSreQ, 0 },
@@ -163,7 +162,7 @@ private:
 		{"SYSTem:COMMunicate:NETwork:GATE?", SCPI_NetworkGateQ, 0 },
 		// This command sets the Gateway IP address of the Ethernet module of the power supply.
 		// The Gateway IP defaults to 0.0.0.0 in absence of a DHCP server.
-	    // Gateway IP address is represented with 4 bytes each having a range of 0-255 separated by dots
+		// Gateway IP address is represented with 4 bytes each having a range of 0-255 separated by dots
 		{"SYSTem:COMMunicate:NETwork:SUBNet", SCPI_NetworkSubnet, 0 },
 		{"SYSTem:COMMunicate:NETwork:SUBNet?", SCPI_NetworkSubnetQ, 0 },
 		// This command sets the subnet IP Mask address of the Ethernet module of the power supply.
@@ -192,14 +191,8 @@ private:
 		{"SYSTem:COMMunicate:SOCKet:FEED", SCPI_SocketFeed, 0},
 		{"SYSTem:COMMunicate:SOCKet:FEED?", SCPI_SocketFeedQ, 0},
 
-		{"SYSTem:COMMunicate:Serial:FEED", SCPI_SerialFeed, 0},
-		{"SYSTem:COMMunicate:Serial:FEED?", SCPI_SerialFeedQ, 0},
-
-		//{"[SYSTem][:COMMunicate]:SERial:FEED", SCPI_SocketPortQ, 0 }
-		//{"[SYSTem][:COMMunicate]:SERial:FEED?", SCPI_SocketPortQ, 0 }
-		//{"[SYSTem][:COMMunicate]:SOCKet:FEED", SCPI_SocketPort, 0 },
-		//{"[SYSTem][:COMMunicate]:SOCKet:FEED?", SCPI_SocketPortQ, 0 },
-
+		{"SYSTem:COMMunicate:SERial:FEED", SCPI_SerialFeed, 0},
+		{"SYSTem:COMMunicate:SERial:FEED?", SCPI_SerialFeedQ, 0},
 
 		//{"STATus:OPERation?", scpi_stub_callback, 0},
 		//{"STATus:OPERation:EVENt?", scpi_stub_callback, 0},
@@ -226,8 +219,6 @@ private:
 
 		{ "OUTPut#[:STATe]", Output_TurnOnOff, 0 },
 		{ "OUTPut#[:STATe]?", Output_TurnOnOffQ, 0 },
-
-		/*{ "SYSTem:COMMunication:TCPIP:CONTROL?", SCPI_SystemCommTcpipControlQ, 0 },*/
 
 		SCPI_CMD_LIST_END
 	};

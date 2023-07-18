@@ -23,10 +23,6 @@ enum network_screen_state_setting {
 	STATE_NETWORK_WIFI_ICON = 1,
 	STATE_NETWORK_LOGGING_ICON,
 	STATE_NETWORK_DHCP,
-//	STATE_NETWORK_MODE,
-//	STATE_LOG_INTERVAL,
-//	STATE_BAUD_RATE,
-//	STATE_BL,
 };
 
 
@@ -51,7 +47,6 @@ public:
 	void drawGatewayIpaddr(const char* ipaddr);
 	void drawSubnetMask(const char* ipaddr);
 	void drawDnsServers(const char* ipaddr_dns1, const char* ipaddr_dns2);
-	//void drawMode(device_operation_mode default_mode = OPERATION_MODE_DEFAULT);
 
 	void onEnter(void);
 	void debug(void);

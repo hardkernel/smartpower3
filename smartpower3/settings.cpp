@@ -26,20 +26,14 @@ void Settings::init()
 	this->serial_baud_rate = this->getSerialBaudRate(true);
 	// Logging related
 	this->logging_enabled = this->isLoggingEnabled(true);
-	//this->log_interval_index = this->getLogIntervalIndex(true);
 	this->log_interval = this->getLogInterval(true);
 	this->wifi_ipv4_udp_logging_server_ip_address = this->getWifiIpv4UdpLoggingServerIpAddress(true);
 	this->wifi_ipv4_udp_logging_server_port = this->getWifiIpv4UdpLoggingServerPort(true);
 	// WiFI related
 	this->wifi_enabled = this->isWifiEnabled(true);
 	this->mac_address = this->getMacAddress();
-	//this->wifi_use_ipv4 = true;
-	//bool wifi_use_ipv6 = false;
 	this->wifi_access_point_ssid = this->getWifiAccessPointSsid(true);
 	this->wifi_password = this->getWifiPassword(true);
-//TODO: add settings/checking CREDENTIALS_STATE
-	/*this->wifi_credentials_checked = this->isWifiCredentialsChecked();
-	this->wifi_ipv4_connect_automatically = true;*/
 	this->wifi_ipv4_dhcp_enabled = this->isWifiIpv4DhcpEnabled(true);
 	this->wifi_ipv4_static_ip = this->getWifiIpv4StaticIp(true);
 	this->wifi_ipv4_gateway_address = this->getWifiIpv4GatewayAddress(true);

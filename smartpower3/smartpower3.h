@@ -1,6 +1,5 @@
 #include <meas_channel.h>
 #include <Microchip_PAC193x.h>
-//#include <screenmanager.h>
 #include "inputmanager.h"
 #include "settings.h"
 #include "wifimanager.h"
@@ -44,5 +43,3 @@ TaskHandle_t screen_handle;
 TaskHandle_t input_handle;
 TaskHandle_t button_handle;
 TaskHandle_t log_handle;
-//TaskHandle_t encoder_handle;
-

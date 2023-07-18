@@ -299,13 +299,11 @@ void loop() {
 		screen_manager.dimmingLED(1);
 	}
 #ifdef TASK_STACK_HIGH_WATERMARK_SERIAL_PRINT
-	//Serial.printf("Loop: %u\n\r", uxTaskGetStackHighWaterMark(NULL));
 	Serial.printf("WiFi task: %u\n\r", uxTaskGetStackHighWaterMark(wifi_handle));
 	Serial.printf("Screen task: %u\n\r", uxTaskGetStackHighWaterMark(screen_handle));
 	Serial.printf("Button task: %u\n\r", uxTaskGetStackHighWaterMark(button_handle));
 	Serial.printf("Input task: %u\n\r", uxTaskGetStackHighWaterMark(input_handle));
 	Serial.printf("Log task: %u\n\r", uxTaskGetStackHighWaterMark(log_handle));
-	//Serial.printf("Encoder task: %u\n\r", uxTaskGetStackHighWaterMark(encoder_handle));
 #endif
 #ifdef HEAP_INFO_SERIAL_PRINT
 	heap_caps_print_heap_info(MALLOC_CAP_8BIT);

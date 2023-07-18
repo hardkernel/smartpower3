@@ -50,9 +50,7 @@ public:
 	void apDisconnectAndTurnWiFiOff(void);
 	void apInfo(void);
 	String apInfoSaved(void);
-	//char* apInfoSaved(void);
 	String apInfoConnected(void);
-	//char apInfoConnected(void);
 	void udpServerInfo();
 	void udpServerForget(void);
 	void switchWiFiConnection(void);

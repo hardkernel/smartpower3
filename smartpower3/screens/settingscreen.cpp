@@ -504,7 +504,6 @@ void SettingScreen::changeOperationMode(device_operation_mode operation_mode)
 {
 	drawMode(operation_mode);
 	operation_mode_edit = operation_mode;
-	//changeOperationMode(operation_mode);
 }
 
 void SettingScreen::selectBLLevel(uint16_t rectangle_color)

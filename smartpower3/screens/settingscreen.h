@@ -27,9 +27,6 @@
 #define X_IPADDR 226
 #define X_SSID 172
 
-/*#define LINE_SPACING 42
-#define RIGHT_POSITION_X 460*/
-
 
 enum setting_screen_mode_t {
 	SETTING_SETTING = 0,
@@ -38,7 +35,6 @@ enum setting_screen_mode_t {
 	SETTING_SETTING_LOG_INTERVAL,
 	SETTING_SETTING_OPERATION_MODE,
 };
-
 
 enum screen_state_setting {
 	STATE_SETTING_WIFI_ICON = 1,
@@ -106,7 +102,6 @@ public:
 	void drawSerialBaud(uint32_t serial_baud);
 	void drawSerialLoggingEnabled(bool is_enabled=true);
 	void drawWifiLoggingEnabled(bool is_enabled=true);
-	//void popUp(void);
 
 	void drawUDPIpaddr(const char* ipaddr);
 	void drawUDPport(uint16_t port);
@@ -119,7 +114,6 @@ public:
 	void debug(void);
 private:
 	setting_screen_mode_t mode = SETTING_SETTING;
-	//TFT_eSprite *popup;
 	uint16_t x;
 	uint16_t y;
 	uint8_t backlight_level_preset = 0;
@@ -133,7 +127,6 @@ private:
 	uint32_t serial_baud_edit = 0;
 	device_operation_mode operation_mode;
 	device_operation_mode operation_mode_edit;
-	//device_operation_mode operation_mode = OPERATION_MODE_DEFAULT;
 	Component *com_serial_baud;
 	Component *com_log_interval;
 	Component *com_ssid;

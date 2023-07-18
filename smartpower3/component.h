@@ -46,7 +46,6 @@ public:
 	void setTextColor(uint16_t fg_color, uint16_t bg_color);
 	void loadFont(const uint8_t font[]);
 	void unloadFont(void);
-	//void clearAndDrawWithFont(const uint8_t font[], String string_to_draw);
 	void clearAndDrawWithColoredFont(const uint8_t font[], uint16_t fg_color, const char* string_to_draw);
 	void clearAndDrawWithFont(const uint8_t font[], const char* string_to_draw);
 private:

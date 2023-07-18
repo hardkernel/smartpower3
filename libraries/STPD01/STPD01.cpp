@@ -124,7 +124,9 @@ uint8_t STPD01::setCurrentLimit(uint16_t milliampere)
 	write8(STPD01_REGISTER_1, val);
 	tmp = read8(STPD01_REGISTER_1);
 	if (tmp != val) {
+		#ifdef DEBUG_STPD01
 		Serial.printf("write error : %x, %x\n\r", tmp, val);
+		#endif
 		return 2;
 	}
 	return 0;
@@ -207,7 +209,9 @@ uint8_t STPD01::setVoltage(uint16_t volt)
 	write8(STPD01_REGISTER_0, val);
 	tmp = read8(STPD01_REGISTER_0);
 	if (tmp != val) {
+		#ifdef DEBUG_STPD01
 		Serial.printf("write error : %x, %x\n\r", tmp, val);
+		#endif
 		return 2;
 	}
 	return 0;

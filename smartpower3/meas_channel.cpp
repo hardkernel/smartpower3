@@ -81,11 +81,6 @@ void MeasChannels::sample()
 		A = A * 100 / 65536;
 		A = A / rsense * 1000000;
 
-/*		Serial.printf("%6.10f\n\r", V);
-		Serial.printf("%6.10f\n\r", A);
-		Serial.printf("%d\n\r", static_cast<uint16_t>(V));
-		Serial.printf("%d\n\r", static_cast<uint16_t>(A));*/
-
 		switch (i) {
 			case 0:
 				channel0->update(V, A);

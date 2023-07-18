@@ -6,6 +6,19 @@
 #define DEFAULT_EXPECTED_VALUE 1
 
 
+scpi_choice_def_t log_options[] = {
+	{"NONE", 0},
+	{"LOG", 1},
+	SCPI_CHOICE_LIST_END
+};
+
+struct _scpi_channel_value_t {
+    int32_t row;
+    int32_t col;
+};
+typedef struct _scpi_channel_value_t scpi_channel_value_t;
+
+
 UserContext::UserContext(ScreenManager *screen_manager, MeasChannels *measuring_channels)
 {
 	this->screen_manager = screen_manager;
@@ -140,12 +153,6 @@ scpi_result_t SCPIManager::Reset(scpi_t * context)
 	return SCPI_CoreRst(context);
 }
 
-struct _scpi_channel_value_t {
-    int32_t row;
-    int32_t col;
-};
-typedef struct _scpi_channel_value_t scpi_channel_value_t;
-
 void SCPIManager::resetContext(scpi_t *context, char *pos, int_fast16_t input_count)
 {
 	context->param_list.lex_state.pos = pos;
@@ -264,9 +271,7 @@ scpi_result_t SCPIManager::DMM_MeasureUnitDcQ(scpi_t *context, scpi_unit_t allow
 {
 	const uint8_t max_param_count = 3;
 	UserContext *user_ctx = static_cast<UserContext *>(context->user_context);
-	//Settings *settings = user_ctx->settings;
 	MeasChannels *channels = user_ctx->measuring_channels;
-	//ScreenManager *sm = user_ctx->screen_manager;
 	scpi_number_t expected_value;
 	scpi_number_t resolution;
 	scpi_parameter_t working_param;
@@ -533,7 +538,6 @@ scpi_result_t SCPIManager::DMM_ConfigureCurrent(scpi_t *context)
 			SCPI_ErrorPush(context, SCPI_ERROR_DATA_TYPE_ERROR);  // full error list define
 			return SCPI_RES_ERR;
 		} else {
-			Serial.println(output_number[0]);
 			if (output_number[0] == 1) {
 				settings->setChannel0CurrentLimit(static_cast<uint16_t>((target_amps.content.value)*1000), true);
 			} else if (output_number[0] == 2) {
@@ -698,16 +702,10 @@ scpi_result_t SCPIManager::SCPI_SocketFeed(scpi_t * context)
 	scpi_parameter_t param;
 	int32_t value = 0;
 
-	scpi_choice_def_t bool_options[] = {
-		{"NONE", 0},
-		{"LOG", 1},
-		SCPI_CHOICE_LIST_END
-	};
-
 	res = SCPI_Parameter(context, &param, FALSE);
 
 	if (res && param.type == SCPI_TOKEN_PROGRAM_MNEMONIC) {
-		if (SCPI_ParamToChoice(context, &param, bool_options, &value)) {
+		if (SCPI_ParamToChoice(context, &param, log_options, &value)) {
 			getSettings(context)->setScpiSocketLoggingEnabled(value);
 			return SCPI_RES_OK;
 		}
@@ -718,7 +716,9 @@ scpi_result_t SCPIManager::SCPI_SocketFeed(scpi_t * context)
 
 scpi_result_t SCPIManager::SCPI_SocketFeedQ (scpi_t *context)
 {
-	SCPI_ResultMnemonic(context, getSettings(context)->isScpiSocketLoggingEnabled() ? "LOG" : "NONE");
+	SCPI_ResultMnemonic(
+			context,
+			getSettings(context)->isScpiSocketLoggingEnabled() ? log_options[1].name : log_options[0].name);
 	return SCPI_RES_OK;
 }
 
@@ -728,16 +728,10 @@ scpi_result_t SCPIManager::SCPI_SerialFeed(scpi_t * context)
 	scpi_parameter_t param;
 	int32_t value = 0;
 
-	scpi_choice_def_t bool_options[] = {
-		{"NONE", 0},
-		{"LOG", 1},
-		SCPI_CHOICE_LIST_END
-	};
-
 	res = SCPI_Parameter(context, &param, FALSE);
 
 	if (res && param.type == SCPI_TOKEN_PROGRAM_MNEMONIC) {
-		if (SCPI_ParamToChoice(context, &param, bool_options, &value)) {
+		if (SCPI_ParamToChoice(context, &param, log_options, &value)) {
 			getSettings(context)->setScpiSerialLoggingEnabled(value);
 			return SCPI_RES_OK;
 		}
@@ -748,7 +742,9 @@ scpi_result_t SCPIManager::SCPI_SerialFeed(scpi_t * context)
 
 scpi_result_t SCPIManager::SCPI_SerialFeedQ (scpi_t *context)
 {
-	SCPI_ResultMnemonic(context, getSettings(context)->isScpiSerialLoggingEnabled() ? "LOG" : "NONE");
+	SCPI_ResultMnemonic(
+			context,
+			getSettings(context)->isScpiSerialLoggingEnabled() ? log_options[1].name : log_options[0].name);
 	return SCPI_RES_OK;
 }
 

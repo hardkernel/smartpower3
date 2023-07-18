@@ -73,5 +73,3 @@ private:
 	Screen *screens[LAST_SCREEN_COUNT] = {};
 	bool show_next_screen = false;
 };
-
-//ScreenManager screen_manager;
