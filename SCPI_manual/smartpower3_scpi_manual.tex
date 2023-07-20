@@ -343,4 +343,143 @@ The mode is changed via screen and encoder, on the second device screen, near th
     \end{enumerate}
 \end{enumerate}
 
+\section{Python Examples}
+
+The power supply in SCPI mode can also be controlled by various VISA implementations. This enables the user to programmatically perform and repeat various test and measurements, that might otherwise be quite complicated or outright impossible with sufficient precision.
+
+The following is a simple example of how the device might be used.
+
+More information on how to use PyVISA can be found at\newline
+\href{https://pyvisa.readthedocs.io/en/latest/introduction/index.html}{https://pyvisa.readthedocs.io/en/latest/introduction/index.html}.
+
+\subsection{Prerequisites}
+
+It is expected that you have Python3, PyVISA and backed installed. We are going to use PyVISA-py for the backend.
+
+The exact steps how to install these prerequisites depend on your selection of operating system and its version. For example, most Linux distributions will have Python installed by default, so its installation might be skipped.
+
+Once Python is installed, you could, for example, install the remaining dependencies for the current user by running the following in terminal:
+\begin{verbatim}
+    pip install -U pyvisa pyvisa-py
+\end{verbatim}
+
+\subsection{Connecting to the Power Supply}
+
+The next step is to connect to the SmartPower3 power supply. To do so, please follow these steps:
+\begin{enumerate}
+
+    \item Connect SmartPower3 to your computer using serial cable.
+    \item On the setting screen, set SmartPower3 to \verb|SCPI| mode.
+    \item Open your terminal application and start Python interpreter by typing:\newline\verb|python|
+    \item Import PyVISA and connect by typing the following
+    \begin{verbatim}
+        >>> import pyvisa
+        >>> rm = pyvisa.ResourceManager()
+        >>> rm.list_resources()
+        ('ASRL/dev/ttyUSB0::INSTR')
+        >>> inst = rm.open_resource('ASRL/dev/ttyUSB0::INSTR')
+        >>> print(inst.query('*IDN?'))
+    \end{verbatim}
+    The \verb|('ASRL/dev/ttyUSB0::INSTR')| string will most likely be different in your case. You might even have more devices listed, depending on your hardware. That is OK, just select the one that corresponds to your serial connection.
+    
+    The last command (\verb|print(inst.query("*IDN?"))|) should result in the terminal printing out the power supply identification, which should look similar to 
+    
+    \verb|Hardkernel Co Ltd,SmartPower3,<mac_address>,Build date: Jul 19 2023 19:32:24|, where \verb|<mac_address>| will be the WiFi module MAC address (a string similar to \newline\verb|94:3C:C6:CC:AA:78|) and the Build date will reflect your current firmware version.
+    \item In case the last command didn't produce the desired result and you got timeout error response, there are couple things you can check to remedy the situation:
+    \begin{enumerate}
+        \item Check that the device is in SCPI mode.
+        \item Check device serial baud rate. It is quite possible that your SmartPower3 is set to a higher baud rate than 9600, which is PyVISA default. To set correct baud rate, you can use the following command:
+        \begin{verbatim}
+            inst.baud_rate = 115200
+        \end{verbatim}
+        where \verb|115200| should be changed to the actual value set on your SmartPower3.
+        \item It is possible that the response was followed by an empty line. In such a case, there is a mismatch between line endings returned by the device and line endings that PyVISA expects. That can be remedied by issuing the following command:
+        \begin{verbatim}
+            inst.read_termination = '\r\n'
+        \end{verbatim}
+    \end{enumerate}
+    For more troubleshooting info please see PyVISA documentation available\newline at \href{https://pyvisa.readthedocs.io/en/latest/introduction/communication.html\#}{https://pyvisa.readthedocs.io/en/latest/introduction/communication.html\#}.
+      
+\end{enumerate}
+\subsection{Doing Something Usefull}
+Once you have succeded in issuing the identification command and getting a proper response, we can get to something more useful.
+\subsubsection{Doing a Voltage Sweep}
+Let's suppose that you have just finished a construction of a new hardware device that is supposed to be powered by 12 Volts DC. But you also want to check how the device behaves at a lower voltage, gradually bringing the voltage up from 5V to the full 12V. That could be achieved by the following commands:
+\begin{verbatim}
+    # by now, you have pyvisa imported and are connected to the device
+    import time
+    start_voltage = 5
+    end_voltage = 12
+    inst.write(f'source1:volt {start_voltage}')  # the starting voltage on channel 1
+    # uncommenting the next line turns channel 1 on and the sweep is done under power
+    # it is advisable to first check the functionality of your program
+    # with the output turned off, in case there is a mistake
+    # inst.write('output1 on')
+    while(start_voltage <= end_voltage):
+        print(f'start_voltage = {start_voltage}')
+        inst.write(f'source1:volt {start_voltage}')
+        start_voltage += 1  # increase the value of start_voltage by 1
+        time.sleep(2)  # wait 2 seconds
+\end{verbatim}
+
+The example above is rather rudimentary and does not use the possibilities of the device to its full extent.
+
+If you wanted to set values on a finer scale than whole Volts and not use Python float data type - which is advisable, as it can lead to unpredictable results - you could modify the above script as follows:
+
+\begin{verbatim}
+    # by now, you have pyvisa imported and are connected to the device
+    import time
+    start_voltage = 3000  # the value represented in milliVolts 
+    end_voltage = 5000  # the value represented in milliVolts
+    inst.write(f'source1:volt {start_voltage}mV')  # note the added unit of mV
+    # uncommenting the next line turns channel 1 on and the sweep is done under power
+    # it is advisable to first check the functionality of your program
+    # with the output turned off, in case there is a mistake
+    # inst.write('output1 on')
+    while(start_voltage <= end_voltage):
+        print(f'start_voltage in Volts = {start_voltage/1000}')
+        inst.write(f'source1:volt {start_voltage}mV')  # note the added unit of mV
+        # increase the value of start_voltage by 20mV, which is the smallest
+        # possible step in this voltage range
+        start_voltage += 20
+        time.sleep(2)  # wait 2 seconds
+\end{verbatim}
+
+\subsubsection{Plotting Power Data From Measurements on Channel 1}
+    The \verb|contrib/SCPI_examples| directory of Smartpower3 git repository contains file\newline
+    \verb|sp3-scpi-datalogger.py| which does exactly what the subtitle advertises.
+    
+    But before you use it, you should be aware of a couple of important points:
+    \begin{enumerate}
+        \item 
+            Check what voltage your device operates on. The file sets output voltage to 5.1V (required for Raspberry Pi 4), so if your device operates on other voltage, change \verb|device_input_voltage| variable in the \verb|run| function to the required value.
+        \item 
+            The script expects the device to be connected to the first (left) channel.
+        \item 
+            The script expects that you use Serial connection to your SmartPower3 and it lets you choose your serial device.
+        \item
+            It asks you how long you want to run the logging - plese enter numeric value, seconds.
+        \item
+            Before you run the script with your device connected to SmartPower3, please run the script without the device to make sure everything is working as expected, the power is set to correct level etc. Doublecheck everything.
+        \item 
+            The script saves logged data to intermediate .csv file in the same directory as the script. You might want to use that file for further analysis.
+        \item 
+            The scrip is pretty basic and definitely can be improved upon - don't hesitate to modify it to suit your needs. But please doublecheck before powering your device.
+    \end{enumerate}
+    If everything goes well, the script will output window with power plot similar to Figure 1.
+    \begin{figure}
+        \begin{center}
+            \includegraphics[scale=0.24]{Figure_1.png}
+            \caption{Script output}
+        \end{center}
+    \end{figure}
+    
+    If things don't go as planned, please check the following:
+    \begin{enumerate}
+    \item 
+        Check that the device mode is set to SCPI. If not and you try to use PyVisa, you will most likely get complains about read method not having read termination and \verb|>>> Unknown Command <<<|.
+    \item 
+        Check the device you try to power is connected to the correct channel.
+    \end{enumerate}
+
 \end{document}
