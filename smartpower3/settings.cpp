@@ -424,7 +424,7 @@ void Settings::setOperationMode(device_operation_mode operationMode, bool set_th
 	preferences.putUChar("oper_mode", operation_mode);
 	delay(100);
 	if (set_through_settings) {
-//TODO: add event and its handling?
+		esp_event_post(SETTINGS_EVENTS, SETTINGS_OPERATION_MODE_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
 	}
 }
 

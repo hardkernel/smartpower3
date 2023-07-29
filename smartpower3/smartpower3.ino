@@ -71,6 +71,7 @@ static void settings_visible_settings_changed_handler(void *handler_args, esp_ev
 	wifi_manager->update_udp_info = true;
 	wifi_manager->port_udp = settings.getWifiIpv4UdpLoggingServerPort(true);
 	wifi_manager->ipaddr_udp = settings.getWifiIpv4UdpLoggingServerIpAddress(true);
+	wifi_manager->update_mode_info = true;
 }
 
 static void wifi_disconnected_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
@@ -260,6 +261,7 @@ void setup(void) {
 	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_CURRENT1_CHANGED_EVENT, settings_current1_changed_handler, NULL, NULL);
 	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_LOGGING_PORT_CHANGED_EVENT, settings_visible_settings_changed_handler, NULL, NULL);
 	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_LOGGING_ADDRESS_CHANGED_EVENT, settings_visible_settings_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_OPERATION_MODE_CHANGED_EVENT, settings_visible_settings_changed_handler, NULL, NULL);
 	esp_event_handler_instance_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, wifi_disconnected_handler, NULL, NULL);  // sent even if the password is wrong etc.
 }
 

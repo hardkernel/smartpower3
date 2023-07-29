@@ -74,9 +74,10 @@ public:
 	static scpi_result_t SCPI_SocketDisconnect(scpi_t * context);
 	static scpi_result_t SCPI_SocketFeed(scpi_t * context);
 	static scpi_result_t SCPI_SocketFeedQ(scpi_t * context);
-
 	static scpi_result_t SCPI_SerialFeed(scpi_t * context);
 	static scpi_result_t SCPI_SerialFeedQ(scpi_t * context);
+	static scpi_result_t SCPI_RLState(scpi_t * context);
+	static scpi_result_t SCPI_RLStateQ(scpi_t * context);
 
 	static scpi_result_t My_CoreTstQ(scpi_t * context);
 
@@ -193,6 +194,9 @@ private:
 
 		{"SYSTem:COMMunicate:SERial:FEED", SCPI_SerialFeed, 0},
 		{"SYSTem:COMMunicate:SERial:FEED?", SCPI_SerialFeedQ, 0},
+
+		{"SYSTem:COMMunicate:RLSTate", SCPI_RLState, 0}, //LOCal|REMote|RWLock // RWLock is not supported
+		{"SYSTem:COMMunicate:RLSTate?", SCPI_RLStateQ, 0},
 
 		//{"STATus:OPERation?", scpi_stub_callback, 0},
 		//{"STATus:OPERation:EVENt?", scpi_stub_callback, 0},

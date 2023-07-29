@@ -748,6 +748,43 @@ scpi_result_t SCPIManager::SCPI_SerialFeedQ (scpi_t *context)
 	return SCPI_RES_OK;
 }
 
+scpi_result_t SCPIManager::SCPI_RLState (scpi_t *context)
+{
+	int32_t param;
+
+	scpi_choice_def_t remote_options[] = {
+	    {"LOCal", OPERATION_MODE_DEFAULT},
+	    {"REMote", OPERATION_MODE_SCPI},
+	    SCPI_CHOICE_LIST_END
+	};
+
+	if (!SCPI_ParamChoice(context, remote_options, &param, TRUE)) {
+        SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+		return SCPI_RES_ERR;
+	};
+	getSettings(context)->setOperationMode(static_cast<device_operation_mode>(param), true);
+	return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIManager::SCPI_RLStateQ (scpi_t *context)
+{
+	const char* result;
+	device_operation_mode operation_mode = getSettings(context)->getOperationMode();
+
+	switch (operation_mode) {
+		case OPERATION_MODE_DEFAULT:
+			result = "LOC";
+			break;
+		case OPERATION_MODE_SCPI:
+			result = "REM";
+			break;
+		default:
+			return SCPI_RES_ERR;
+	}
+	SCPI_ResultMnemonic(context, result);
+	return SCPI_RES_OK;
+}
+
 Settings* SCPIManager::getSettings(scpi_t *context)
 {
 	return static_cast<UserContext *>(context->user_context)->settings;

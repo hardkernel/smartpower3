@@ -233,6 +233,26 @@ The mode is changed via screen and encoder, on the second device screen, near th
                     \item \verb|LOG|
                     \item \verb|NONE|
             \end{description}
+        \item 
+            \begin{verbatim}SYSTem:COMMunicate:RLSTate\end{verbatim}
+            \begin{description}
+                Sets the device operation mode. Equivalent to the \verb|Mode| screen menu item.
+                Acceptable options are:
+                \item \verb|LOCal|
+                    - Corresponds to the \verb|Default| menu selection.
+                \item \verb|REMote|
+                    - Corresponds to the \verb|SCPI| menu selection.
+            \end{description}
+        \item 
+            \begin{verbatim}SYSTem:COMMunicate:RLSTate?\end{verbatim}
+            \begin{description}
+                Queries the selected device operation mode. Equivalent to the \verb|Mode| screen menu item.
+                Possible responses are:
+                \item \verb|LOCal|
+                    - Corresponds to the \verb|Default| menu selection.
+                \item \verb|REMote|
+                    - Corresponds to the \verb|SCPI| menu selection.
+            \end{description}
             
             
             
