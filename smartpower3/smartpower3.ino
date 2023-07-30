@@ -190,7 +190,7 @@ void inputTask(void *parameter)
 			screen_manager.getActiveScreen()->countDial(dial.cnt, dial.direct, dial.step, cur_time);
 			dial.cnt = 0;
 		}
-		screen_manager.getActiveScreen()->setTime(cur_time);
+		screen_manager.setTime(cur_time);  // needs to go through screen_manager bacause of shutdown
 		vTaskDelay(10);
 	}
 }
