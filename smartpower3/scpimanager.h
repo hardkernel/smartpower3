@@ -85,6 +85,8 @@ public:
 	static scpi_result_t Reset(scpi_t * context);
 	static scpi_result_t Output_TurnOnOff(scpi_t *context);
 	static scpi_result_t Output_TurnOnOffQ(scpi_t *context);
+	static scpi_result_t SCPI_LoggingInterval(scpi_t * context);
+	static scpi_result_t SCPI_LoggingIntervalQ(scpi_t * context);
 	static scpi_result_t DMM_FetchVoltageDcQ(scpi_t *context);
 	static scpi_result_t DMM_FetchCurrentDcQ(scpi_t *context);
 	static scpi_result_t DMM_FetchPowerDcQ(scpi_t *context);
@@ -99,8 +101,8 @@ protected:
 private:
 	UserContext *user_context;
 	static Settings* getSettings(scpi_t *context);
-	static scpi_result_t saveIpv4Address(scpi_t *context, void (Settings::*func)(IPAddress, bool, bool));
-	static scpi_result_t saveNetworkPort(scpi_t *context, void (Settings::*func)(uint16_t, bool, bool));
+	static scpi_result_t saveIpv4Address(scpi_t *context, void (Settings::*func)(IPAddress, bool));
+	static scpi_result_t saveNetworkPort(scpi_t *context, void (Settings::*func)(uint16_t, bool));
 	static float fetchChannelVoltage(uint8_t channel_number, float resolution, MeasChannels *channels);
 	static float fetchChannelCurrent(uint8_t channel_number, float resolution, MeasChannels *channels);
 	static float fetchChannelPower(uint8_t channel_number, float resolution, MeasChannels *channels);
@@ -198,19 +200,8 @@ private:
 		{"SYSTem:COMMunicate:RLSTate", SCPI_RLState, 0}, //LOCal|REMote|RWLock // RWLock is not supported
 		{"SYSTem:COMMunicate:RLSTate?", SCPI_RLStateQ, 0},
 
-		//{"STATus:OPERation?", scpi_stub_callback, 0},
-		//{"STATus:OPERation:EVENt?", scpi_stub_callback, 0},
-		//{"STATus:OPERation:CONDition?", scpi_stub_callback, 0},
-		//{"STATus:OPERation:ENABle", scpi_stub_callback, 0},
-		//{"STATus:OPERation:ENABle?", scpi_stub_callback, 0},
-
-		//{ "STATus:QUEStionable[:EVENt]?", SCPI_StatusQuestionableEventQ, 0 },
-		//{"STATus:QUEStionable:CONDition?", scpi_stub_callback, 0},
-		//{ "STATus:QUEStionable:ENABle", SCPI_StatusQuestionableEnable, 0 },
-		//{ "STATus:QUEStionable:ENABle?", SCPI_StatusQuestionableEnableQ, 0 },
-
-		//{ "STATus:PRESet", SCPI_StatusPreset, 0 },
-
+		{"SENSe:FUNCtion:TINTerval", SCPI_LoggingInterval, 0},
+		{"SENSe:FUNCtion:TINTerval?", SCPI_LoggingIntervalQ, 0},
 		/* DMM */
 		{ "FETCh[:SCALar]:VOLTage[:DC]?", DMM_FetchVoltageDcQ, 0 },
 		{ "FETCh[:SCALar]:CURRent[:DC]?", DMM_FetchCurrentDcQ, 0 },

@@ -31,14 +31,13 @@ uint8_t Button::checkPressed(void)
 	return 0;
 }
 
-
 void initEncoder(void *dial)
 {
 	ESP32Encoder::useInternalWeakPullResistors = UP;
 	encoder.attachFullQuad(33, 32);
 	encoder.setCount(0);
 	encoder.setFilter(1023);
-	xTaskCreate(countEncoder, "encoderTask", 672, dial, 1, NULL);
+	xTaskCreate(countEncoder, "encoderTask", 608, dial, 1, NULL);
 }
 
 void countEncoder(void *dial)
@@ -80,4 +79,3 @@ void countEncoder(void *dial)
 		vTaskDelay(100);
 	}
 }
-

@@ -121,7 +121,6 @@ private:
 	uint16_t log_interval = 0;
 	uint16_t log_interval_edit = 0;
 	uint8_t bl_value_preset[7] = {10, 25, 50, 75, 100, 125, 150};
-	uint16_t log_value[7] = {0, 5, 10, 50, 100, 500, 1000};
 	uint32_t serial_value[10] = {9600, 19200, 38400, 57600, 115200, 230400, 460800, 500000, 576000, 921600};
 	uint32_t serial_baud = 0;
 	uint32_t serial_baud_edit = 0;

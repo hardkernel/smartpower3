@@ -12,11 +12,11 @@ scpi_choice_def_t log_options[] = {
 	SCPI_CHOICE_LIST_END
 };
 
-struct _scpi_channel_value_t {
+/*struct _scpi_channel_value_t {
     int32_t row;
     int32_t col;
 };
-typedef struct _scpi_channel_value_t scpi_channel_value_t;
+typedef struct _scpi_channel_value_t scpi_channel_value_t;*/
 
 
 UserContext::UserContext(ScreenManager *screen_manager, MeasChannels *measuring_channels)
@@ -53,6 +53,11 @@ void SCPIManager::init(void)
 	Serial.end();
 	Serial.begin(115200);
 	while (!Serial); // wait for serial to finish initializing
+}
+
+Settings* SCPIManager::getSettings(scpi_t *context)
+{
+	return static_cast<UserContext *>(context->user_context)->settings;
 }
 
 size_t SCPIManager::SCPI_Write(scpi_t *context, const char *data, size_t len)
@@ -153,6 +158,78 @@ scpi_result_t SCPIManager::Reset(scpi_t * context)
 	return SCPI_CoreRst(context);
 }
 
+scpi_result_t SCPIManager::SCPI_LoggingInterval(scpi_t *context)
+{
+//TODO: should MIN go down to off or DOWN to off? Or none of them? Or, maybe, screen should not go to OFF state?
+	scpi_number_t target_logging_interval;
+	uint8_t current_logging_index;
+	Settings* settings = getSettings(context);
+
+	SCPI_ParamNumber(context, scpi_special_numbers_def, &target_logging_interval, TRUE);
+
+	if (target_logging_interval.special) {
+		current_logging_index = getSettings(context)->getLogInterval();
+		switch (target_logging_interval.content.tag) {
+			case SCPI_NUM_UP:
+				settings->setLogInterval(
+						settings->checkLogLevel(
+								current_logging_index < 6 ? current_logging_index + 1 : current_logging_index,
+								settings->getSerialBaudRate()
+								),
+						true
+
+				);
+				break;
+			case SCPI_NUM_DOWN:
+				settings->setLogInterval(
+						settings->checkLogLevel(
+								current_logging_index > 0 ? current_logging_index - 1 : current_logging_index,
+								settings->getSerialBaudRate()
+								),
+						true
+				);
+				break;
+			case SCPI_NUM_MIN:
+				settings->setLogInterval(settings->checkLogLevel(1, settings->getSerialBaudRate()), true);
+				break;
+			case SCPI_NUM_MAX:
+				settings->setLogInterval(6, true);
+				break;
+			default:
+				SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+				return SCPI_RES_ERR;
+		}
+	} else {
+		/* handling of numeric value */
+		if (target_logging_interval.unit == SCPI_UNIT_NONE || target_logging_interval.unit == SCPI_UNIT_SECOND) {
+			/* range check of value */
+			uint16_t value = static_cast<uint16_t>(target_logging_interval.content.value*1000);  // convert to ms
+			int8_t index = settings->getLogIntervalIndexFromPreset(value);
+			if (
+					(index >= 0
+					&& settings->isNotLoggingPresetValue(value))
+					|| (index != settings->checkLogLevel(index, settings->getSerialBaudRate()))
+			) {
+				SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+				return SCPI_RES_ERR;
+			} else {
+				settings->setLogInterval(index, true);
+				return SCPI_RES_OK;
+			}
+		} else {
+			SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
+			return SCPI_RES_ERR;
+		}
+	}
+	return SCPI_RES_ERR;
+}
+
+scpi_result_t SCPIManager::SCPI_LoggingIntervalQ(scpi_t *context)
+{
+	SCPI_ResultFloat(context, (static_cast<float>(getSettings(context)->getLogIntervalPreset()))/1000);
+	return SCPI_RES_OK;
+}
+
 void SCPIManager::resetContext(scpi_t *context, char *pos, int_fast16_t input_count)
 {
 	context->param_list.lex_state.pos = pos;
@@ -201,9 +278,7 @@ scpi_result_t SCPIManager::reprocessNumberParam(scpi_t *context, scpi_parameter_
 scpi_result_t SCPIManager::processChannelList(scpi_t *context, scpi_parameter_t &channel_list_param, float resolution,
 											  float (*reading_method)(uint8_t, float, MeasChannels*))
 {
-	UserContext *user_ctx = static_cast<UserContext *>(context->user_context);
-	MeasChannels *channels = user_ctx->measuring_channels;
-
+	MeasChannels *channels = static_cast<UserContext *>(context->user_context)->measuring_channels;
 	scpi_bool_t is_range;
 	int32_t values_from[MAXDIM];
 	int32_t values_to[MAXDIM];
@@ -270,8 +345,7 @@ scpi_result_t SCPIManager::DMM_MeasureUnitDcQ(scpi_t *context, scpi_unit_t allow
 											  float (*reading_method)(uint8_t, float, MeasChannels*))
 {
 	const uint8_t max_param_count = 3;
-	UserContext *user_ctx = static_cast<UserContext *>(context->user_context);
-	MeasChannels *channels = user_ctx->measuring_channels;
+	MeasChannels *channels = static_cast<UserContext *>(context->user_context)->measuring_channels;
 	scpi_number_t expected_value;
 	scpi_number_t resolution;
 	scpi_parameter_t working_param;
@@ -421,8 +495,7 @@ scpi_result_t SCPIManager::Output_TurnOnOffQ(scpi_t *context)
 
 scpi_result_t SCPIManager::DMM_ConfigureVoltage(scpi_t *context)
 {
-	UserContext *user_ctx = static_cast<UserContext *>(context->user_context);
-	Settings *settings = user_ctx->settings;
+	Settings *settings = getSettings(context);
 	scpi_number_t target_volts;
 	int32_t output_number[1];
 
@@ -477,8 +550,7 @@ scpi_result_t SCPIManager::DMM_ConfigureVoltage(scpi_t *context)
 
 scpi_result_t SCPIManager::DMM_ConfigureVoltageQ(scpi_t *context)
 {
-	UserContext *user_ctx = static_cast<UserContext *>(context->user_context);
-	Settings *settings = user_ctx->settings;
+	Settings *settings = getSettings(context);
 	int32_t output_number[1];
 
 	if (!SCPI_CommandNumbers(context, output_number, 1, 1)) {
@@ -498,8 +570,7 @@ scpi_result_t SCPIManager::DMM_ConfigureVoltageQ(scpi_t *context)
 
 scpi_result_t SCPIManager::DMM_ConfigureCurrent(scpi_t *context)
 {
-	UserContext *user_ctx = static_cast<UserContext *>(context->user_context);
-	Settings *settings = user_ctx->settings;
+	Settings *settings = getSettings(context);
 	scpi_number_t target_amps;
 	int32_t output_number[1];
 
@@ -534,8 +605,7 @@ scpi_result_t SCPIManager::DMM_ConfigureCurrent(scpi_t *context)
 			}
 			return SCPI_RES_OK;
 		} else if (target_amps.content.value < 0.5 || target_amps.content.value > 3) {
-			//SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);  // full error list define
-			SCPI_ErrorPush(context, SCPI_ERROR_DATA_TYPE_ERROR);  // full error list define
+			SCPI_ErrorPush(context, SCPI_ERROR_DATA_TYPE_ERROR);
 			return SCPI_RES_ERR;
 		} else {
 			if (output_number[0] == 1) {
@@ -554,8 +624,7 @@ scpi_result_t SCPIManager::DMM_ConfigureCurrent(scpi_t *context)
 
 scpi_result_t SCPIManager::DMM_ConfigureCurrentQ(scpi_t *context)
 {
-	UserContext *user_ctx = static_cast<UserContext *>(context->user_context);
-	Settings *settings = user_ctx->settings;
+	Settings *settings = getSettings(context);
 	int32_t output_number[1];
 
 	if (!SCPI_CommandNumbers(context, output_number, 1, 1)) {
@@ -681,7 +750,7 @@ scpi_result_t SCPIManager::SCPI_SocketIPAddressQ(scpi_t *context)
 
 scpi_result_t SCPIManager::SCPI_SocketConnect(scpi_t * context)
 {
-	Settings *settings = (static_cast<UserContext *>(context->user_context))->settings;
+	Settings *settings = getSettings(context);
 
 	settings->setWifiEnabled(true);
 	return SCPI_RES_OK;
@@ -689,7 +758,7 @@ scpi_result_t SCPIManager::SCPI_SocketConnect(scpi_t * context)
 
 scpi_result_t SCPIManager::SCPI_SocketDisconnect(scpi_t * context)
 {
-	Settings *settings = (static_cast<UserContext *>(context->user_context))->settings;
+	Settings *settings = getSettings(context);
 
 	settings->setScpiSocketLoggingEnabled(false);
 	settings->setWifiEnabled(false);
@@ -753,8 +822,8 @@ scpi_result_t SCPIManager::SCPI_RLState (scpi_t *context)
 	int32_t param;
 
 	scpi_choice_def_t remote_options[] = {
-	    {"LOCal", OPERATION_MODE_DEFAULT},
-	    {"REMote", OPERATION_MODE_SCPI},
+	    {F("LOCal"), OPERATION_MODE_DEFAULT},
+	    {F("REMote"), OPERATION_MODE_SCPI},
 	    SCPI_CHOICE_LIST_END
 	};
 
@@ -773,10 +842,10 @@ scpi_result_t SCPIManager::SCPI_RLStateQ (scpi_t *context)
 
 	switch (operation_mode) {
 		case OPERATION_MODE_DEFAULT:
-			result = "LOC";
+			result = F("LOC");
 			break;
 		case OPERATION_MODE_SCPI:
-			result = "REM";
+			result = F("REM");
 			break;
 		default:
 			return SCPI_RES_ERR;
@@ -785,12 +854,7 @@ scpi_result_t SCPIManager::SCPI_RLStateQ (scpi_t *context)
 	return SCPI_RES_OK;
 }
 
-Settings* SCPIManager::getSettings(scpi_t *context)
-{
-	return static_cast<UserContext *>(context->user_context)->settings;
-}
-
-scpi_result_t SCPIManager::saveIpv4Address(scpi_t *context, void (Settings::*func)(IPAddress, bool, bool))
+scpi_result_t SCPIManager::saveIpv4Address(scpi_t *context, void (Settings::*func)(IPAddress, bool))
 {
 	const char* value;
 	uint len;
@@ -803,17 +867,16 @@ scpi_result_t SCPIManager::saveIpv4Address(scpi_t *context, void (Settings::*fun
 	}
 	strncpy(ipaddr, value, len);
 	if (ipaddr_obj.fromString(ipaddr)) {
-		(getSettings(context)->* func)(ipaddr_obj, true, false);
+		(getSettings(context)->* func)(ipaddr_obj, true);
 		return SCPI_RES_OK;
 	} else {
-		//SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);  // full error list
-		SCPI_ErrorPush(context, SCPI_ERROR_DATA_TYPE_ERROR);  // full error list
+		SCPI_ErrorPush(context, SCPI_ERROR_DATA_TYPE_ERROR);
 		return SCPI_RES_ERR;
 	}
 	return SCPI_RES_ERR;
 }
 
-scpi_result_t SCPIManager::saveNetworkPort(scpi_t *context, void (Settings::*func)(uint16_t, bool, bool))
+scpi_result_t SCPIManager::saveNetworkPort(scpi_t *context, void (Settings::*func)(uint16_t, bool))
 {
 	scpi_number_t port;
 
@@ -822,10 +885,9 @@ scpi_result_t SCPIManager::saveNetworkPort(scpi_t *context, void (Settings::*fun
 	}
 
 	if (0 <= port.content.value && port.content.value < 10000) {
-		(getSettings(context)->* func)(port.content.value, true, false);
+		(getSettings(context)->* func)(port.content.value, true);
 		return SCPI_RES_OK;
 	} else {
-		//SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);  // full error list
 		SCPI_ErrorPush(context, SCPI_ERROR_DATA_TYPE_ERROR);
 		return SCPI_RES_ERR;
 	}

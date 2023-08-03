@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "helpers.h"
 
 Settings::Settings()
 {
@@ -58,15 +59,49 @@ uint8_t Settings::getBacklightLevelIndex(bool from_storage)
 	return (from_storage) ? preferences.getUChar("bl_level", backlight_level_index) : backlight_level_index;
 }
 
-void Settings::setBacklightLevelIndex(uint8_t backlightLevelIndex, bool force_commit)
+void Settings::setBacklightLevelIndex(uint8_t backlightLevelIndex)
 {
 	backlight_level_index = backlightLevelIndex;
 	preferences.putUChar("bl_level", backlight_level_index);
 }
 
-const uint8_t* Settings::getBacklightLevelPreset () const
+uint8_t Settings::checkLogLevel(uint8_t log_interval, uint32_t serial_baud)
 {
-	return backlight_level_preset;
+	if (log_interval != 0) {
+		clampVariableToRange(0, 6, &log_interval);
+		double ms = (1/static_cast<double>(serial_baud/780))*1000;
+		while (this->getLogIntervalPreset(log_interval) < ms) {
+			log_interval++;
+		}
+	}
+	return log_interval;
+}
+
+int8_t Settings::getLogIntervalIndexFromPreset(uint16_t preset)
+{
+	int8_t result = -1;
+
+	for (uint8_t i = 0; i < 7; i++) {
+		if (this->getLogIntervalPreset (i) == preset) {
+			result = i;
+			break;
+		}
+	}
+
+	return result;
+}
+
+bool Settings::isNotLoggingPresetValue(uint16_t value)
+{
+	bool result = true;
+
+	for (uint16_t preset : log_interval_preset) {
+		if (preset == value) {
+			result = false;
+			break;
+		}
+	}
+	return result;
 }
 
 uint8_t Settings::getLogInterval(bool from_storage)
@@ -74,10 +109,24 @@ uint8_t Settings::getLogInterval(bool from_storage)
 	return (from_storage) ? preferences.getUChar("log_interval", log_interval) : log_interval;
 }
 
-void Settings::setLogInterval(uint8_t logInterval, bool force_commit)
+void Settings::setLogInterval(uint8_t logInterval, bool set_through_settings)
 {
 	log_interval = logInterval;
 	preferences.putUChar("log_interval", logInterval);
+	delay(100);
+	if (set_through_settings) {
+		esp_event_post(SETTINGS_EVENTS, SETTINGS_LOGGING_INTERVAL_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+	}
+}
+
+uint16_t Settings::getLogIntervalPreset(bool from_storage)
+{
+	return this->log_interval_preset[this->getLogInterval(from_storage)];
+}
+
+uint16_t Settings::getLogIntervalPreset(uint8_t log_interval)
+{
+	return this->log_interval_preset[log_interval];
 }
 
 bool Settings::isLoggingEnabled(bool from_storage)
@@ -89,7 +138,7 @@ bool Settings::isLoggingEnabled(bool from_storage)
 	}
 }
 
-void Settings::setLoggingEnabled(bool loggingEnabled, bool force_commit)
+void Settings::setLoggingEnabled(bool loggingEnabled)
 {
 	logging_enabled = loggingEnabled;
 	preferences.putBool("logging_enabled", logging_enabled);
@@ -126,7 +175,7 @@ uint32_t Settings::getSerialBaudRate(bool from_storage)
 	return (from_storage) ? preferences.getUInt("serial_baud", serial_baud_rate) : serial_baud_rate;
 }
 
-void Settings::setSerialBaudRate(uint32_t serialBaudRate, bool force_commit)
+void Settings::setSerialBaudRate(uint32_t serialBaudRate)
 {
 	serial_baud_rate = serialBaudRate;
 	preferences.putUInt("serial_baud", serial_baud_rate);
@@ -140,7 +189,7 @@ String Settings::getWifiAccessPointSsid(bool from_storage)
 	return wifi_access_point_ssid;
 }
 
-void Settings::setWifiAccessPointSsid(const char* wifiAccessPointSsid, bool force_commit)
+void Settings::setWifiAccessPointSsid(const char* wifiAccessPointSsid)
 {
 	wifi_access_point_ssid = wifiAccessPointSsid;
 	preferences.putString("ssid", wifiAccessPointSsid);
@@ -151,7 +200,7 @@ bool Settings::isWifiEnabled(bool from_storage)
 	return (from_storage) ? preferences.getBool("wifi_enabled", wifi_enabled) : wifi_enabled;
 }
 
-void Settings::setWifiEnabled(bool wifiEnabled, bool force_commit)
+void Settings::setWifiEnabled(bool wifiEnabled)
 {
 	wifi_enabled = wifiEnabled;
 	preferences.putBool("wifi_enabled", wifi_enabled);
@@ -171,7 +220,7 @@ IPAddress Settings::getWifiIpv4AddressDns1(bool from_storage)
 	return this->getSettingIPAddress(from_storage, "ipaddr_dns1", &wifi_ipv4_address_dns_1);
 }
 
-void Settings::setWifiIpv4AddressDns1(IPAddress wifiIpv4AddressDns1, bool set_through_settings, bool force_commit)
+void Settings::setWifiIpv4AddressDns1(IPAddress wifiIpv4AddressDns1, bool set_through_settings)
 {
 	wifi_ipv4_address_dns_1 = wifiIpv4AddressDns1;
 	preferences.putString("ipaddr_dns1", wifi_ipv4_address_dns_1.toString());
@@ -182,7 +231,7 @@ IPAddress Settings::getWifiIpv4AddressDns2(bool from_storage)
 	return this->getSettingIPAddress(from_storage, "ipaddr_dns2", &wifi_ipv4_address_dns_2);
 }
 
-void Settings::setWifiIpv4AddressDns2(IPAddress wifiIpv4AddressDns2, bool set_through_settings, bool force_commit)
+void Settings::setWifiIpv4AddressDns2(IPAddress wifiIpv4AddressDns2, bool set_through_settings)
 {
 	wifi_ipv4_address_dns_2 = wifiIpv4AddressDns2;
 	preferences.putString("ipaddr_dns2", wifi_ipv4_address_dns_2.toString());
@@ -207,7 +256,8 @@ IPAddress Settings::getWifiIpv4UdpLoggingServerIpAddress(bool from_storage)
 	return this->getSettingIPAddress(from_storage, "ipaddr_udp", &wifi_ipv4_udp_logging_server_ip_address);
 }
 
-void Settings::setWifiIpv4UdpLoggingServerIpAddress(IPAddress wifiIpv4UdpLoggingServerIpAddress, bool set_through_settings, bool force_commit)
+void Settings::setWifiIpv4UdpLoggingServerIpAddress(IPAddress wifiIpv4UdpLoggingServerIpAddress,
+													bool set_through_settings)
 {
 	wifi_ipv4_udp_logging_server_ip_address = wifiIpv4UdpLoggingServerIpAddress;
 	preferences.putString("ipaddr_udp", wifi_ipv4_udp_logging_server_ip_address.toString());
@@ -223,7 +273,7 @@ uint16_t Settings::getWifiIpv4UdpLoggingServerPort(bool from_storage)
 			: wifi_ipv4_udp_logging_server_port;
 }
 
-void Settings::setWifiIpv4UdpLoggingServerPort(uint16_t wifiIpv4UdpLoggingServerPort, bool set_through_settings, bool force_commit)
+void Settings::setWifiIpv4UdpLoggingServerPort(uint16_t wifiIpv4UdpLoggingServerPort, bool set_through_settings)
 {
 	wifi_ipv4_udp_logging_server_port = wifiIpv4UdpLoggingServerPort;
 	preferences.putUShort("port_udp", wifi_ipv4_udp_logging_server_port);
@@ -241,7 +291,7 @@ String Settings::getWifiPassword(bool from_storage)
 	return wifi_password;
 }
 
-void Settings::setWifiPassword(const char* wifiPassword, bool force_commit)
+void Settings::setWifiPassword(const char* wifiPassword)
 {
 	wifi_password = wifiPassword;
 	preferences.putString("passwd", wifiPassword);
@@ -252,7 +302,7 @@ bool Settings::isFirstBoot(bool from_storage)
 	return (from_storage) ? preferences.getBool("firstboot", first_boot) : first_boot;
 }
 
-void Settings::setFirstBoot(bool firstBoot, bool force_commit)
+void Settings::setFirstBoot(bool firstBoot)
 {
 	first_boot = firstBoot;
 	preferences.putBool("firstboot", first_boot);
@@ -265,7 +315,7 @@ wifi_credentials_state_e Settings::getWifiCredentialsState(bool from_storage)
 			: wifi_credentials_state;
 }
 
-void Settings::setWifiCredentialsState(wifi_credentials_state_e wifiCredentialsStateSettings, bool force_commit)
+void Settings::setWifiCredentialsState(wifi_credentials_state_e wifiCredentialsStateSettings)
 {
 	wifi_credentials_state = wifiCredentialsStateSettings;
 	preferences.putBool("wifi_conn_ok", wifi_credentials_state);
@@ -276,7 +326,7 @@ uint16_t Settings::getChannel0CurrentLimit(bool from_storage)
 	return (from_storage) ? preferences.getUShort("current_limit0", channel_0_current_limit) : channel_0_current_limit;
 }
 
-void Settings::setChannel0CurrentLimit(uint16_t channel0CurrentLimit, bool set_through_settings, bool force_commit)
+void Settings::setChannel0CurrentLimit(uint16_t channel0CurrentLimit, bool set_through_settings)
 {
 	channel_0_current_limit = channel0CurrentLimit;
 	preferences.putUShort("current_limit0", channel_0_current_limit);
@@ -290,7 +340,7 @@ uint16_t Settings::getChannel0Voltage(bool from_storage)
 	return (from_storage) ? preferences.getUShort("voltage0", channel_0_voltage) : channel_0_voltage;
 }
 
-void Settings::setChannel0Voltage(uint16_t channel0Voltage, bool set_through_settings, bool force_commit)
+void Settings::setChannel0Voltage(uint16_t channel0Voltage, bool set_through_settings)
 {
 	channel_0_voltage = channel0Voltage;
 	preferences.putUShort("voltage0", channel_0_voltage);
@@ -305,7 +355,7 @@ uint16_t Settings::getChannel1CurrentLimit(bool from_storage)
 	return (from_storage) ? preferences.getUShort("current_limit1", channel_1_current_limit) : channel_1_current_limit;
 }
 
-void Settings::setChannel1CurrentLimit(uint16_t channel1CurrentLimit, bool set_through_settings, bool force_commit)
+void Settings::setChannel1CurrentLimit(uint16_t channel1CurrentLimit, bool set_through_settings)
 {
 	channel_1_current_limit = channel1CurrentLimit;
 	preferences.putUShort("current_limit1", channel_1_current_limit);
@@ -319,7 +369,7 @@ uint16_t Settings::getChannel1Voltage(bool from_storage)
 	return (from_storage) ? preferences.getUShort("voltage1", channel_1_voltage) : channel_1_voltage;
 }
 
-void Settings::setChannel1Voltage(uint16_t channel1Voltage, bool set_through_settings, bool force_commit)
+void Settings::setChannel1Voltage(uint16_t channel1Voltage, bool set_through_settings)
 {
 	channel_1_voltage = channel1Voltage;
 	preferences.putUShort("voltage1", channel_1_voltage);
@@ -356,7 +406,7 @@ IPAddress Settings::getWifiIpv4GatewayAddress(bool from_storage)
 	return this->getSettingIPAddress(from_storage, "ipaddr_gate", &wifi_ipv4_gateway_address);
 }
 
-void Settings::setWifiIpv4GatewayAddress(IPAddress wifiIpv4GatewayAddress, bool set_through_settings, bool force_commit)
+void Settings::setWifiIpv4GatewayAddress(IPAddress wifiIpv4GatewayAddress, bool set_through_settings)
 {
 	wifi_ipv4_gateway_address = wifiIpv4GatewayAddress;
 	preferences.putString("ipaddr_gate", wifi_ipv4_gateway_address.toString());
@@ -367,7 +417,7 @@ IPAddress Settings::getWifiIpv4StaticIp(bool from_storage)
 	return this->getSettingIPAddress(from_storage, "ipaddr_static", &wifi_ipv4_static_ip);
 }
 
-void Settings::setWifiIpv4StaticIp (IPAddress wifiIpv4StaticIp, bool set_through_settings, bool force_commit)
+void Settings::setWifiIpv4StaticIp(IPAddress wifiIpv4StaticIp, bool set_through_settings)
 {
 	wifi_ipv4_static_ip = wifiIpv4StaticIp;
 	preferences.putString("ipaddr_static", wifi_ipv4_static_ip.toString());
@@ -378,7 +428,7 @@ IPAddress Settings::getWifiIpv4SubnetMask (bool from_storage)
 	return this->getSettingIPAddress(from_storage, "subnet", &wifi_ipv4_subnet_mask);
 }
 
-void Settings::setWifiIpv4SubnetMask(IPAddress wifiIpv4SubnetMask, bool set_through_settings, bool force_commit)
+void Settings::setWifiIpv4SubnetMask(IPAddress wifiIpv4SubnetMask, bool set_through_settings)
 {
 	wifi_ipv4_subnet_mask = wifiIpv4SubnetMask;
 	preferences.putString("subnet", wifi_ipv4_subnet_mask.toString());
@@ -401,7 +451,7 @@ uint16_t Settings::getWifiIpv4SCPIServerPort(bool from_storage)
 			: wifi_ipv4_SCPI_server_port;
 }
 
-void Settings::setWifiIpv4SCPIServerPort(uint16_t wifiIpv4SCPIServerPort, bool set_through_settings, bool force_commit)
+void Settings::setWifiIpv4SCPIServerPort(uint16_t wifiIpv4SCPIServerPort, bool set_through_settings)
 {
 	wifi_ipv4_udp_logging_server_port = wifiIpv4SCPIServerPort;
 	preferences.putUShort("port_scpi", wifi_ipv4_SCPI_server_port);
@@ -418,7 +468,7 @@ device_operation_mode Settings::getOperationMode(bool from_storage)
 			: operation_mode;
 }
 
-void Settings::setOperationMode(device_operation_mode operationMode, bool set_through_settings, bool force_commit)
+void Settings::setOperationMode(device_operation_mode operationMode, bool set_through_settings)
 {
 	operation_mode = operationMode;
 	preferences.putUChar("oper_mode", operation_mode);

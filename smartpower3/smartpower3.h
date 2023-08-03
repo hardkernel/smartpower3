@@ -41,5 +41,4 @@ bool low_input;
 TaskHandle_t wifi_handle;
 TaskHandle_t screen_handle;
 TaskHandle_t input_handle;
-TaskHandle_t button_handle;
 TaskHandle_t log_handle;

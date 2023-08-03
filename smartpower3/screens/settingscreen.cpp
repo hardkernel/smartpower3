@@ -59,7 +59,7 @@ void SettingScreen::init()
 	this->serial_baud_edit = this->serial_baud;
 
 	this->drawSerialBaud(this->serial_baud);
-	this->drawLogIntervalValue(log_value[log_interval]);
+	this->drawLogIntervalValue(settings->getLogIntervalPreset(true));
 	this->drawMode(this->operation_mode);
 
 	selected = dial_cnt = dial_cnt_old = STATE_NONE;
@@ -106,6 +106,11 @@ bool SettingScreen::draw(void)
 	if (wifi_manager->update_mode_info) {
 		wifi_manager->update_mode_info = false;
 		this->drawMode(settings->getOperationMode());
+	}
+	if (wifi_manager->update_logging_interval_info) {
+		wifi_manager->update_logging_interval_info = false;
+		log_interval = settings->getLogIntervalPreset(true);
+		this->drawLogIntervalValue(log_interval);
 	}
 
 	header->draw();
@@ -421,7 +426,7 @@ uint8_t SettingScreen::getLogInterval(void)
 
 uint16_t SettingScreen::getLogIntervalValue(void)
 {
-	return log_value[log_interval];
+	return settings->getLogIntervalPreset();
 }
 
 uint32_t SettingScreen::getSerialBaud(void)
@@ -458,25 +463,19 @@ void SettingScreen::changeBacklight(uint8_t level)
 
 void SettingScreen::restoreLogIntervalValue()
 {
-	drawLogIntervalValue(log_value[this->log_interval]);
+	drawLogIntervalValue(settings->getLogIntervalPreset(static_cast<uint8_t>(log_interval)));
 	log_interval_edit = this->log_interval;
 }
 
 void SettingScreen::changeLogInterval(uint8_t log_interval, bool color_changed_value)
 {
-	double ms = (1/static_cast<double>(this->serial_baud_edit/780))*1000;
+	log_interval = settings->checkLogLevel(log_interval, serial_baud_edit);
 
-	if (log_interval != 0) {
-		clampVariableToRange(0, 6, &log_interval);
-		while (log_value[log_interval] < ms) {
-			log_interval++;
-		}
-	}
 	if (log_interval != log_interval_edit) {
 		if (log_interval != this->log_interval && color_changed_value) {
 			com_log_interval->setTextColor(COLOR_TEXT_ERROR, BG_COLOR);
 		}
-		drawLogIntervalValue(log_value[log_interval]);
+		drawLogIntervalValue(settings->getLogIntervalPreset(log_interval));
 		com_log_interval->setTextColor(COLOR_TEXT_DESELECTED, BG_COLOR);
 		log_interval_edit = log_interval;
 	}

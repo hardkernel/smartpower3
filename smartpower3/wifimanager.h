@@ -82,6 +82,7 @@ public:
 	bool update_gateway_address_info = true;
 	bool update_dns_info = true;
 	bool update_mode_info = true;
+	bool update_logging_interval_info = true;
 
 	void runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3);
 	device_operation_mode getOperationMode(bool from_storage = false);
