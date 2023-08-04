@@ -27,14 +27,19 @@
 \renewcommand{\labelenumiv}{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}}
 
 \maketitle
+\newpage
 \tableofcontents
+\newpage
 
 
 \section{Introduction}
 
-SmartPower3 is a small power supply designed to provide power supply to up to two connected devices and measure and log the connected devices power consumption. The first firmware versions allowed control of the SmartPower3 via devices buttons, rotary encoder and display. As the system became more mature, some users showed interest in remote control of the power supply. New versions added more refined functionality and SCPI (Standard Commands for Programmable Instruments) capability - effectively enabling (at least partial) remote control of the SmartPower3. This manual tries to describe the commands available in SCPI device mode. 
+SmartPower3 is a small power supply designed to provide power supply to up to two connected devices and measure and log the connected devices power consumption. The first firmware versions allowed control of the SmartPower3 via devices buttons, rotary encoder and display. As the system became more mature, some users showed interest in remote control of the power supply. New versions added more refined functionality and SCPI (Standard Commands for Programmable Instruments) capability - effectively enabling (at least partial) remote control of the SmartPower3. This manual tries to describe the commands available in SCPI device mode.
 
-For more information regarding SCPI and its usage please see the online specification and description available at:\newline\href{http://www.ivifoundation.org/docs/scpi-99.pdf}{http://www.ivifoundation.org/docs/scpi-99.pdf}\newline
+For more information regarding SCPI and its usage please see the online specification and description available at:
+\newline
+\href{http://www.ivifoundation.org/docs/scpi-99.pdf}{http://www.ivifoundation.org/docs/scpi-99.pdf}
+\newline
 and other online resources.
 
 \section{Device modes}
@@ -49,319 +54,207 @@ The mode is changed via screen and encoder, on the second device screen, near th
 
 \section{Commands}
 
-\begin{enumerate}
-\item IEEE Mandated Commands
-    \begin{description}
-        \item These commands are required in any SCPI implementation (SCPI std V1999.0 4.1.1).
-    \end{description}
-    \begin{enumerate}
-        \item \hypertarget{cls}{} 
-            \begin{verbatim}*CLS\end{verbatim}
-            \begin{description}
-                Command clears all registers and error queues.
-            \end{description}
-        \item \begin{verbatim}*ESE\end{verbatim}
-		\item \begin{verbatim}*ESE?\end{verbatim}
-		\item \begin{verbatim}*ESR?\end{verbatim}
-		\item \begin{verbatim}*IDN?\end{verbatim}
-		\item \begin{verbatim}*OPC\end{verbatim}
-		\item \begin{verbatim}*OPC?\end{verbatim}
-        \item \begin{verbatim}*RST\end{verbatim}
-            \begin{description}
-                Device reset - return device to defined known state. Turns output voltage off and stops logging output.
-            \end{description}
-        \item \begin{verbatim}*SRE\end{verbatim}
-        \item \begin{verbatim}*SRE?\end{verbatim}
-        \item \begin{verbatim}*STB?\end{verbatim}
-        \item \begin{verbatim}*TST?\end{verbatim}
-        \item \begin{verbatim}*WAI"\end{verbatim}
-    \end{enumerate}
-\item Required SCPI Commands
+\subsection{Command Syntax}
+    Lets start with an example command:
+    \begin{verbatim}
+        [SOURce#:]CURRent <numeric_value>
+    \end{verbatim}
+    As you may see, the command consists of a couple of parts, divided by \verb|:| character. In different commands, some of these command parts will be repeated - these divide individual subsystems. They could also be presented in a tree-like structure.
+    \begin{itemize}
+        \item{} The command is written in upper-case and lower-case letters. These denote the short-form and full-form of the command. The part written in capital letters is the shor-form - when you enter the command, it is necessary to write this part of the command - or the whole command. Apart from this disctinction, the case of the letters does not matter. So it is possible to enter the first segment of the above command in following ways:
+        \begin{itemize}
+            \item{SOUR}
+            \item{sour}
+            \item{source}
+            \item{SOURCE}
+        \end{itemize}
+        \item{} The \verb|#| is a placeholder for a number - in this case, a number of the source channel. If ommited, it is automatically expected to be number 1.
+        \item{} The \verb|[]|brackets around the \verb|SOURce| indicate that that particular part of the whole command is optional - it is not necessary to write it when entering the command. So the above example could be shorthanded as \verb|CURR <numeric_value>|. But in that case it would apply only to source 1. In order to use source 2, you would still have to use both parts, as the source number is defined in the first part. 
+        \item{} The \verb|<numeric_value>| indicates that the command needs some sort of parameter. It's meaning and possible values are usually described at the individual command.
+    \end{itemize} 
+
+\subsection{IEEE Mandated Commands}
+    These commands are required in any SCPI implementation (SCPI std V1999.0 4.1.1).
+    
+    \hypertarget{cls}{}
+    \subsubsection{*CLS}
+        Command clears all registers and error queues.
+    \subsubsection{*ESE}
+    \subsubsection{*ESE?}
+    \subsubsection{*ESR?}
+    \subsubsection{*IDN?}
+        Returns identification of the device.
+    \subsubsection{*OPC}
+    \subsubsection{*OPC?}
+    \subsubsection{*RST}
+        Device reset - return device to defined known state. Turns output voltage off and stops logging output.
+    \subsubsection{*SRE}
+    \subsubsection{*SRE?}
+    \subsubsection{*STB?}
+    \subsubsection{*TST?}
+    \subsubsection{*WAI"}
+    
+\subsection{Required SCPI Commands}
     \begin{description}
         \item Commands required by Required SCPI commands (SCPI std V1999.0 4.2.1) 
     \end{description}
-    \begin{enumerate}
-        \item 
-            \begin{verbatim}SYSTem:ERRor[:NEXT]?\end{verbatim}
-            \begin{description}
-                Query removes the last error from error buffer and reports it. Repeatedly calling this query eventually causes the error buffer to become empty.
-            \end{description}
-        \item 
-            \begin{verbatim}SYSTem:ERRor:COUNt?\end{verbatim}
-            \begin{description}
-                Query reports number of errors since device start-up or last device clear (Please see \hyperlink{cls}{*CLS} command).
-            \end{description}
-        \item 
-            \begin{verbatim}SYSTem:VERSion?\end{verbatim}
-            \begin{description}
-                Query that reports SCPI standard version this device should adhere to.
-            \end{description}
-    \end{enumerate}
-\item Non-Required SCPI Commands
+
+        \subsubsection{SYSTem:ERRor[:NEXT]?}
+            Query removes the last error from error buffer and reports it. Repeatedly calling this query eventually causes the error buffer to become empty.
+        \subsubsection{SYSTem:ERRor:COUNt?}
+            Query reports number of errors since device start-up or last device clear (Please see \hyperlink{cls}{*CLS} command).
+        \subsubsection{SYSTem:VERSion?}
+            Query that reports SCPI standard version this device should adhere to.
+
+\subsection{Non-Required SCPI Commands}
     \begin{description}
         \item This section contains commands specific to the device and query or control its main functionality.
     \end{description}
-    \begin{enumerate}
-        \item
-            \begin{verbatim}SYSTem:CAPability?\end{verbatim}
-            \begin{description}
-                Some desc.
-            \end{description}
-        \item 
-            \begin{verbatim}SYSTem:COMMunicate:NETwork:MAC?\end{verbatim}
-            \begin{description}
+        \subsubsection{SYSTem:CAPability?}
+        \subsubsection{SYSTem:COMMunicate:NETwork:MAC?}
                 This query returns the MAC address of the power supply. MAC address consist of two number groups: the first three bytes are known as the Organizationally Unique Identifier (OUI), which is distributed by the IEEE, and the last three bytes are the device’s unique serial number. The six bytes are separated by hyphens. The MAC address is unique to the instrument and cannot be altered by the user.
                 \newline
                 Return Param <XX-XX-XX-YY-YY-YY>
-		    \end{description}
-		\item 
-		    \begin{verbatim}SYSTem:COMMunicate:NETwork:ADDRess\end{verbatim}
-		    \begin{description}
+
+		\subsubsection{SYSTem:COMMunicate:NETwork:ADDRess}
 		        This command sets the static address of the power supply.
-		    \end{description}
-		\item 
-		    \begin{verbatim}SYSTem:COMMunicate:NETwork:ADDRess?\end{verbatim}
-		    \begin{description}
+	    \subsubsection{SYSTem:COMMunicate:NETwork:ADDRess?}
 		        Queries the static IP address of the power supply.
-		    \end{description}
-		\item 
-		    \begin{verbatim}SYSTem:COMMunicate:NETwork:GATE\end{verbatim}
-		    \begin{description}
+		\subsubsection{SYSTem:COMMunicate:NETwork:GATE}
 		        This command sets the Gateway IP address of the power supply. Gateway IP address is represented with 4 bytes each having a range of 0-255 separated by dots.
-		    \end{description}
-		\item 
-		    \begin{verbatim}SYSTem:COMMunicate:NETwork:GATE?\end{verbatim}
-		    \begin{description}
+		\subsubsection{SYSTem:COMMunicate:NETwork:GATE?}
 		        Queries the Gateway IP address of the power supply.
-	        \end{description}
-	    \item 
-	        \begin{verbatim}SYSTem:COMMunicate:NETwork:SUBNet <string>\end{verbatim}
-	        \begin{description}
+	    \subsubsection{SYSTem:COMMunicate:NETwork:SUBNet <string>}
 	            This command sets the subnet IP Mask of the power supply.
-	        \end{description}
-	    \item 
-	        \begin{verbatim}SYSTem:COMMunicate:NETwork:SUBNet?\end{verbatim}
-	        \begin{description}
+	    \subsubsection{SYSTem:COMMunicate:NETwork:SUBNet?}
 		        Queries the value of manually set network subnet mask.
-		    \end{description}
-		%\item 
-		%    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:PORT\end{verbatim}
-		%    \begin{description}
-		%        This command sets the Port of the Ethernet module of the power supply.
-		%    \end{description}
-		%\item
-		%    \begin{verbatim}[SYSTem][:COMMunicate]:NETwork:PORT?\end{verbatim}
-		%    \begin{description}
-		%        *
-		%    \end{description}
-		%\item 
-		%    \begin{verbatim}// [SYSTem][:COMMunicate]:NETwork:HOSTname?\end{verbatim}
-		%    \begin{description}
-		%        This query reads the host name of the Ethernet communications module.
-		%    \end{description}
-		\item 
-		    \begin{verbatim}SYSTem:COMMunicate:NETwork:DHCP\end{verbatim}
-		    \begin{description}
+		\subsubsection{SYSTem:COMMunicate:NETwork:DHCP}
 		        This command sets the DHCP operating mode of the Ethernet module. If DHCP is set to 1, the module will allow its IP address to be automatically set by the DHCP server on the network. If DHCP is set to 0, the default IP address is set according to .
-		    \end{description}
-		\item 
-		    \begin{verbatim}SYSTem:COMMunicate:NETwork:DHCP?\end{verbatim}
-		    \begin{description}
+		\subsubsection{SYSTem:COMMunicate:NETwork:DHCP?}
 		        This query reports the DHCP operating mode currently set.
-		    \end{description}
-		\item 
-		    \begin{verbatim}SYSTem:COMMunicate:SOCKet:ADDRess\end{verbatim}
-		    \begin{description}
+		\subsubsection{SYSTem:COMMunicate:SOCKet:ADDRess}
 		        Command sets logging target IP address (UDP logging server address). 
-		    \end{description}
-		\item 
-		    \begin{verbatim}SYSTem:COMMunicate:SOCKet:ADDRess?\end{verbatim}
-		    \begin{description}
+		\subsubsection{SYSTem:COMMunicate:SOCKet:ADDRess?}
 		        Queries logging target IP address (UDP logging server address).
-		    \end{description}
-		\item
-		    \begin{verbatim}SYSTem:COMMunicate:SOCKet:PORT\end{verbatim}
-		    \begin{description}
+		\subsubsection{SYSTem:COMMunicate:SOCKet:PORT}
 		        Command sets logging target port (UDP logging server port).
-		    \end{description}
-		\item 
-		    \begin{verbatim}SYSTem:COMMunicate:SOCKet:PORT?\end{verbatim}
-		    \begin{description}
+		\subsubsection{SYSTem:COMMunicate:SOCKet:PORT?}
 		        Queries logging target port (UDP logging server port).
-		    \end{description}
-
-		\item
-		    \begin{verbatim}SYSTem:COMMunicate:SOCKet:CONNect\end{verbatim}
-		    \begin{description}
+		\subsubsection{SYSTem:COMMunicate:SOCKet:CONNect}
 		        Command connects to the target socket. In case of SmartPower3 and UDP WiFi logging, this basically means connecting to WiFi network, the same way one can connect by moving cursor over WiFi icon when disconnected and pressing encoder button.
-		    \end{description}
-		\item 
-		    \begin{verbatim}SYSTem:COMMunicate:SOCKet:DISConnect\end{verbatim}
-		    \begin{description}
+		\subsubsection{SYSTem:COMMunicate:SOCKet:DISConnect}
 		        Command disconnects to the target socket. In case of SmartPower3 and UDP WiFi logging, this basically means disconnecting from WiFi network, the same way one can disconnect by moving cursor over WiFi icon when connected and pressing encoder button.
-		    \end{description}
-
-        \item
-            \begin{verbatim}SYSTem:COMMunicate:SOCKet:FEED <data_handle>\end{verbatim}
-            \begin{description}
+        \subsubsection{SYSTem:COMMunicate:SOCKet:FEED <data\_handle>}
                 Connect or disconnect the logging output to connected socket - WiFi.
                 The data handle parameter can be one of two values:
+                \begin{itemize}
                     \item \verb|LOG| - connect the logging output
                     \item \verb|NONE| - disconnect the logging output
-            \end{description}
-        \item
-            \begin{verbatim}SYSTem:COMMunicate:SOCKet:FEED?\end{verbatim}
-            \begin{description}
+                \end{itemize}
+        \subsubsection{SYSTem:COMMunicate:SOCKet:FEED?}
                 Report what data source is connected to the logging output.
                 The result can be one of the following values:
+                \begin{itemize}
                     \item \verb|LOG|
                     \item \verb|NONE|
-            \end{description}
-        \item
-            \begin{verbatim}SYSTem:COMMunicate:SERial:FEED <data_handle>\end{verbatim}
-            \begin{description}
+                \end{itemize}
+        \subsubsection{SYSTem:COMMunicate:SERial:FEED <data\_handle>}
                 Connect the logging output to connected serial port.
                 The data handle parameter can be one of two values:
+                \begin{itemize}
                     \item \verb|LOG| - connect the logging output
                     \item \verb|NONE| - disconnect the logging output
-            \end{description}
-        \item
-            \begin{verbatim}SYSTem:COMMunicate:SERial:FEED?\end{verbatim}
-            \begin{description}
+                \end{itemize}
+        \subsubsection{SYSTem:COMMunicate:SERial:FEED?}
                 Report what data source is connected to the logging output.
                 The result can be one of the following values:
+                \begin{itemize}
                     \item \verb|LOG|
                     \item \verb|NONE|
-            \end{description}
-        \item 
-            \begin{verbatim}SYSTem:COMMunicate:RLSTate\end{verbatim}
-            \begin{description}
+                \end{itemize}
+        \subsubsection{SYSTem:COMMunicate:RLSTate}
                 Sets the device operation mode. Equivalent to the \verb|Mode| screen menu item.
                 Acceptable options are:
-                \item \verb|LOCal|
-                    - Corresponds to the \verb|Default| menu selection.
-                \item \verb|REMote|
-                    - Corresponds to the \verb|SCPI| menu selection.
-            \end{description}
-        \item 
-            \begin{verbatim}SYSTem:COMMunicate:RLSTate?\end{verbatim}
-            \begin{description}
+                \begin{itemize}
+                    \item \verb|LOCal|
+                        - Corresponds to the \verb|Default| menu selection.
+                    \item \verb|REMote|
+                        - Corresponds to the \verb|SCPI| menu selection.
+                \end{itemize}
+        \subsubsection{SYSTem:COMMunicate:RLSTate?}
                 Queries the selected device operation mode. Equivalent to the \verb|Mode| screen menu item.
                 Possible responses are:
-                \item \verb|LOCal|
-                    - Corresponds to the \verb|Default| menu selection.
-                \item \verb|REMote|
-                    - Corresponds to the \verb|SCPI| menu selection.
-            \end{description}
-            
-            
-            
-		% STATus:OPERation:CONDition?
-		% STATus:OPERation:ENABle
-		% STATus:OPERation:ENABle?
+                \begin{itemize}
+                    \item \verb|LOCal|
+                        - Corresponds to the \verb|Default| menu selection.
+                    \item \verb|REMote|
+                        - Corresponds to the \verb|SCPI| menu selection.
+                \end{itemize}
+        \subsubsection{SENSe:FUNCtion:TINTerval}
+                Allows to set logging interval. Corresponds to the \verb|Logging Interval| setting screen menu item.
+                Possible values are 5, 10, 50, 100, 500, 1000 ms. Please note that the values available are also dependent on \verb|Serial Baud Rate| set - if the baud rate is slow, the fastes logging rates may not be available.
+                The value may be set in seconds and fractions of seconds. Values set as \verb|0.5|, \verb|0.5s| or \verb|500ms| all set the same value.
+                Other possible values are:
+                \begin{itemize}
+                    \item\verb|MIN| Sets the lowes possible value - 0 or OFF.
+                    \item\verb|MAX| Sets the longes logging interval - 1s.
+                    \item\verb|UP| Sets one step slower logging speed (larger value of interval).
+                    \item\verb|DOWN| Sets one step faster logging speed (smaller value of interval). It takes into account the lowes value possible, so is also dependent on Serial Baud Rate. 
+                \end{itemize}
 
-		%\item 
-		%    \begin{verbatim}STATus:QUEStionable[:EVENt]?\end{verbatim}
-		%    \begin{description}
-		%        TBD
-		%    \end{description}
-		%\item
-		%    \begin{verbatim}// STATus:QUEStionable:CONDition?\end{verbatim}
-		%    \begin{description}
-		%        TBD
-		%    \end{description}
-		%\item 
-		%    \begin{verbatim}STATus:QUEStionable:ENABle\end{verbatim}
-		%    \begin{description}
-		%        TBD
-		%    \end{description}
-		%\item 
-		%    \begin{verbatim}STATus:QUEStionable:ENABle?\end{verbatim}
-		%    \begin{description}
-		%        TBD
-		%    \end{description}
-
-		%\item 
-		%    \begin{verbatim}STATus:PRESet\end{verbatim}
-		%    \begin{description}
-		%        TBD
-		%    \end{description}
-
+        \subsubsection{SENSe:FUNCtion:TINTerval?}
+                Queries the logging interval set. The values are returned in seconds.
 		%/* DMM */
-		\item \hypertarget{FETCh}{}
-		    \begin{verbatim}FETCh[:SCALar]:VOLTage[:DC]? [expected_value, [resolution,]] <channel_list>\end{verbatim}
-		    \begin{description}
+		\hypertarget{FETCh}{}
+		\subsubsection{FETCh[:SCALar]:VOLTage[:DC]? [expected\_value, [resolution,]] <channel\_list>}
 		        Command allows reading voltage on channel specified by \verb|<channel_list>|. Parameter \verb|expected_value| has no use in this case and is included for reasons of compatibility. Parameter \verb|resolution| allows specifying the resolution of the result. If ommited, the result is returned in Volts. Parameter \verb|<channel_list>| allows specifying which channel(s) result should be read. The order of the channels is important - results are returned in that order.
 		        \newline If all parameters are ommited, the command will return value for channel 1, in Volts.
-		        \item Example 1:
-		            \begin{verbatim}FETCh:VOLTage? 1 V, 0.001V, (@1:3)\end{verbatim} will return voltage read on all three channels (including the power supply supply channel), in milliVolts, in order of channel 1, 2, 3.
-		        \item Example 2:
-		            \begin{verbatim}FETCh:VOLTage? (@3,1)\end{verbatim} will return voltage read on channels 3 and 1 (in that order), in units of Volts.
-		    \end{description}
-		\item 
-		    \begin{verbatim}FETCh[:SCALar]:CURRent[:DC]? [expected_value, [resolution,]] <channel_list>\end{verbatim}
-		    \begin{description}
+		        \begin{itemize}
+		            \item Example 1:
+		                \begin{verbatim}FETCh:VOLTage? 1 V, 0.001V, (@1:3)\end{verbatim} will return voltage read on all three channels (including the power supply supply channel), in milliVolts, in order of channel 1, 2, 3.
+		            \item Example 2:
+		                \begin{verbatim}FETCh:VOLTage? (@3,1)\end{verbatim} will return voltage read on channels 3 and 1 (in that order), in units of Volts.
+		        \end{itemize}
+		\subsubsection{FETCh[:SCALar]:CURRent[:DC]? [expected\_value, [resolution,]] <channel\_list>}
 		        Command allows reading of current on channel specified by \verb|<channel_list>|, averaged over 2 samples. If \verb|resolution| is not specified, the value is returned in Amperes.
 		        Parameter \verb|<channel_list>| allows specifying which channel(s) result should be read. The order of the channels is important - results are returned in that order.
 		        \newline If all parameters are ommited, the command will return value for channel 1, in Amperes.
-		        \item Example 1:
-		            \begin{verbatim}FETCh:CURRent? 1 A, 0.001A, (@1:3)\end{verbatim} will return current read on all three channels (including the power supply supply channel), in milliAmperes, in order of channel 1, 2, 3.
-		        \item Example 2:
-		            \begin{verbatim}FETCh:CURRent? (@3,1)\end{verbatim} will return current read on channels 3 and 1 (in that order), in units of Amperes.
-		    \end{description}
-		\item 
-		    \begin{verbatim}FETCh[:SCALar]:POWer[:DC]? [expected_value, [resolution,]] <channel_list>\end{verbatim}
-		    \begin{description}
+		        \begin{itemize}
+		            \item Example 1:
+		                \begin{verbatim}FETCh:CURRent? 1 A, 0.001A, (@1:3)\end{verbatim} will return current read on all three channels (including the power supply supply channel), in milliAmperes, in order of channel 1, 2, 3.
+		            \item Example 2:
+		                \begin{verbatim}FETCh:CURRent? (@3,1)\end{verbatim} will return current read on channels 3 and 1 (in that order), in units of Amperes.
+		        \end{itemize}
+		\subsubsection{FETCh[:SCALar]:POWer[:DC]? [expected\_value, [resolution,]] <channel\_list>}
 		        Command allows reading power on channel specified by \verb|<channel_list>|. Parameter \verb|expected_value| has no use in this case and is included for reasons of compatibility. Parameter \verb|resolution| allows specifying the resolution of the result. If ommited, the result is returned in Watts. Parameter \verb|<channel_list>| allows specifying which channel(s) result should be read. The order of the channels is important - results are returned in that order.
 		        \newline If all parameters are ommited, the command will return value for channel 1, in Watts.
-		        \item Example 1:
-		            \begin{verbatim}FETCh:POWer? 1 V, 0.001V, (@1:3)\end{verbatim} will return power read on all three channels (including the power supply supply channel), in milliWatts, in order of channel 1, 2, 3.
-		        \item Example 2:
-		            \begin{verbatim}FETCh:POWer? (@3,1)\end{verbatim} will return power read on channels 3 and 1 (in that order), in units of Watts.
-		    \end{description}
-
-		\item
-		    \begin{verbatim}[SOURce#]:CURRent <numeric_value>\end{verbatim}
-		    \begin{description}
+		        \begin{itemize}
+		            \item Example 1:
+		                \begin{verbatim}FETCh:POWer? 1 V, 0.001V, (@1:3)\end{verbatim} will return power read on all three channels (including the power supply supply channel), in milliWatts, in order of channel 1, 2, 3.
+		            \item Example 2:
+		                \begin{verbatim}FETCh:POWer? (@3,1)\end{verbatim} will return power read on channels 3 and 1 (in that order), in units of Watts.
+		        \end{itemize}
+		\subsubsection{[SOURce\#]:CURRent <numeric\_value>}
 		        Sets output current on source \verb|#|. If \verb|#| is ommited, the default value is 1.
 		        \newline
 		        \verb|<numeric_value>| is the value that should be set on the device. Default unit is Amperes. Other possible values include \verb!MIN|MAX!, which set minimum and maximum persmissible value, respectively. Another option, if you decide to use \verb|A| unit is to specify units as fractions, such as \verb|mA| (milliAmperes) or \verb|UA| (microAmperes). 
-		    \end{description}
-		\item 
-		    \begin{verbatim}[SOURce#]:CURRent?\end{verbatim}
-		    \begin{description}
+		\subsubsection{[SOURce\#]:CURRent?}
 		        Querries the output current set on channel \verb|#|. Note that this differs from the \hyperlink{FETCh}{FETCh} series of commands in that no measurements are taken and value set by \verb|[SOURce#]:CURRent| is returned.
 		        \newline
 		        Returns value in Amperes.
-		    \end{description}
-		\item 
-		    \begin{verbatim}[SOURce#]:VOLTage <numeric_value>\end{verbatim}
-		    \begin{description}
+		\subsubsection{[SOURce\#]:VOLTage <numeric\_value>}
 		        Sets output voltage on source \verb|#|. If \verb|#| is ommited, the default value is 1.
 		        \newline
 		        \verb|<numeric_value>| is the value that should be set on the device. Default unit is Volts. Other possible values include \verb!MIN|MAX!, which set minimum and maximum persmissible value, respectively. Another option, if you decide to use \verb|V| unit is to specify units as fractions, such as \verb|mV| (milliVolts) or \verb|UV| (microVolts). 
-		    \end{description}
-		\item 
-		    \begin{verbatim}[SOURce#]:VOLTage?\end{verbatim}
-		    \begin{description}
+		\subsubsection{[SOURce\#]:VOLTage?}
 		        Querries the output voltage set on channel \verb|#|. Note that this differs from the \hyperlink{FETCh}{FETCh} series of commands in that no measurements are taken and value set by \verb|[SOURce#]:VOLTage| is returned.
 		        \newline
 		        Returns value in Amperes.
-		    \end{description}
-
-		\item 
-		    \begin{verbatim}OUTPut#[:STATe] <parameter>\end{verbatim}
-		    \begin{description}
+		\subsubsection{OUTPut\#[:STATe] <parameter>}
 		        This command turns the output channel \verb!#! on or off. If \verb|#| is ommited, the command defaults to channel number 1.
 		        \newline Possible parameter value is one of \verb!ON|1|OFF|0!.
-		    \end{description}
-		\item 
-		    \begin{verbatim}OUTPut#[:STATe]?\end{verbatim}
-		    \begin{description}
+		\subsubsection{OUTPut\#[:STATe]?}
 		        This query returns the output states of channel \verb!#!. Returns 0 or 1.
-		    \end{description}
-    \end{enumerate}
-\end{enumerate}
 
 \section{Python Examples}
 
