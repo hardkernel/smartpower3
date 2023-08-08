@@ -30,8 +30,10 @@ MeasChannel mCh1(&PAC, 1);
 MeasChannel mCh2(&PAC, 2);
 MeasChannels mChs (&PAC, &mCh0, &mCh1, &mCh2, 15000);
 
+#ifndef PIO_UNIT_TESTING
 TwoWire I2CA = TwoWire(0);
 TwoWire I2CB = TwoWire(1);
+#endif
 
 struct dial_t dial;
 

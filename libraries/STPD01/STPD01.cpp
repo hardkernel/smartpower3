@@ -117,7 +117,9 @@ uint8_t STPD01::setCurrentLimit(uint16_t milliampere)
 {
 	uint8_t val, tmp;
 	if ((milliampere < 100) and (milliampere > 3000)) {
+		#ifdef DEBUG_STPD01
 		Serial.printf("Invalid current limit value : %d\n\r", milliampere);
+		#endif
 		return 1;
 	}
 	val = milliampere/100 -1;
@@ -174,24 +176,28 @@ bool STPD01::off(void)
 	return 0;
 }
 
-uint16_t STPD01::readVoltage()
+uint16_t STPD01::convertRegisterValueToVolt(uint8_t val)
 {
-	uint8_t val = 0;
 	uint16_t volt = 0;
-	val = read8(STPD01_REGISTER_0);
 	if (val < 0x91)
 		volt = val*20 + 3000;
 	else if (val < 0xc4)
 		volt = (val - 0x91)*100 + 5900;
-	else if (val < 0xf1)
+	else if (val <= 0xf1)
 		volt = (val - 0xc4)*200 + 11000;
 	return volt;
-
 }
 
-uint8_t STPD01::setVoltage(uint16_t volt)
+uint16_t STPD01::readVoltage()
 {
-	uint8_t val, tmp;
+	uint8_t val = 0;
+	val = read8(STPD01_REGISTER_0);
+	return convertRegisterValueToVolt(val);
+}
+
+uint8_t STPD01::convertVoltToRegisterValue(uint16_t volt)
+{
+	uint8_t val;
 	if (volt < 3000) {
 		val = 0x00;
 	} else if (volt < 5900) {
@@ -199,12 +205,19 @@ uint8_t STPD01::setVoltage(uint16_t volt)
 	} else if (volt < 11000) {
 		val = 0x91 + (volt - 5900)/100;
 	} else if (volt < 20000) {
-		val = 0xc4 + (uint16_t)(volt - 11000)/200;
+		val = 0xc4 + static_cast<uint16_t>((volt - 11000)/200);
 	} else if (volt >= 20000) {
 		val = 0xf1;
 	} else {
 		val = 0x00;
 	}
+	return val;
+}
+
+uint8_t STPD01::setVoltage(uint16_t volt)
+{
+	uint8_t tmp;
+	uint8_t val = this->convertVoltToRegisterValue(volt);
 
 	write8(STPD01_REGISTER_0, val);
 	tmp = read8(STPD01_REGISTER_0);

@@ -223,6 +223,7 @@ void wifiTask(void *parameter)
 	}
 }
 
+#ifndef PIO_UNIT_TESTING
 void setup(void) {
 	Serial.begin(115200);
 
@@ -319,3 +320,4 @@ void loop() {
 	heap_caps_print_heap_info(MALLOC_CAP_8BIT);
 #endif
 }
+#endif
