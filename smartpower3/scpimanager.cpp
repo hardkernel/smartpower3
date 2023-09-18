@@ -303,7 +303,6 @@ scpi_result_t SCPIManager::processChannelList(scpi_t *context, scpi_parameter_t 
 					SCPI_ResultFloat(context, reading_method(values_from[0], resolution, channels));
 				} else {
 					return SCPI_RES_ERR;
-					break;
 				}
 				arr_idx++; //inkrement array where we want to save our values to, not neccessary otherwise
 			} else if (is_range == true) {
@@ -329,7 +328,6 @@ scpi_result_t SCPIManager::processChannelList(scpi_t *context, scpi_parameter_t 
 				}
 			} else {
 				return SCPI_RES_ERR;
-				break;
 			}
 			chanlst_idx++;
 		}
@@ -506,6 +504,7 @@ scpi_result_t SCPIManager::DMM_ConfigureVoltage(scpi_t *context)
 	if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &target_volts, TRUE)) {
 		return SCPI_RES_ERR;
 	}
+	// value can be either 1 or 2
 	if (output_number[0] < 1 || output_number[0] > 2) {
 		SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
 		return SCPI_RES_ERR;
@@ -518,14 +517,14 @@ scpi_result_t SCPIManager::DMM_ConfigureVoltage(scpi_t *context)
 		if (target_volts.special && target_volts.content.tag == SCPI_NUM_MIN) {
 			if (output_number[0] == 1) {
 				settings->setChannel0Voltage(3000, true);  // hardware allowed minimum
-			} else if (output_number[0] == 2) {
+			} else {
 				settings->setChannel1Voltage(3000, true);  // hardware allowed minimu
 			}
 			return SCPI_RES_OK;
 		} else if (target_volts.special && target_volts.content.tag == SCPI_NUM_MAX) {
 			if (output_number[0] == 1) {
 				settings->setChannel0Voltage(20000, true);  // hardware allowed maximum
-			} else if (output_number[0] == 2) {
+			} else {
 				settings->setChannel1Voltage(20000, true);  // hardware allowed maximum
 			}
 			return SCPI_RES_OK;
@@ -536,7 +535,7 @@ scpi_result_t SCPIManager::DMM_ConfigureVoltage(scpi_t *context)
 		} else {
 			if (output_number[0] == 1) {
 				settings->setChannel0Voltage(static_cast<uint16_t>((target_volts.content.value)*1000), true);
-			} else if (output_number[0] == 2) {
+			} else {
 				settings->setChannel1Voltage(static_cast<uint16_t>((target_volts.content.value)*1000), true);
 			}
 			return SCPI_RES_OK;
@@ -556,13 +555,14 @@ scpi_result_t SCPIManager::DMM_ConfigureVoltageQ(scpi_t *context)
 	if (!SCPI_CommandNumbers(context, output_number, 1, 1)) {
 		return SCPI_RES_ERR;
 	}
+	// only 1 or 2
 	if (output_number[0] < 1 || output_number[0] > 2) {
 		SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
 		return SCPI_RES_ERR;
 	}
 	if (output_number[0] == 1) {
 		SCPI_ResultFloat(context, static_cast<float>(settings->getChannel0Voltage(true))/1000);
-	} else if (output_number[0] == 2) {
+	} else {
 		SCPI_ResultFloat(context, static_cast<float>(settings->getChannel1Voltage(true))/1000);
 	}
 	return SCPI_RES_OK;
@@ -593,14 +593,14 @@ scpi_result_t SCPIManager::DMM_ConfigureCurrent(scpi_t *context)
 		if (target_amps.special && target_amps.content.tag == SCPI_NUM_MIN) {
 			if (output_number[0] == 1) {
 				settings->setChannel0CurrentLimit(500, true);  // hardware allowed minimum
-			} else if (output_number[0] == 2) {
+			} else {
 				settings->setChannel1CurrentLimit(500, true);  // hardware allowed minimum
 			}
 			return SCPI_RES_OK;
 		} else if (target_amps.special && target_amps.content.tag == SCPI_NUM_MAX) {
 			if (output_number[0] == 1) {
 				settings->setChannel0CurrentLimit(3000, true);  // hardware allowed maximum
-			} else if (output_number[0] == 2) {
+			} else {
 				settings->setChannel1CurrentLimit(3000, true);  // hardware allowed maximum
 			}
 			return SCPI_RES_OK;
@@ -610,7 +610,7 @@ scpi_result_t SCPIManager::DMM_ConfigureCurrent(scpi_t *context)
 		} else {
 			if (output_number[0] == 1) {
 				settings->setChannel0CurrentLimit(static_cast<uint16_t>((target_amps.content.value)*1000), true);
-			} else if (output_number[0] == 2) {
+			} else {
 				settings->setChannel1CurrentLimit(static_cast<uint16_t>((target_amps.content.value)*1000), true);
 			}
 			return SCPI_RES_OK;
@@ -636,7 +636,7 @@ scpi_result_t SCPIManager::DMM_ConfigureCurrentQ(scpi_t *context)
 	}
 	if (output_number[0] == 1) {
 		SCPI_ResultFloat(context, static_cast<float>(settings->getChannel0CurrentLimit(true))/1000);
-	} else if (output_number[0] == 2) {
+	} else {
 		SCPI_ResultFloat(context, static_cast<float>(settings->getChannel1CurrentLimit(true))/1000);
 	}
 	return SCPI_RES_OK;
@@ -696,17 +696,6 @@ scpi_result_t SCPIManager::SCPI_NetworkSubnet (scpi_t *context)
 scpi_result_t SCPIManager::SCPI_NetworkSubnetQ (scpi_t *context)
 {
 	SCPI_ResultMnemonic(context, getSettings(context)->getWifiIpv4SubnetMask(true).toString().c_str());
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIManager::SCPI_NetworkPort (scpi_t *context)
-{
-	return SCPIManager::saveNetworkPort(context, &Settings::setWifiIpv4SCPIServerPort);
-}
-
-scpi_result_t SCPIManager::SCPI_NetworkPortQ (scpi_t *context)
-{
-	SCPI_ResultUInt16(context, getSettings(context)->getWifiIpv4SCPIServerPort());
 	return SCPI_RES_OK;
 }
 
@@ -857,7 +846,7 @@ scpi_result_t SCPIManager::SCPI_RLStateQ (scpi_t *context)
 scpi_result_t SCPIManager::saveIpv4Address(scpi_t *context, void (Settings::*func)(IPAddress, bool))
 {
 	const char* value;
-	uint len;
+	size_t len;
 	IPAddress ipaddr_obj;
 	char ipaddr[15];
 	memset(ipaddr, 0x00, sizeof(ipaddr));
@@ -885,7 +874,7 @@ scpi_result_t SCPIManager::saveNetworkPort(scpi_t *context, void (Settings::*fun
 	}
 
 	if (0 <= port.content.value && port.content.value < 10000) {
-		(getSettings(context)->* func)(port.content.value, true);
+		(getSettings(context)->* func)(static_cast<uint16_t>(port.content.value), true);
 		return SCPI_RES_OK;
 	} else {
 		SCPI_ErrorPush(context, SCPI_ERROR_DATA_TYPE_ERROR);

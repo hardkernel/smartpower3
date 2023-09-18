@@ -101,8 +101,6 @@ public:
 	esp_event_loop_handle_t& getEventLoopHandleAddress(void);
 	String getMacAddress(void);
 	void setMacAddress(String macAddress);
-	uint16_t getWifiIpv4SCPIServerPort(bool from_storage = false);
-	void setWifiIpv4SCPIServerPort(uint16_t wifiIpv4SCPIServerPort = 0, bool set_through_settings = false);
 	device_operation_mode getOperationMode(bool from_storage = false);
 	void setOperationMode(device_operation_mode operationMode = OPERATION_MODE_DEFAULT,
 						  bool set_through_settings = false);

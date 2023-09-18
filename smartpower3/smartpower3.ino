@@ -79,8 +79,8 @@ void logTask(void *parameter)
 	char buffer_ch1[SIZE_LOG_BUFFER2];
 	char buffer_checksum[SIZE_CHECKSUM_BUFFER];
 	uint16_t log_interval = 0;
-	uint8_t checksum8 = 0;
-	uint8_t checksum8_xor = 0;
+	uint8_t checksum8;
+	uint8_t checksum8_xor;
 	SettingScreen *setting_screen = screen_manager.getSettingScreen();
 	VoltageScreen *voltage_screen = screen_manager.getVoltageScreen();
 	device_operation_mode operation_mode = settings.getOperationMode();

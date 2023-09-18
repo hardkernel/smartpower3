@@ -843,7 +843,7 @@ uint8_t WiFiManager::serialGetInt(void)
 				return false;
 			} else if ( cmd == SERIAL_ENTER ) {
 				resulting_mode = atoi(mode);
-				if (resulting_mode >= 0 && resulting_mode < 2) {
+				if (resulting_mode < 2) {
 					Serial.println();
 					return resulting_mode;
 				} else {

@@ -170,8 +170,11 @@ private:
 		{"SYSTem:COMMunicate:NETwork:SUBNet?", SCPI_NetworkSubnetQ, 0 },
 		// This command sets the subnet IP Mask address of the Ethernet module of the power supply.
 		// The factory subnet mask setting is 255.255.255.0.
-		{"SYSTem:COMMunicate:NETwork:PORT", SCPI_NetworkPort, 0 },
-		{"SYSTem:COMMunicate:NETwork:PORT?", SCPI_NetworkPortQ, 0 },
+
+		// Currently no need for this
+		//{"SYSTem:COMMunicate:NETwork:PORT", SCPI_NetworkPort, 0 },
+		//{"SYSTem:COMMunicate:NETwork:PORT?", SCPI_NetworkPortQ, 0 },
+
 		// This command sets the Socket (Port) of the Ethernet module of the power supply.
 		// The factory default port setting is 50505. The factory recommends port values greater than 49151
 		// to avoid conflicts with registered Ethernet port functions.

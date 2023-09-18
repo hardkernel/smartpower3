@@ -50,7 +50,6 @@ void Settings::init()
 	this->channel_1_voltage = this->getChannel1Voltage(true);
 	this->channel_1_current_limit = this->getChannel1CurrentLimit(true);
 	// SCPI related
-	this->wifi_ipv4_SCPI_server_port = this->getWifiIpv4SCPIServerPort(true);
 	this->operation_mode = this->getOperationMode(true);
 }
 
@@ -242,7 +241,6 @@ bool Settings::isWifiIpv4DhcpEnabled(bool from_storage)
 	return (from_storage) ?
 			preferences.getBool("dhcp_enabled", wifi_ipv4_dhcp_enabled)
 			: wifi_ipv4_dhcp_enabled;
-	return wifi_ipv4_dhcp_enabled;
 }
 
 void Settings::setWifiIpv4DhcpEnabled(bool wifiIpv4DhcpEnabled)
@@ -436,28 +434,12 @@ void Settings::setWifiIpv4SubnetMask(IPAddress wifiIpv4SubnetMask, bool set_thro
 
 IPAddress Settings::getSettingIPAddress(bool from_storage, const char *setting_key, IPAddress *address_variable)
 {
-	IPAddress ipaddress;
 	if (from_storage && preferences.isKey(setting_key)) {
+		IPAddress ipaddress;
 		ipaddress.fromString(preferences.getString(setting_key));
 		return ipaddress;
-	}
-	return *address_variable;
-}
-
-uint16_t Settings::getWifiIpv4SCPIServerPort(bool from_storage)
-{
-	return (from_storage) ?
-			preferences.getUShort("port_scpi", wifi_ipv4_SCPI_server_port)
-			: wifi_ipv4_SCPI_server_port;
-}
-
-void Settings::setWifiIpv4SCPIServerPort(uint16_t wifiIpv4SCPIServerPort, bool set_through_settings)
-{
-	wifi_ipv4_udp_logging_server_port = wifiIpv4SCPIServerPort;
-	preferences.putUShort("port_scpi", wifi_ipv4_SCPI_server_port);
-	delay(100);
-	if (set_through_settings) {
-		esp_event_post(SETTINGS_EVENTS, SETTINGS_SCPI_PORT_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+	} else {
+		return *address_variable;
 	}
 }
 
