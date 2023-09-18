@@ -10,6 +10,7 @@
 #include "screens/voltagescreen.h"
 #include "screens/logoscreen.h"
 #include "screens/settingscreen.h"
+#include "screens/networkscreen.h"
 
 
 #define LED2	13
@@ -39,16 +40,19 @@ public:
 	void dimmingLED(uint8_t led);
 	VoltageScreen* getVoltageScreen(void);
 	SettingScreen* getSettingScreen(void);
+	NetworkScreen* getNetworkScreen(void);
 	Screen* getActiveScreen(void);
 	void setNextScreen(void);
 	void getBtnPress(uint8_t idx, uint32_t cur_time, bool long_pressed = false);
 	void setTime(uint32_t milisec);
 	void setWiFiIconState(void);
+	Settings *getSettings();
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	Header *header = nullptr;
 	VoltageScreen *voltage_screen = nullptr;
 	SettingScreen *setting_screen = nullptr;
+	NetworkScreen *network_screen = nullptr;
 	LogoScreen *logo_screen = nullptr;
 	Settings *settings = nullptr;
 	TwoWire *_wire = nullptr;

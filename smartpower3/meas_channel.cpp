@@ -6,7 +6,7 @@ MeasChannel::MeasChannel(Microchip_PAC193x * pac, int channel_number)
 	this->channel_number = channel_number;
 }
 
-void MeasChannel::update(float V, float A)
+void MeasChannel::update(uint16_t V, uint16_t A)
 {
 	voltage = V;
 
@@ -32,7 +32,9 @@ uint16_t MeasChannel::A(int interval)
 
 	for (int i = 0; i < interval; i++) {
 		n = current_buffer_count - i;
-		if (n < 0) n+= 1000;
+		if (n < 0) {
+			n += 1000;
+		}
 		acc += current_buffer[n];
 	}
 
@@ -44,7 +46,7 @@ uint16_t MeasChannel::W(int interval)
 	return (uint16_t) (voltage * A(interval) / 1000);
 }
 
-MeasChannels::MeasChannels(Microchip_PAC193x * mc, MeasChannel * c0, MeasChannel * c1, MeasChannel * c2, float rs)
+MeasChannels::MeasChannels(Microchip_PAC193x * mc, MeasChannel * c0, MeasChannel * c1, MeasChannel * c2, uint16_t rs)
 {
 	pac = mc;
 	channel0 = c0;
@@ -90,5 +92,19 @@ void MeasChannels::sample()
 				channel2->update(V, A);
 				break;
 		}
+	}
+}
+
+MeasChannel* MeasChannels::getChannel(uint8_t channel_number)
+{
+	switch(channel_number) {
+		case 0:
+			return this->channel0;
+		case 1:
+			return this->channel1;
+		case 2:
+			return this->channel2;
+		default:
+			return NULL;
 	}
 }

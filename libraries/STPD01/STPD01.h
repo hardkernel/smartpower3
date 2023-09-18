@@ -68,12 +68,14 @@ public:
 	bool on(void);
 	bool off(void);
 	uint8_t setVoltage(uint16_t val);
+	uint8_t convertVoltToRegisterValue(uint16_t val);
 	uint8_t setCurrentLimit(uint16_t milliampere);
 	void monitorInterrupt(uint8_t ch);
 	void setInterrupt(uint8_t reg);
 	void clearInterrupt(uint8_t reg);
 	uint8_t readInterrupt(void);
 	bool readOnOff(void);
+	uint16_t convertRegisterValueToVolt(uint8_t val);
 	uint16_t readVoltage();
 	uint16_t readVoltSet();
 	uint16_t readCurrentLimit();

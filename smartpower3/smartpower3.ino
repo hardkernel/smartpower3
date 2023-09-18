@@ -1,12 +1,17 @@
 #include <Wire.h>
 #include "smartpower3.h"
 
+#include "esp_event.h"
+#include "esp_event_base.h"
+
 uint32_t ctime1 = 0;
 
 volatile int interruptFlag;
 
 hw_timer_t *timer = NULL;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+
+ESP_EVENT_DEFINE_BASE(SETTINGS_EVENTS);
 
 void IRAM_ATTR onTimer()
 {
@@ -32,13 +37,39 @@ void initPAC1933(void)
 	PAC.UpdateRevisionID();
 }
 
-void btnTask(void *parameter)
+static void settings_voltage0_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
 {
-	for (;;) {
-		for (int i = 0; i < 4; i++)
-			button[i].isr_pol();
-		vTaskDelay(10);
-	}
+	screen_manager.getVoltageScreen()->getChannel(0)->setVolt(settings.getChannel0Voltage(true), 2);
+}
+
+static void settings_voltage1_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
+{
+	screen_manager.getVoltageScreen()->getChannel(1)->setVolt(settings.getChannel1Voltage(true), 2);
+}
+
+static void settings_current0_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
+{
+	screen_manager.getVoltageScreen()->getChannel(0)->setCurrentLimit(settings.getChannel0CurrentLimit(true), 2);
+}
+
+static void settings_current1_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
+{
+	screen_manager.getVoltageScreen()->getChannel(1)->setCurrentLimit(settings.getChannel1CurrentLimit(true), 2);
+}
+
+static void settings_visible_settings_changed_handler(void *handler_args, esp_event_base_t base, int32_t id,
+													  void *event_data)
+{
+	wifi_manager->update_udp_info = true;
+	wifi_manager->port_udp = settings.getWifiIpv4UdpLoggingServerPort(true);
+	wifi_manager->ipaddr_udp = settings.getWifiIpv4UdpLoggingServerIpAddress(true);
+	wifi_manager->update_mode_info = true;
+}
+
+static void settings_logging_interval_changed_handler(void *handler_args, esp_event_base_t base, int32_t id,
+													  void *event_data)
+{
+	wifi_manager->update_logging_interval_info = true;
 }
 
 void logTask(void *parameter)
@@ -48,10 +79,11 @@ void logTask(void *parameter)
 	char buffer_ch1[SIZE_LOG_BUFFER2];
 	char buffer_checksum[SIZE_CHECKSUM_BUFFER];
 	uint16_t log_interval = 0;
-	uint8_t checksum8 = 0;
-	uint8_t checksum8_xor = 0;
+	uint8_t checksum8;
+	uint8_t checksum8_xor;
 	SettingScreen *setting_screen = screen_manager.getSettingScreen();
 	VoltageScreen *voltage_screen = screen_manager.getVoltageScreen();
+	device_operation_mode operation_mode = settings.getOperationMode();
 
 	for (;;) {
 		if (interruptFlag > 0) {
@@ -67,9 +99,18 @@ void logTask(void *parameter)
 					timerAlarmWrite(timer, 1000*log_interval, true);
 			}
 			if ((log_interval > 0) && !wifi_manager->isCommandMode()) {
-				sprintf(buffer_input, "%010lu,%05d,%04d,%05d,%1d,", millis(), mCh0.V(),mCh0.A(log_interval), mCh0.W(log_interval), low_input);
-				sprintf(buffer_ch0, "%05d,%04d,%05d,%1d,%02x,", mCh1.V(), mCh1.A(log_interval), mCh1.W(log_interval), onoff[0], voltage_screen->getIntStat(0));
-				sprintf(buffer_ch1, "%05d,%04d,%05d,%1d,%02x,", mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval), onoff[1], voltage_screen->getIntStat(1));
+				operation_mode = settings.getOperationMode();
+				// this has a few interesting points:
+				// %04d specifier is max 4 digits for uint16_t - which might be 5 digits
+				// %1d specifier for uint8_t - which might be 3 digits
+				// It does not happen because of the used data ranges, but it's safer to truncate the result
+				// to prevent possible buffer overflow
+				snprintf(buffer_input, SIZE_LOG_BUFFER0, "%010lu,%05d,%04d,%05d,%1d,",
+						 millis(), mCh0.V(), mCh0.A(log_interval), mCh0.W(log_interval), low_input);
+				snprintf(buffer_ch0, SIZE_LOG_BUFFER1, "%05d,%04d,%05d,%1d,%02x,",
+						 mCh1.V(), mCh1.A(log_interval), mCh1.W(log_interval), onoff[0], voltage_screen->getIntStat(0));
+				snprintf(buffer_ch1, SIZE_LOG_BUFFER2, "%05d,%04d,%05d,%1d,%02x,",
+						 mCh2.V(), mCh2.A(log_interval), mCh2.W(log_interval), onoff[1], voltage_screen->getIntStat(1));
 
 				checksum8 = 0;
 				checksum8_xor = 0;
@@ -85,13 +126,23 @@ void logTask(void *parameter)
 					checksum8 += buffer_ch1[i];
 					checksum8_xor ^= buffer_ch1[i];
 				}
-				sprintf(buffer_checksum, "%02x,%02x\r\n", static_cast<byte>((~checksum8)+1), checksum8_xor);
-
-				Serial.printf(buffer_input);
-				Serial.printf(buffer_ch0);
-				Serial.printf(buffer_ch1);
-				Serial.printf(buffer_checksum);
-				wifi_manager->runWiFiLogging(buffer_input, buffer_ch0, buffer_ch1, buffer_checksum);
+				snprintf(buffer_checksum, SIZE_CHECKSUM_BUFFER, "%02x,%02x\r\n", static_cast<byte>((~checksum8)+1),
+						 checksum8_xor);
+				if (
+						operation_mode == OPERATION_MODE_DEFAULT
+						|| (operation_mode == OPERATION_MODE_SCPI && settings.isScpiSerialLoggingEnabled())
+				) {
+					Serial.printf(buffer_input);
+					Serial.printf(buffer_ch0);
+					Serial.printf(buffer_ch1);
+					Serial.printf(buffer_checksum);
+				}
+				if (
+						operation_mode == OPERATION_MODE_DEFAULT
+						|| (operation_mode == OPERATION_MODE_SCPI && settings.isScpiSocketLoggingEnabled())
+				) {
+					wifi_manager->runWiFiLogging(buffer_input, buffer_ch0, buffer_ch1, buffer_checksum);
+				}
 			} else {
 				vTaskDelay(10);
 			}
@@ -123,6 +174,9 @@ void inputTask(void *parameter)
 	unsigned long cur_time;
 
 	for (;;) {
+		for (int i = 0; i < 4; i++)
+			button[i].isr_pol();
+
 		cur_time = millis();
 
 		for (int i = 0; i < 4; i++) {
@@ -136,7 +190,7 @@ void inputTask(void *parameter)
 			screen_manager.getActiveScreen()->countDial(dial.cnt, dial.direct, dial.step, cur_time);
 			dial.cnt = 0;
 		}
-		screen_manager.getActiveScreen()->setTime(cur_time);
+		screen_manager.setTime(cur_time);  // needs to go through screen_manager bacause of shutdown handling
 		vTaskDelay(10);
 	}
 }
@@ -152,14 +206,16 @@ void wifiTask(void *parameter)
 		screen_manager.setWiFiIconState();
 
 		if (Serial.available()) {
-			if (wifi_manager->isCommandMode())
+			if (wifi_manager->isCommandMode()) {
 				wifi_manager->WiFiMenuMain(Serial.read());
-			else {
-				if (Serial.read() == SERIAL_CTRL_C) {
-					wifi_manager->setCommandMode();
+			} else if (wifi_manager->getOperationMode() == OPERATION_MODE_SCPI) {
+				scpi_manager->processInput(Serial);
+			} else {
+				if (Serial.read() == SERIAL_CTRL_C && wifi_manager->getOperationMode() == OPERATION_MODE_DEFAULT) {
+					wifi_manager->enterCommandMode();
 					wifi_manager->viewMainMenu();
 				} else {
-					Serial.printf(">>> Unknown command <<<\n\r");
+					Serial.printf(F(">>> Unknown command <<<\n\r"));
 				}
 			}
 		}
@@ -167,10 +223,13 @@ void wifiTask(void *parameter)
 	}
 }
 
+#ifndef PIO_UNIT_TESTING
 void setup(void) {
 	Serial.begin(115200);
 
 	settings.init();
+
+	esp_event_loop_create_default();
 
 	I2CA.begin(15, 4, (uint32_t)10000);
 	I2CB.begin(21, 22, (uint32_t)800000);
@@ -178,6 +237,8 @@ void setup(void) {
 	wifi_manager = new WiFiManager(&settings);
 	screen_manager.begin(&settings, wifi_manager, &I2CA);
 	initEncoder(&dial);  // this also starts a task, without specified core
+	scpi_manager = new SCPIManager(&screen_manager, &mChs);
+	scpi_manager->init();
 
 	pinMode(25, INPUT_PULLUP);
 	pinMode(26, INPUT_PULLUP);
@@ -189,11 +250,27 @@ void setup(void) {
 	timerAlarmWrite(timer, 1000000, true);
 	timerAlarmEnable(timer);
 
-	xTaskCreatePinnedToCore(screenTask, "Draw Screen", 6000, NULL, 1, NULL, 1);  // delay 10
-	xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 5000, NULL, 1, NULL, 1);  // delay 50
-	xTaskCreatePinnedToCore(logTask, "Log Task", 8000, NULL, 1, NULL, 1);  // delay 10, 250 or 1 depending on logging interval and interrupt count
-	xTaskCreate(inputTask, "Input Task", 8000, NULL, 1, NULL);  // delay 10, also counts for screen
-	xTaskCreate(btnTask, "Button Task", 4000, NULL, 1, NULL);  // delay 10
+	xTaskCreatePinnedToCore(screenTask, "Draw Screen", 2048, NULL, 1, &screen_handle, 1);  // delay 10
+	xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 2512, NULL, 1, &wifi_handle, 1);  // delay 50
+	xTaskCreatePinnedToCore(logTask, "Log Task", 2048, NULL, 1, &log_handle, 1);  // delay 10, 250 or 1
+	xTaskCreate(inputTask, "Input Task", 736, NULL, 1, &input_handle);  // delay 10, also counts for screen
+
+	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_VOLTAGE0_CHANGED_EVENT,
+										settings_voltage0_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_VOLTAGE1_CHANGED_EVENT,
+										settings_voltage1_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_CURRENT0_CHANGED_EVENT,
+										settings_current0_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_CURRENT1_CHANGED_EVENT,
+										settings_current1_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_LOGGING_PORT_CHANGED_EVENT,
+										settings_visible_settings_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_LOGGING_ADDRESS_CHANGED_EVENT,
+										settings_visible_settings_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_LOGGING_INTERVAL_CHANGED_EVENT,
+										settings_logging_interval_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register(SETTINGS_EVENTS, SETTINGS_OPERATION_MODE_CHANGED_EVENT,
+										settings_visible_settings_changed_handler, NULL, NULL);
 }
 
 void loop() {
@@ -231,4 +308,16 @@ void loop() {
 	if (screen_manager.getShutdown()) {
 		screen_manager.dimmingLED(1);
 	}
+
+#ifdef TASK_STACK_HIGH_WATERMARK_SERIAL_PRINT
+	Serial.printf("WiFi task: %u\n\r", uxTaskGetStackHighWaterMark(wifi_handle));
+	Serial.printf("Screen task: %u\n\r", uxTaskGetStackHighWaterMark(screen_handle));
+	Serial.printf("Input task: %u\n\r", uxTaskGetStackHighWaterMark(input_handle));
+	Serial.printf("Log task: %u\n\r", uxTaskGetStackHighWaterMark(log_handle));
+#endif
+
+#ifdef HEAP_INFO_SERIAL_PRINT
+	heap_caps_print_heap_info(MALLOC_CAP_8BIT);
+#endif
 }
+#endif

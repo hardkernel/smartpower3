@@ -37,7 +37,7 @@ void initEncoder(void *dial)
 	encoder.attachFullQuad(33, 32);
 	encoder.setCount(0);
 	encoder.setFilter(1023);
-	xTaskCreate(countEncoder, "encoderTask", 1500, dial, 1, NULL);
+	xTaskCreate(countEncoder, "encoderTask", 608, dial, 1, NULL);
 }
 
 void countEncoder(void *dial)
@@ -79,4 +79,3 @@ void countEncoder(void *dial)
 		vTaskDelay(100);
 	}
 }
-
