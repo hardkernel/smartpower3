@@ -84,6 +84,35 @@ void ScreenManager::pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt
 	header->pushPower(volt, ampere, watt);
 }
 
+void ScreenManager::enableChannel(uint8_t idx)
+{
+	if (idx != 0 && idx != 1)
+		return;
+
+	if (onoff[idx] == 0)
+		onoff[idx] = 3;
+}
+
+void ScreenManager::disableChannel(uint8_t idx)
+{
+	if (idx != 0 && idx != 1)
+		return;
+
+	if (onoff[idx] == 1)
+		onoff[idx] = 2;
+}
+
+void ScreenManager::toggleChannel(uint8_t idx)
+{
+	if (idx != 0 && idx != 1)
+		return;
+
+	if (onoff[idx] == 1)
+		onoff[idx] = 2;
+	else if (onoff[idx] == 0)
+		onoff[idx] = 3;
+}
+
 void ScreenManager::checkOnOff()
 {
 	if (state_power == 1) {
@@ -315,10 +344,7 @@ void ScreenManager::getBtnPress(uint8_t idx, uint32_t cur_time, bool long_presse
 	case 1:  // Channel1 ON/OFF
 		if (shutdown || screen != VOLTAGE_SCREEN || long_pressed)
 			break;
-		if (onoff[idx] == 1)
-			onoff[idx] = 2;
-		else if (onoff[idx] == 0)
-			onoff[idx] = 3;
+		toggleChannel(idx);
 		btn_pressed[idx] = true;
 		break;
 	case 2:  // MENU/CANCEL

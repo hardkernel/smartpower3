@@ -144,7 +144,9 @@ void inputTask(void *parameter)
 void wifiTask(void *parameter)
 {
 	for (;;) {
-		if (wifi_manager->canConnect() && wifi_manager->isWiFiEnabled()) {
+		if (wifi_manager->isConnected()) {
+			wifi_manager->parseWiFiPacket(screen_manager);
+		} else if (wifi_manager->canConnect() && wifi_manager->isWiFiEnabled()) {
 			wifi_manager->apConnectFromSettings();
 		} else if (!wifi_manager->isWiFiEnabled()) {
 			wifi_manager->apDisconnectAndTurnWiFiOff();

@@ -46,6 +46,8 @@ void Settings::init()
 	//IPAddress wifi_ipv4_address_dns_2;
 	this->wifi_ipv4_udp_logging_server_ip_address = this->getWifiIpv4UdpLoggingServerIpAddress(true);
 	this->wifi_ipv4_udp_logging_server_port = this->getWifiIpv4UdpLoggingServerPort(true);
+	this->wifiPowerToggling = this->isWifiPowerTogglingEnabled(true);
+	this->wifiPowerTogglingAnyIP = this->canWifiPowerToggleFromAnyIP(true);
 	// Various
 	this->first_boot = this->isFirstBoot(true);
 	this->wifi_credentials_state = this->getWifiCredentialsState(true);
@@ -320,6 +322,28 @@ void Settings::setWifiUseIpv6 (bool wifiUseIpv6)
 {
 	wifi_use_ipv6 = wifiUseIpv6;
 }*/
+
+bool Settings::isWifiPowerTogglingEnabled (bool from_storage)
+{
+	return from_storage ? preferences.getBool("wifi_pwr_tgl", false) : wifiPowerToggling;
+}
+
+void Settings::setWifiPowerTogglingEnabled (bool enabled)
+{
+	preferences.putBool("wifi_pwr_tgl", enabled);
+	wifiPowerToggling = enabled;
+}
+
+bool Settings::canWifiPowerToggleFromAnyIP (bool from_storage)
+{
+	return from_storage ? preferences.getBool("wifi_pwr_anyip", false) : wifiPowerTogglingAnyIP;
+}
+
+void Settings::setCanWifiPowerToggleFromAnyIP (bool allowAnyIP)
+{
+	preferences.putBool("wifi_pwr_anyip", allowAnyIP);
+	wifiPowerTogglingAnyIP = allowAnyIP;
+}
 
 bool Settings::isFirstBoot(bool from_storage)
 {
