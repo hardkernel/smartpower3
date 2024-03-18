@@ -67,6 +67,10 @@ public:
 	void setWifiUseIpv4 (bool wifiUseIpv4 = true);
 	bool isWifiUseIpv6 () const;
 	void setWifiUseIpv6 (bool wifiUseIpv6 = false);
+	bool isWifiPowerTogglingEnabled(bool from_storage = false);
+	void setWifiPowerTogglingEnabled(bool enabled);
+	bool canWifiPowerToggleFromAnyIP(bool from_storage = false);
+	void setCanWifiPowerToggleFromAnyIP(bool allowAnyIP);
 	bool isFirstBoot(bool from_storage = false);
 	void setFirstBoot(bool firstBoot = false, bool force_commit = true);
 	wifi_credentials_state_e getWifiCredentialsState(bool from_storage = false);
@@ -117,6 +121,8 @@ private:
 	IPAddress wifi_ipv4_address_dns_2;*/
 	IPAddress wifi_ipv4_udp_logging_server_ip_address = IPAddress(0,0,0,0);
 	uint16_t wifi_ipv4_udp_logging_server_port = 0;
+	bool wifiPowerToggling;
+	bool wifiPowerTogglingAnyIP;
 	Preferences preferences;
 	bool nvs_cleared = false;
 };

@@ -1,4 +1,5 @@
 #include "wifimanager.h"
+#include "screenmanager.h"
 
 // general
 const char *MSG_ON = "ON";
@@ -24,6 +25,7 @@ const char *MSG_CMD_FORGET_CONNECTION = ">>> Forget connection AP <<<";
 const char *MSG_CMD_FORGET_UDP_SERVER_INFO = ">>> Forget UDP server <<<";
 const char *MSG_CMD_TURN_WIFI_ON_OFF = "[Dis]Connect pre-saved WiFi network. Current state: ";
 const char *MSG_CMD_TURN_LOGGING_ON_OFF = "Switch logging ON or OFF (if logging interval is set). Current state: ";
+const char *MSG_CMD_ALLOW_POWER_ON_OFF = "Allow or forbid enabling and disabling channel power via WiFi. Current state: ";
 // yes/no selections
 // common
 const char *MSG_YN_REDO_SELECTION_REQUEST = "\n\rPlease enter \"y\" or \"n\" & Enter or press Ctrl+C: ";
@@ -47,6 +49,19 @@ const char *MSG_YN_WIFI_SWITCH_STATE_FAILURE = "\n\rWiFi state not changed.";
 const char *MSG_YN_LOGGING_SWITCH_STATE_CONFIRMATION = "Do you really want to switch logging state? (y/n & Enter): ";
 const char *MSG_YN_LOGGING_SWITCH_STATE_SUCCESS = "\n\rLogging state successfully changed.";
 const char *MSG_YN_LOGGING_SWITCH_STATE_FAILURE = "\n\rLogging state not changed.";
+// Power toggling allow/forbid
+const char *MSG_POWER_TOGGLING_ALLOWED_ANY_IP = "allowed, from any IP";
+const char *MSG_POWER_TOGGLING_ALLOWED_LOGGING_IP = "allowed, but only from IP of logging server";
+const char *MSG_POWER_TOGGLING_FORBIDDEN = "forbidden";
+const char *MSG_POWER_TOGGLING_OPTIONS = "A - allow from any IP address\n\r"
+					 "Y - allow, but only from logging server IP address\n\r"
+					 "F - forbid\n\r"
+					 "n - do not change\n\r";
+const char *MSG_POWER_TOGGLING_REQUEST = "Select option (A, Y, F or n) & Enter : ";
+const char *MSG_POWER_TOGGLING_REQUEST_ALLOWED_ANYIP = "\n\rChannel power toggling over WiFi allowed from any IP address.";
+const char *MSG_POWER_TOGGLING_REQUEST_ALLOWED_LOGGINGIP = "\n\rChannel power toggling over WiFi allowed from logging server IP address.";
+const char *MSG_POWER_TOGGLING_REQUEST_FORBIDDEN = "\n\rChannel power toggling over WiFi forbidden.";
+const char *MSG_POWER_TOGGLING_REQUEST_NOT_CHANGED = "\n\rChannel power toggling over WiFi not changed.";
 // AP selection
 const char *MSG_AP_SELECT = "Select AP Number (0 - %d) & Enter : ";
 const char *MSG_AP_SELECT_PASSWORD = "Please enter password & press Enter : ";
@@ -507,6 +522,58 @@ void WiFiManager::switchLoggingOnOff()
 	);
 }
 
+void WiFiManager::switchPowerToggling(void)
+{
+	bool allowed = settings->isWifiPowerTogglingEnabled();
+	bool anyIP = settings->canWifiPowerToggleFromAnyIP();
+	char buf, cmd;
+
+	Serial.printf(
+			"%s%s\n\r",
+			MSG_CMD_ALLOW_POWER_ON_OFF,
+			allowed ? (anyIP ? MSG_POWER_TOGGLING_ALLOWED_ANY_IP :
+					 MSG_POWER_TOGGLING_ALLOWED_LOGGING_IP)
+				: MSG_POWER_TOGGLING_FORBIDDEN);
+
+	Serial.printf("%s%s", MSG_POWER_TOGGLING_OPTIONS, MSG_POWER_TOGGLING_REQUEST);
+
+	while (true) {
+		if (Serial.available()) {
+			cmd = Serial.read();
+			switch (cmd) {
+				case SERIAL_CTRL_C:
+					return;
+				case SERIAL_ENTER:
+					switch (buf) {
+						case 'A':
+							settings->setWifiPowerTogglingEnabled(true);
+							settings->setCanWifiPowerToggleFromAnyIP(true);
+							Serial.println(MSG_POWER_TOGGLING_REQUEST_ALLOWED_ANYIP);
+							return;
+						case 'Y':
+							settings->setWifiPowerTogglingEnabled(true);
+							settings->setCanWifiPowerToggleFromAnyIP(false);
+							Serial.println(MSG_POWER_TOGGLING_REQUEST_ALLOWED_LOGGINGIP);
+							return;
+						case 'F':
+							settings->setWifiPowerTogglingEnabled(false);
+							Serial.println(MSG_POWER_TOGGLING_REQUEST_FORBIDDEN);
+							return;
+						case SERIAL_N:
+							Serial.println(MSG_POWER_TOGGLING_REQUEST_NOT_CHANGED);
+							return;
+						default:
+							Serial.printf("\n\r%s", MSG_POWER_TOGGLING_REQUEST);
+					}
+					break;
+				default:
+					Serial.printf("%c", cmd);
+					buf = cmd;
+			}
+		}
+	}
+}
+
 void WiFiManager::WiFiMenuMain(char idata)
 {
 	Serial.println(idata);
@@ -550,6 +617,10 @@ void WiFiManager::WiFiMenuMain(char idata)
 			switchLoggingOnOff();
 			break;
 		case    '9':
+			switchPowerToggling();
+			break;
+		case    'a':
+		case    'A':
 		case    SERIAL_CTRL_C:
 			commandMode = false;
 			Serial.printf("%s\n\r", MSG_CMD_MODE_EXITED);
@@ -681,4 +752,37 @@ void WiFiManager::runWiFiLogging(const char *buf0, const char *buf1, const char 
 	udp.write((uint8_t *)buf2, SIZE_LOG_BUFFER2-1);
 	udp.write((uint8_t *)buf3, SIZE_CHECKSUM_BUFFER-1);
 	udp.endPacket();
+}
+
+void WiFiManager::parseWiFiPacket(ScreenManager &screen_manager)
+{
+	if (!settings->isWifiPowerTogglingEnabled())
+		return;
+
+	char buf[8];
+	int chn;
+
+	int size = udp.parsePacket();
+	if (!size)
+		return;
+	if (size != 8) {
+		udp.flush();
+		return;
+	}
+
+	udp.read(buf, sizeof(buf));
+
+	if (!settings->canWifiPowerToggleFromAnyIP() && udp.remoteIP() != settings->getWifiIpv4UdpLoggingServerIpAddress())
+		return;
+
+	if (buf[7] == '0' || buf[7] == '1')
+		chn = buf[7] - '0';
+	else
+		return;
+
+	if (!memcmp(buf, "enblChn", 7)) {
+		screen_manager.enableChannel(chn);
+	} else if (!memcmp(buf, "dsblChn", 7)) {
+		screen_manager.disableChannel(chn);
+	}
 }

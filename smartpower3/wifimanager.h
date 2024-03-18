@@ -34,8 +34,11 @@ const char wifi_cmd_menu[][50] = {
 	"6. Forget UDP server IP address",
 	"7. (Dis)Connect WiFi connection",
 	"8. Switch logging ON or OFF",
-	"9. WiFi Command mode exit"
+	"9. Allow toggling channel power via WiFi",
+	"A. WiFi Command mode exit"
 };
+
+class ScreenManager;
 
 class WiFiManager
 {
@@ -70,11 +73,13 @@ public:
 	void switchWifiState(bool from_storage);
 	void setUdp();
 	void switchLoggingOnOff(void);
+	void switchPowerToggling(void);
 	uint16_t port_udp = 0;
 	IPAddress ipaddr_udp;
 	bool update_udp_info = true;
 	bool update_wifi_info = true;
 	void runWiFiLogging(const char *buf0, const char *buf1, const char *buf2, const char *buf3);
+	void parseWiFiPacket(ScreenManager &screen_manager);
 private:
 	WiFiUDP udp;
 	WiFiClient client;

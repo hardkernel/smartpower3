@@ -29,6 +29,9 @@ public:
 	void pushPower(uint16_t volt, uint16_t ampere, uint16_t watt, uint8_t ch);
 	void pushInputPower(uint16_t volt, uint16_t ampere, uint16_t watt);
 	void disablePower();
+	void enableChannel(uint8_t idx);
+	void disableChannel(uint8_t idx);
+	void toggleChannel(uint8_t idx);
 	uint8_t* getOnOff(void);
 	void checkOnOff();
 	void debug();
